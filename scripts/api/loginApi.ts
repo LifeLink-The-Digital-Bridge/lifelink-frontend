@@ -5,7 +5,8 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  token: string;
+  accessToken: string;
+  refreshToken: string;
   id: string;
   email: string;
   username: string;
@@ -13,7 +14,7 @@ export interface LoginResponse {
 }
 
 export const loginUser = async (payload: LoginRequest): Promise<LoginResponse> => {
-  const response = await fetch('http://:8080/auth/login', {
+  const response = await fetch('http:///auth/login', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

@@ -26,7 +26,8 @@ export default function LoginScreen() {
     const loginType = getLoginType(identifier);
     const response = await loginUser({ loginType, identifier, password });
 
-    await SecureStore.setItemAsync('jwt', response.token);
+    await SecureStore.setItemAsync('jwt', response.accessToken);
+    await SecureStore.setItemAsync('refreshToken', response.refreshToken);
     await SecureStore.setItemAsync('userId', response.id);
     await SecureStore.setItemAsync('email', response.email);
     await SecureStore.setItemAsync('username', response.username);

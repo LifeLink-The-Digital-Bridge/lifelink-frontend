@@ -23,7 +23,7 @@ export interface RegisterResponse {
 }
 
 export const registerUser = async (payload: RegisterRequest): Promise<RegisterResponse> => {
-  const response = await fetch('http://:8080/users/register', {
+  const response = await fetch('http:///users/register', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
