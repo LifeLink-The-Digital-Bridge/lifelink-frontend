@@ -11,6 +11,8 @@ export interface LoginResponse {
   email: string;
   username: string;
   roles: string[];
+  gender: string;
+  dob: string;
 }
 
 export const loginUser = async (payload: LoginRequest): Promise<LoginResponse> => {

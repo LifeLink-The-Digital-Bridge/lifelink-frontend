@@ -22,38 +22,35 @@ export default function LoginScreen() {
     }
 
     setLoading(true);
-  try {
-    const loginType = getLoginType(identifier);
-    const response = await loginUser({ loginType, identifier, password });
+    try {
+      const loginType = getLoginType(identifier);
+      const response = await loginUser({ loginType, identifier, password });
 
-    await SecureStore.setItemAsync('jwt', response.accessToken);
-    await SecureStore.setItemAsync('refreshToken', response.refreshToken);
-    await SecureStore.setItemAsync('userId', response.id);
-    await SecureStore.setItemAsync('email', response.email);
-    await SecureStore.setItemAsync('username', response.username);
-    await SecureStore.setItemAsync('roles', JSON.stringify(response.roles));
-    
+      await SecureStore.setItemAsync('jwt', response.accessToken);
+      await SecureStore.setItemAsync('refreshToken', response.refreshToken);
+      await SecureStore.setItemAsync('userId', response.id);
+      await SecureStore.setItemAsync('email', response.email);
+      await SecureStore.setItemAsync('username', response.username);
+      await SecureStore.setItemAsync('roles', JSON.stringify(response.roles));
+      await SecureStore.setItemAsync('gender', response.gender)
+      await SecureStore.setItemAsync('dob', response.dob);
 
-    Alert.alert('Login Successful', `Welcome, ${response.username}`);
-    router.push("../dashboard");
-  } catch (error: any) {
+      Alert.alert('Login Successful', `Welcome, ${response.username}`);
+      router.push("../dashboard");
+    } catch (error: any) {
       let message = 'An unexpected error occurred.';
-
       if (error instanceof Error) {
         message = error.message;
       }
-
       Alert.alert('Login Failed', message);
     } finally {
       setLoading(false);
     }
   };
 
-
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Login to LifeLink</Text>
-
       <TextInput
         style={styles.input}
         placeholder="Username or Email"
@@ -61,7 +58,6 @@ export default function LoginScreen() {
         value={identifier}
         onChangeText={setIdentifier}
       />
-
       <TextInput
         style={styles.input}
         placeholder="Password"
@@ -69,7 +65,6 @@ export default function LoginScreen() {
         value={password}
         onChangeText={setPassword}
       />
-
       <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
         {loading ? (
           <ActivityIndicator color="#fff" />
@@ -77,11 +72,9 @@ export default function LoginScreen() {
           <Text style={styles.buttonText}>Login</Text>
         )}
       </TouchableOpacity>
-
       <TouchableOpacity onPress={() => router.push('/navigation/registerScreen')}>
         <Text style={styles.linkText}>Don't have an account? Register</Text>
       </TouchableOpacity>
-      
     </View>
   );
 }

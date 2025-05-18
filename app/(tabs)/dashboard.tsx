@@ -1,49 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, Button, Text, View, ActivityIndicator, ScrollView } from 'react-native';
-import styles from '../../constants/styles/loginStyles';
+import { Alert, Text, View, ActivityIndicator, ScrollView, TouchableOpacity } from 'react-native';
 import { callSampleEndpoint } from '../../scripts/api/sampleApi';
 import { useAuth } from '../utils/auth-context';
 import { router } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
+import { MaterialIcons, Feather } from '@expo/vector-icons';
+import styles from '../../constants/styles/dashboardStyles';
+import { addUserRole, refreshAuthTokens } from '../../scripts/api/roleApi';
+import AppLayout from '../../components/AppLayout';
+import ProfileCard from '../../components/ProfileCard';
 
-const addUserRole = async () => {
-  const token = await SecureStore.getItemAsync('jwt');
-  const response = await fetch('http://192.168.1.26:8080/donors/addRole', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    }
-  });
 
-  const text = await response.text();
-
-  if (!response.ok) {
-    throw new Error(text || 'Failed to add role');
-  }
-
-  return text; 
-};
-
-const refreshAuthTokens = async () => {
-  const refreshToken = await SecureStore.getItemAsync('refreshToken');
-  const response = await fetch(`http://192.168.1.26:8080/auth/refresh?refreshToken=${refreshToken}`, {
-    method: 'POST'
-  });
-
-  if (!response.ok) {
-    let errorMsg = 'Failed to refresh tokens';
-    try {
-      const errorData = await response.text();
-      errorMsg = errorData || errorMsg;
-    } catch {}
-    throw new Error(errorMsg);
-  }
-
-  return response.json();
-};
 
 const Dashboard = () => {
+  const { logout, setIsAuthenticated } = useAuth();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -54,10 +24,11 @@ const Dashboard = () => {
     roles: '',
     userId: '',
     token: '',
-    refreshToken: ''
+    refreshToken: '',
+    bloodGroup: '',
+    lastDonation: '',
+    location: ''
   });
-
-  const { logout } = useAuth();
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -83,13 +54,24 @@ const Dashboard = () => {
         roles: roles || '',
         userId: userId || '',
         token: token || '',
-        refreshToken: refreshToken || ''
+        refreshToken: refreshToken || '',
+        bloodGroup: '', 
+        lastDonation: '', 
+        location: '' 
       });
       setIsLoggedIn(!!token);
       setLoading(false);
     };
     loadUserData();
   }, []);
+const [donorId, setDonorId] = useState<string | null>(null);
+useEffect(() => {
+  const fetchDonorId = async () => {
+    const id = await SecureStore.getItemAsync('donorId');
+    setDonorId(id);
+  };
+  fetchDonorId();
+}, []);
 
   const handleSample = async () => {
     try {
@@ -100,11 +82,19 @@ const Dashboard = () => {
     }
   };
 
-  const handleAddRoleAndRefresh = async () => {
-    setActionLoading(true);
+const handleDonate = async () => {
+  setActionLoading(true);
+  try {
+    let rolesString = await SecureStore.getItemAsync('roles');
+    let roles: string[] = [];
     try {
-      const addRoleResult = await addUserRole();
+      roles = rolesString ? JSON.parse(rolesString) : [];
+    } catch {
+      roles = [];
+    }
 
+    if (!roles.includes('DONOR')) {
+      await addUserRole();
       const newTokens = await refreshAuthTokens();
 
       await Promise.all([
@@ -113,25 +103,34 @@ const Dashboard = () => {
         SecureStore.setItemAsync('email', newTokens.email),
         SecureStore.setItemAsync('username', newTokens.username),
         SecureStore.setItemAsync('roles', JSON.stringify(newTokens.roles)),
-        SecureStore.setItemAsync('userId', newTokens.id)
+        SecureStore.setItemAsync('userId', newTokens.id),
+        SecureStore.setItemAsync('gender', newTokens.gender),
+        SecureStore.setItemAsync('dob', newTokens.dob),
       ]);
 
-      setUserData({
-        username: newTokens.username,
-        email: newTokens.email,
-        roles: JSON.stringify(newTokens.roles),
-        userId: newTokens.id,
-        token: newTokens.accessToken,
-        refreshToken: newTokens.refreshToken
-      });
+      setIsAuthenticated(true);
 
-      Alert.alert('Success', `${addRoleResult} and tokens refreshed!`);
-    } catch (error: any) {
-      Alert.alert('Error', error.message);
-    } finally {
-      setActionLoading(false);
+      roles = newTokens.roles;
     }
-  };
+
+    const dob = await SecureStore.getItemAsync('dob');
+    const gender = await SecureStore.getItemAsync('gender');
+    if (!dob || !gender) {
+      Alert.alert(
+        'Profile Incomplete',
+        'Date of birth or gender is missing from your profile. Please update your profile before registering as a donor.'
+      );
+      setActionLoading(false);
+      return;
+    }
+
+    router.push('/navigation/donorScreen');
+  } catch (error: any) {
+    Alert.alert('Error', error.message);
+  } finally {
+    setActionLoading(false);
+  }
+};
 
   const handleLogout = async () => {
     await logout();
@@ -140,42 +139,85 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <View style={styles.container}>
+      <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#0984e3" />
-        <Text style={{ marginTop: 10 }}>Loading dashboard...</Text>
+        <Text style={{ marginTop: 10, color: '#636e72' }}>Loading dashboard...</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Welcome to the Dashboard {userData.username}</Text>
-      <Text style={styles.title}>Email: {userData.email}</Text>
-      <Text style={styles.title}>UserId: {userData.userId}</Text>
-      <Text style={styles.title}>Roles: {userData.roles}</Text>
+    <AppLayout title="Dashboard">
+      <ScrollView style={styles.bg} contentContainerStyle={styles.scrollContent}>
+        <ProfileCard
+          username={userData.username}
+          email={userData.email}
+          bloodGroup={userData.bloodGroup}
+          lastDonation={userData.lastDonation}
+          location={userData.location}
+          onEdit={() => router.push('/dashboard')}
+        />
 
-      {isLoggedIn && (
-        <>
-          <Button title="Call Sample Endpoint" onPress={handleSample} />
-          <View style={{ marginTop: 20 }}>
-            <Button
-              title={actionLoading ? "Processing..." : "Add Role & Refresh Token"}
-              onPress={handleAddRoleAndRefresh}
-              color="#00b894"
-              disabled={actionLoading}
-            />
-          </View>
-          <View style={{ marginTop: 20 }}>
-            <Button title="Logout" color="#d63031" onPress={handleLogout} />
-          </View>
-        </>
-      )}
-      {!isLoggedIn && (
-        <Text style={{ color: 'red', marginTop: 20 }}>
-          You must log in to access this feature.
-        </Text>
-      )}
-    </ScrollView>
+{isLoggedIn && (
+  <>
+    <TouchableOpacity
+      style={styles.button}
+      onPress={handleSample}
+      activeOpacity={0.8}
+    >
+      <Feather name="activity" size={20} color="#fff" />
+      <Text style={styles.buttonText}>Call Sample Endpoint</Text>
+    </TouchableOpacity>
+
+    {/* Donor Actions */}
+    {donorId ? (
+      <>
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: "#0984e3" }]}
+          onPress={() => router.push('./donate')}
+          activeOpacity={0.8}
+        >
+          <MaterialIcons name="add-circle-outline" size={20} color="#fff" />
+          <Text style={styles.buttonText}>Donate</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: "#00b894" }]}
+          onPress={() => router.push({ pathname: './donorScreen', params: { mode: 'update' } })}
+          activeOpacity={0.8}
+        >
+          <Feather name="edit" size={20} color="#fff" />
+          <Text style={styles.buttonText}>Update Donor Details</Text>
+        </TouchableOpacity>
+      </>
+    ) : (
+      <TouchableOpacity
+        style={[styles.button, { backgroundColor: "#00b894" }]}
+        onPress={() => router.push('./donorscreen')}
+        activeOpacity={0.8}
+      >
+        <MaterialIcons name="person-add-alt" size={20} color="#fff" />
+        <Text style={styles.buttonText}>Register as Donor</Text>
+      </TouchableOpacity>
+    )}
+
+    <TouchableOpacity
+      style={[styles.button, { backgroundColor: "#d63031" }]}
+      onPress={handleLogout}
+      activeOpacity={0.8}
+    >
+      <Feather name="log-out" size={20} color="#fff" />
+      <Text style={styles.buttonText}>Logout</Text>
+    </TouchableOpacity>
+  </>
+)}
+
+        {!isLoggedIn && (
+          <Text style={{ color: 'red', marginTop: 20, textAlign: 'center' }}>
+            You must log in to access this feature.
+          </Text>
+        )}
+      </ScrollView>
+    </AppLayout>
   );
 };
 

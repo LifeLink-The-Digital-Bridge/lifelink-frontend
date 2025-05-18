@@ -2,7 +2,6 @@ import * as SecureStore from 'expo-secure-store';
 
 export const addUserRole = async () => {
   const token = await SecureStore.getItemAsync('jwt');
-  
   const response = await fetch('http:///donors/addRole', {
     method: 'POST',
     headers: {
@@ -11,18 +10,19 @@ export const addUserRole = async () => {
     }
   });
 
+  const text = await response.text();
+
   if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'Failed to add role');
+    throw new Error(text || 'Failed to add role');
   }
 
-  return response.json();
+  return text;
 };
 
 export const refreshAuthTokens = async () => {
   const refreshToken = await SecureStore.getItemAsync('refreshToken');
   
-  const response = await fetch(`http:///auth/refresh?refreshToken=${refreshToken}`, {
+  const response = await fetch(`http://192.168.1.26:8080/auth/refresh?refreshToken=${refreshToken}`, {
     method: 'POST'
   });
 

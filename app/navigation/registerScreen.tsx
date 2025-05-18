@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator, ScrollView, Image } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import styles from '../../constants/styles/loginStyles';
 import { router } from 'expo-router';
 import { registerUser } from '../../scripts/api/registerApi'; 
@@ -14,10 +15,31 @@ export default function RegisterScreen() {
     phone: '',
     dob: '',
     gender: '',
-    profileImageUrl: '',
+    profileImageUrl: '', 
   });
 
   const [loading, setLoading] = useState(false);
+
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission denied', 'We need camera roll permissions to select a profile image.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      base64: true, 
+      quality: 0.7,
+    });
+
+    if (!result.canceled) {
+      setFormData((prev) => ({
+        ...prev,
+        profileImageUrl: `data:image/jpeg;base64,${result.assets[0].base64}`,
+      }));
+    }
+  };
 
   const handleChange = (key: keyof RegisterRequest, value: string) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
@@ -50,14 +72,12 @@ export default function RegisterScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Register for LifeLink</Text>
-
       <TextInput
         style={styles.input}
         placeholder="Name"
         value={formData.name}
         onChangeText={(text) => handleChange('name', text)}
       />
-
       <TextInput
         style={styles.input}
         placeholder="Email"
@@ -66,7 +86,6 @@ export default function RegisterScreen() {
         value={formData.email}
         onChangeText={(text) => handleChange('email', text)}
       />
-
       <TextInput
         style={styles.input}
         placeholder="Username"
@@ -74,7 +93,6 @@ export default function RegisterScreen() {
         value={formData.username}
         onChangeText={(text) => handleChange('username', text)}
       />
-
       <TextInput
         style={styles.input}
         placeholder="Password"
@@ -82,7 +100,6 @@ export default function RegisterScreen() {
         value={formData.password}
         onChangeText={(text) => handleChange('password', text)}
       />
-
       <TextInput
         style={styles.input}
         placeholder="Phone"
@@ -90,14 +107,12 @@ export default function RegisterScreen() {
         value={formData.phone}
         onChangeText={(text) => handleChange('phone', text)}
       />
-
       <TextInput
         style={styles.input}
         placeholder="Date of Birth (YYYY-MM-DD)"
         value={formData.dob}
         onChangeText={(text) => handleChange('dob', text)}
       />
-
       <TextInput
         style={styles.input}
         placeholder="Gender"
@@ -105,17 +120,22 @@ export default function RegisterScreen() {
         onChangeText={(text) => handleChange('gender', text)}
       />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Profile Image URL"
-        value={formData.profileImageUrl}
-        onChangeText={(text) => handleChange('profileImageUrl', text)}
-      />
+      {/* Image Picker */}
+      <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
+        <Text style={styles.imagePickerText}>
+          {formData.profileImageUrl ? 'Change Profile Image' : 'Upload Profile Image'}
+        </Text>
+      </TouchableOpacity>
+      {formData.profileImageUrl ? (
+        <Image
+          source={{ uri: formData.profileImageUrl }}
+          style={{ width: 100, height: 100, borderRadius: 50, alignSelf: 'center', marginBottom: 10 }}
+        />
+      ) : null}
 
       <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading}>
         {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Register</Text>}
       </TouchableOpacity>
-
       <TouchableOpacity onPress={() => router.push('/navigation/loginScreen')}>
         <Text style={styles.linkText}>Already have an account? Login</Text>
       </TouchableOpacity>

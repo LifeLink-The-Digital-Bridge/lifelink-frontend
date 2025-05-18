@@ -39,6 +39,18 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 10,
   },
+  imagePicker: {
+  backgroundColor: '#eee',
+  padding: 10,
+  borderRadius: 8,
+  alignItems: 'center',
+  marginBottom: 10,
+},
+imagePickerText: {
+  color: '#333',
+  fontSize: 16,
+},
+
 });
 
 export default styles;
