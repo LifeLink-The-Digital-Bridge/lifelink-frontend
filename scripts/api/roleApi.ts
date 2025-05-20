@@ -1,9 +1,12 @@
 import * as SecureStore from 'expo-secure-store';
+import Constants from 'expo-constants';
+
+const BASE_URL = Constants.expoConfig?.extra?.API_URL;
 
 export const addUserRole = async () => {
   const token = await SecureStore.getItemAsync('jwt');
-  const response = await fetch('http:///donors/addRole', {
-    method: 'POST',
+  const response = await fetch(`${BASE_URL}/donors/addRole`, {
+    method: 'PUT',
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
@@ -22,7 +25,7 @@ export const addUserRole = async () => {
 export const refreshAuthTokens = async () => {
   const refreshToken = await SecureStore.getItemAsync('refreshToken');
   
-  const response = await fetch(`http://192.168.1.26:8080/auth/refresh?refreshToken=${refreshToken}`, {
+  const response = await fetch(`${BASE_URL}/auth/refresh?refreshToken=${refreshToken}`, {
     method: 'POST'
   });
 

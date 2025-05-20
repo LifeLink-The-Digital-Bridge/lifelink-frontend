@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Alert, Text, View, ActivityIndicator, ScrollView, TouchableOpacity } from 'react-native';
 import { callSampleEndpoint } from '../../scripts/api/sampleApi';
-import { useAuth } from '../utils/auth-context';
 import { router } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { MaterialIcons, Feather } from '@expo/vector-icons';
@@ -9,7 +8,7 @@ import styles from '../../constants/styles/dashboardStyles';
 import { addUserRole, refreshAuthTokens } from '../../scripts/api/roleApi';
 import AppLayout from '../../components/AppLayout';
 import ProfileCard from '../../components/ProfileCard';
-
+import { AuthProvider, useAuth } from '../utils/auth-context';
 
 
 const Dashboard = () => {
@@ -29,6 +28,13 @@ const Dashboard = () => {
     lastDonation: '',
     location: ''
   });
+  
+  const { isAuthenticated } = useAuth();
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.replace('/navigation/loginScreen');
+    }
+}, [isAuthenticated]);
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -108,9 +114,9 @@ const handleDonate = async () => {
         SecureStore.setItemAsync('dob', newTokens.dob),
       ]);
 
-      setIsAuthenticated(true);
-
+      
       roles = newTokens.roles;
+      setIsAuthenticated(true);
     }
 
     const dob = await SecureStore.getItemAsync('dob');
@@ -146,7 +152,8 @@ const handleDonate = async () => {
     );
   }
 
-  return (
+  return (    
+  <AuthProvider> 
     <AppLayout title="Dashboard">
       <ScrollView style={styles.bg} contentContainerStyle={styles.scrollContent}>
         <ProfileCard
@@ -169,20 +176,19 @@ const handleDonate = async () => {
       <Text style={styles.buttonText}>Call Sample Endpoint</Text>
     </TouchableOpacity>
 
-    {/* Donor Actions */}
     {donorId ? (
       <>
         <TouchableOpacity
           style={[styles.button, { backgroundColor: "#0984e3" }]}
-          onPress={() => router.push('./donate')}
+          onPress={() => router.push('/navigation/donorScreen')}
           activeOpacity={0.8}
         >
           <MaterialIcons name="add-circle-outline" size={20} color="#fff" />
           <Text style={styles.buttonText}>Donate</Text>
         </TouchableOpacity>
-        <TouchableOpacity
+        <TouchableOpacity 
           style={[styles.button, { backgroundColor: "#00b894" }]}
-          onPress={() => router.push({ pathname: './donorScreen', params: { mode: 'update' } })}
+          onPress={() => router.push({ pathname: '/navigation/donorScreen', params: { mode: 'update' } })}
           activeOpacity={0.8}
         >
           <Feather name="edit" size={20} color="#fff" />
@@ -192,7 +198,7 @@ const handleDonate = async () => {
     ) : (
       <TouchableOpacity
         style={[styles.button, { backgroundColor: "#00b894" }]}
-        onPress={() => router.push('./donorscreen')}
+        onPress={() => router.push('/navigation/donorScreen')}
         activeOpacity={0.8}
       >
         <MaterialIcons name="person-add-alt" size={20} color="#fff" />
@@ -218,6 +224,8 @@ const handleDonate = async () => {
         )}
       </ScrollView>
     </AppLayout>
+    </AuthProvider>
+  
   );
 };
 

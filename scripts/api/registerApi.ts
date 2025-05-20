@@ -21,9 +21,10 @@ export interface RegisterResponse {
   roles: string[];
   username: string;
 }
-
+import Constants from 'expo-constants';
+const BASE_URL = Constants.expoConfig?.extra?.API_URL;
 export const registerUser = async (payload: RegisterRequest): Promise<RegisterResponse> => {
-  const response = await fetch('http://192.168.1.26:8080/users/register', {
+  const response = await fetch(`${BASE_URL}/users/register`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

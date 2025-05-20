@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { loginUser } from '../../scripts/api/loginApi';
 import styles from '../../constants/styles/loginStyles';
 import * as SecureStore from 'expo-secure-store';
+import { useAuth } from '../utils/auth-context';
 
 function getLoginType(identifier: string): 'username' | 'email' {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -14,6 +15,7 @@ export default function LoginScreen() {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const { setIsAuthenticated } = useAuth();
 
   const handleLogin = async () => {
     if (!identifier || !password) {
@@ -34,7 +36,7 @@ export default function LoginScreen() {
       await SecureStore.setItemAsync('roles', JSON.stringify(response.roles));
       await SecureStore.setItemAsync('gender', response.gender)
       await SecureStore.setItemAsync('dob', response.dob);
-
+      setIsAuthenticated(true)
       Alert.alert('Login Successful', `Welcome, ${response.username}`);
       router.push("../dashboard");
     } catch (error: any) {

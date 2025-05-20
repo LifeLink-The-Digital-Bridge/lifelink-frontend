@@ -27,11 +27,13 @@ export interface RegisterDonorRequest {
   eligibilityCriteria: EligibilityCriteriaDTO;
   consentForm: ConsentFormDTO;
 }
+import Constants from 'expo-constants';
+const BASE_URL = Constants.expoConfig?.extra?.API_URL;
 
 export const registerDonor = async (payload: RegisterDonorRequest) => {
   const token = await SecureStore.getItemAsync('jwt');
   const userId = await SecureStore.getItemAsync('userId');
-  const response = await fetch('http:///donors/register', {
+  const response = await fetch(`${BASE_URL}/donors/register`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,

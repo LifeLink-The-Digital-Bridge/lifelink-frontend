@@ -15,8 +15,13 @@ export interface LoginResponse {
   dob: string;
 }
 
+import Constants from 'expo-constants';
+const BASE_URL = Constants.expoConfig?.extra?.API_URL;
+console.log('All env:', process.env);
+console.log('BASE_URL:', process.env.EXPO_PUBLIC_API_URL);
+
 export const loginUser = async (payload: LoginRequest): Promise<LoginResponse> => {
-  const response = await fetch('http:///auth/login', {
+  const response = await fetch(`${BASE_URL}/auth/login`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

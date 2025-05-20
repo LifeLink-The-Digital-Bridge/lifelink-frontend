@@ -1,50 +1,41 @@
-export interface RegisterDonorRequest {
-  registrationDate: string;
+import * as SecureStore from 'expo-secure-store';
+
+export type DonationType = 'BLOOD' | 'ORGAN' | 'TISSUE' | 'STEM_CELL';
+export type BloodType = 'A_POSITIVE' | 'A_NEGATIVE' | 'B_POSITIVE'| 'B_NEGATIVE'|'O_POSITIVE'| 'O_NEGATIVE'|
+    'AB_POSITIVE'| 'AB_NEGATIVE';
+export type OrganType = 'HEART' | 'LIVER' | 'KIDNEY' | 'LUNG' | 'PANCREAS' | 'INTESTINE';
+export type TissueType =
+  | 'BONE' | 'SKIN' | 'CORNEA' | 'VEIN' | 'TENDON' | 'LIGAMENT';
+export type StemCellType =
+  | 'PERIPHERAL_BLOOD' | 'BONE_MARROW' | 'CORD_BLOOD';
+  
+export interface DonationRequest {
+  donorId: string;
+  donationType: DonationType;
+  donationDate: string;
+  quantity?: number;
   status: string;
-  medicalDetails: {
-    hemoglobinLevel: number;
-    bloodPressure: string;
-    hasDiseases: boolean;
-    takingMedication: boolean;
-    diseaseDescription: string;
-    recentlyIll: boolean;
-    isPregnant?: boolean;
-  };
-  eligibilityCriteria: {
-    ageEligible: boolean;
-    age: number;
-    dob: string;
-    weightEligible: boolean;
-    weight: number;
-    medicalClearance: boolean;
-    recentTattooOrPiercing: boolean;
-    recentTravel: boolean;
-    recentTravelDetails: string;
-    recentVaccination: boolean;
-    recentSurgery: boolean;
-    chronicDiseases: string;
-    allergies: string;
-    lastDonationDate: string | null;
-  };
-  consentForm: {
-    userId: string;
-    isConsented: boolean;
-    consentedAt: string;
-    consentType: string;
-  };
-  location: {
-    city: string;
-    state: string;
-    country: string;
-    pincode: string;
-  };
+  locationId: number;
+  bloodType?: BloodType;
+  organType?: OrganType;
+  isCompatible?: boolean;
+  tissueType?: string;
+  stemCellType?: string;
 }
 
-export async function registerDonation(payload : RegisterDonorRequest) {
-  const response = await fetch('http:///donors/register', {
+import Constants from 'expo-constants';
+const BASE_URL = Constants.expoConfig?.extra?.API_URL;
+
+export async function registerDonation(payload : DonationRequest) {
+  const token = await SecureStore.getItemAsync('jwt');
+  const userId = await SecureStore.getItemAsync('userId');
+  const response = await fetch(`${BASE_URL}/donors/donate`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'id': userId || '',
+      'Content-Type': 'application/json'
+    },    body: JSON.stringify(payload),
   });
   if (!response.ok) throw new Error(await response.text());
   return await response.json();

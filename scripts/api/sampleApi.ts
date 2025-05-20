@@ -1,10 +1,13 @@
 import { getJwt } from '../../app/utils/JWT';
+import Constants from 'expo-constants';
+
+const BASE_URL = Constants.expoConfig?.extra?.API_URL;
 
 export const callSampleEndpoint = async () => {
   const jwt = await getJwt();
   if (!jwt) throw new Error('Not authenticated!');
 
-  const response = await fetch('http:///users/sample', {
+  const response = await fetch(`${BASE_URL}/users/sample`, {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${jwt}`,

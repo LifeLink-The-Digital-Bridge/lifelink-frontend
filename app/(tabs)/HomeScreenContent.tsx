@@ -2,9 +2,11 @@ import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { Link } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
+import AppLayout from '../../components/AppLayout';
 
 export default function HomeScreenContent() {
   return (
+    <AppLayout>
     <View style={homeStyles.container}>
       <Image
         source={require('../../assets/images/lifelink_logo.jpg')}
@@ -26,6 +28,8 @@ export default function HomeScreenContent() {
       </Link>
       <Text style={homeStyles.footer}>© {new Date().getFullYear()} LifeLink</Text>
     </View>
+    </AppLayout>
+
   );
 }
 

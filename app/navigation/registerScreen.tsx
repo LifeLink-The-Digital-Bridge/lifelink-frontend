@@ -1,10 +1,18 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator, ScrollView, Image } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import { Picker } from '@react-native-picker/picker';
 import styles from '../../constants/styles/loginStyles';
 import { router } from 'expo-router';
 import { registerUser } from '../../scripts/api/registerApi'; 
 import type { RegisterRequest } from '../../scripts/api/registerApi'; 
+
+const genderOptions = [
+  { label: 'Select Gender', value: '' },
+  { label: 'Male', value: 'MALE' },
+  { label: 'Female', value: 'FEMALE' },
+  { label: 'Other', value: 'OTHER' },
+];
 
 export default function RegisterScreen() {
   const [formData, setFormData] = useState<RegisterRequest>({
@@ -14,7 +22,7 @@ export default function RegisterScreen() {
     password: '',
     phone: '',
     dob: '',
-    gender: '',
+    gender: '', 
     profileImageUrl: '', 
   });
 
@@ -113,14 +121,18 @@ export default function RegisterScreen() {
         value={formData.dob}
         onChangeText={(text) => handleChange('dob', text)}
       />
-      <TextInput
-        style={styles.input}
-        placeholder="Gender"
-        value={formData.gender}
-        onChangeText={(text) => handleChange('gender', text)}
-      />
 
-      {/* Image Picker */}
+      <View style={[styles.input, { padding: 0 }]}>
+        <Picker
+          selectedValue={formData.gender}
+          onValueChange={(value) => handleChange('gender', value)}
+        >
+          {genderOptions.map((option) => (
+            <Picker.Item label={option.label} value={option.value} key={option.value} />
+          ))}
+        </Picker>
+      </View>
+
       <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
         <Text style={styles.imagePickerText}>
           {formData.profileImageUrl ? 'Change Profile Image' : 'Upload Profile Image'}
