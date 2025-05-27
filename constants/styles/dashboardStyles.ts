@@ -17,6 +17,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 10,
     alignSelf: 'flex-start',
+    marginVertical: 10,
   },
   input: {
     width: '100%',
@@ -83,6 +84,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#f4fafd',
+  },
+
+  mapContainer: {
+    height: 220,
+    borderRadius: 12,
+    overflow: "hidden",
+    marginBottom: 16,
+    backgroundColor: "#e3eafc",
+    position: "relative", 
+  },
+  mapLoadingContainer: {
+    height: 220,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
 

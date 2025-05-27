@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const AppLayout = ({ children, title = "LifeLink Dashboard" }: { children: React.ReactNode, title?: string }) => (
+const AppLayout = ({ children, title = "" }: { children: React.ReactNode, title?: string }) => (
   <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
     <StatusBar barStyle="dark-content" backgroundColor="#f6f8fa" />
     <View style={styles.container}>

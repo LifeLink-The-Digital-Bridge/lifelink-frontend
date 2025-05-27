@@ -22,6 +22,7 @@ const Dashboard = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [donorId, setDonorId] = useState<string | null>(null);
 
   const [userData, setUserData] = useState({
     username: "",
@@ -70,7 +71,6 @@ const Dashboard = () => {
     };
     loadUserData();
   }, []);
-  const [donorId, setDonorId] = useState<string | null>(null);
   useEffect(() => {
     const fetchDonorId = async () => {
       const id = await SecureStore.getItemAsync("donorId");
@@ -138,10 +138,26 @@ const Dashboard = () => {
   };
 
   const handleLogout = async () => {
+    const keysToDelete = [
+      "jwt",
+      "refreshToken",
+      "userId",
+      "email",
+      "username",
+      "roles",
+      "gender",
+      "dob",
+      "donorId",
+      "donorData",
+    ];
+
+    await Promise.all(
+      keysToDelete.map((key) => SecureStore.deleteItemAsync(key))
+    );
+
     await logout();
     router.replace("/");
   };
-
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -225,6 +241,15 @@ const Dashboard = () => {
               >
                 <Feather name="list" size={20} color="#fff" />
                 <Text style={styles.buttonText}>My Donations</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.button, { backgroundColor: "#636e72" }]}
+                onPress={() => router.push("/navigation/mapScreen")}
+                activeOpacity={0.8}
+              >
+                <Feather name="list" size={20} color="#fff" />
+                <Text style={styles.buttonText}>Maps</Text>
               </TouchableOpacity>
 
               <TouchableOpacity

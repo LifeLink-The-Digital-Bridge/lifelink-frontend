@@ -1,21 +1,25 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   Alert,
   Text,
+  Button,
   View,
   ScrollView,
   TextInput,
   Switch,
   TouchableOpacity,
   ActivityIndicator,
-} from 'react-native';
-import { AuthProvider, useAuth } from '../utils/auth-context';
-import { router } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
-import styles from '../../constants/styles/dashboardStyles';
-import { registerDonor } from '../../scripts/api/donorApi';
-import AppLayout from '../../components/AppLayout';
-import { addUserRole, refreshAuthTokens } from '../../scripts/api/roleApi';
+} from "react-native";
+import { useLocalSearchParams } from "expo-router";
+import { AuthProvider, useAuth } from "../utils/auth-context";
+import { router, useRouter } from "expo-router";
+import * as SecureStore from "expo-secure-store";
+import styles from "../../constants/styles/dashboardStyles";
+import { registerDonor } from "../../scripts/api/donorApi";
+import AppLayout from "../../components/AppLayout";
+import { addUserRole, refreshAuthTokens } from "../../scripts/api/roleApi";
+import MapView, { Marker } from "react-native-maps";
+import * as Location from "expo-location";
 
 const calculateAge = (dobString: string): number => {
   const today = new Date();
@@ -33,7 +37,7 @@ const DonorScreen: React.FC = () => {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      router.replace('/navigation/loginScreen');
+      router.replace("/navigation/loginScreen");
     }
   }, [isAuthenticated]);
   const [roleLoading, setRoleLoading] = useState(true);
@@ -41,7 +45,7 @@ const DonorScreen: React.FC = () => {
     const ensureDonorRole = async () => {
       setRoleLoading(true);
       try {
-        let rolesString = await SecureStore.getItemAsync('roles');
+        let rolesString = await SecureStore.getItemAsync("roles");
         let roles: string[] = [];
         try {
           roles = rolesString ? JSON.parse(rolesString) : [];
@@ -49,27 +53,27 @@ const DonorScreen: React.FC = () => {
           roles = [];
         }
 
-        if (!roles.includes('DONOR')) {
-          // Add role
+        if (!roles.includes("DONOR")) {
           await addUserRole();
-          // Refresh tokens
           const newTokens = await refreshAuthTokens();
 
-          // Update SecureStore with new tokens and roles
           await Promise.all([
-            SecureStore.setItemAsync('jwt', newTokens.accessToken),
-            SecureStore.setItemAsync('refreshToken', newTokens.refreshToken),
-            SecureStore.setItemAsync('email', newTokens.email),
-            SecureStore.setItemAsync('username', newTokens.username),
-            SecureStore.setItemAsync('roles', JSON.stringify(newTokens.roles)),
-            SecureStore.setItemAsync('userId', newTokens.id),
-            SecureStore.setItemAsync('gender', newTokens.gender),
-            SecureStore.setItemAsync('dob', newTokens.dob),
+            SecureStore.setItemAsync("jwt", newTokens.accessToken),
+            SecureStore.setItemAsync("refreshToken", newTokens.refreshToken),
+            SecureStore.setItemAsync("email", newTokens.email),
+            SecureStore.setItemAsync("username", newTokens.username),
+            SecureStore.setItemAsync("roles", JSON.stringify(newTokens.roles)),
+            SecureStore.setItemAsync("userId", newTokens.id),
+            SecureStore.setItemAsync("gender", newTokens.gender),
+            SecureStore.setItemAsync("dob", newTokens.dob),
           ]);
         }
       } catch (error: any) {
-        Alert.alert('Role Error', error.message || 'Failed to assign donor role');
-        router.replace('/navigation/loginScreen');
+        Alert.alert(
+          "Role Error",
+          error.message || "Failed to assign donor role"
+        );
+        router.replace("/navigation/loginScreen");
         return;
       } finally {
         setRoleLoading(false);
@@ -79,80 +83,139 @@ const DonorScreen: React.FC = () => {
     ensureDonorRole();
   }, []);
 
-
   const [loading, setLoading] = useState<boolean>(false);
 
   const [donorData, setDonorData] = useState<any>(null);
 
-  const [hemoglobinLevel, setHemoglobinLevel] = useState<string>('');
-  const [bloodPressure, setBloodPressure] = useState<string>('');
+  const [hemoglobinLevel, setHemoglobinLevel] = useState<string>("");
+  const [bloodPressure, setBloodPressure] = useState<string>("");
   const [hasDiseases, setHasDiseases] = useState<boolean>(false);
   const [takingMedication, setTakingMedication] = useState<boolean>(false);
-  const [diseaseDescription, setDiseaseDescription] = useState<string>('');
+  const [diseaseDescription, setDiseaseDescription] = useState<string>("");
   const [recentlyIll, setRecentlyIll] = useState<boolean>(false);
   const [isPregnant, setIsPregnant] = useState<boolean>(false);
 
-  const [dob, setDob] = useState<string>('');
+  const [dob, setDob] = useState<string>("");
   const [age, setAge] = useState<number | null>(null);
-  const [weight, setWeight] = useState<string>('');
+  const [weight, setWeight] = useState<string>("");
   const [weightEligible, setWeightEligible] = useState<boolean>(false);
   const [medicalClearance, setMedicalClearance] = useState<boolean>(false);
-  const [recentTattooOrPiercing, setRecentTattooOrPiercing] = useState<boolean>(false);
+  const [recentTattooOrPiercing, setRecentTattooOrPiercing] =
+    useState<boolean>(false);
   const [recentTravel, setRecentTravel] = useState<boolean>(false);
-  const [recentTravelDetails, setRecentTravelDetails] = useState<string>('');
+  const [recentTravelDetails, setRecentTravelDetails] = useState<string>("");
   const [recentVaccination, setRecentVaccination] = useState<boolean>(false);
   const [recentSurgery, setRecentSurgery] = useState<boolean>(false);
-  const [chronicDiseases, setChronicDiseases] = useState<string>('');
-  const [allergies, setAllergies] = useState<string>('');
-  const [lastDonationDate, setLastDonationDate] = useState<string>('');
+  const [chronicDiseases, setChronicDiseases] = useState<string>("");
+  const [allergies, setAllergies] = useState<string>("");
+  const [lastDonationDate, setLastDonationDate] = useState<string>("");
 
   const [isConsented, setIsConsented] = useState<boolean>(false);
 
-  const [city, setCity] = useState<string>('');
-  const [stateVal, setStateVal] = useState<string>('');
-  const [country, setCountry] = useState<string>('');
-  const [pincode, setPincode] = useState<string>('');
+  const [city, setCity] = useState<string>("");
+  const [stateVal, setStateVal] = useState<string>("");
+  const [country, setCountry] = useState<string>("");
+  const [pincode, setPincode] = useState<string>("");
 
-  const [gender, setGender] = useState<string>('');
-  const [userId, setUserId] = useState<string>('');
+  const [gender, setGender] = useState<string>("");
+  const [userId, setUserId] = useState<string>("");
+  const [mapRegion, setMapRegion] = useState<{
+    latitude: number;
+    longitude: number;
+    latitudeDelta: number;
+    longitudeDelta: number;
+  } | null>(null);
+
+  const [marker, setMarker] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+  const [locationLoading, setLocationLoading] = useState(true);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  useEffect(() => {
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        setLocationError("Permission to access location was denied");
+        setLocationLoading(false);
+        return;
+      }
+      let loc = await Location.getCurrentPositionAsync({});
+      const region = {
+        latitude: loc.coords.latitude,
+        longitude: loc.coords.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      };
+      setMapRegion(region);
+      setMarker({
+        latitude: loc.coords.latitude,
+        longitude: loc.coords.longitude,
+      });
+      setLocationLoading(false);
+    })();
+  }, []);
+  useEffect(() => {
+    if (marker) {
+      (async () => {
+        let [place] = await Location.reverseGeocodeAsync(marker);
+        setCity(place.city || "");
+        setStateVal(place.region || "");
+        setCountry(place.country || "");
+        setPincode(place.postalCode || "");
+      })();
+    }
+  }, [marker]);
 
   useEffect(() => {
     const loadDonorData = async () => {
-      const data = await SecureStore.getItemAsync('donorData');
+      const data = await SecureStore.getItemAsync("donorData");
       if (data) {
         const donor = JSON.parse(data);
         setDonorData(donor);
 
-        setHemoglobinLevel(donor.medicalDetails?.hemoglobinLevel?.toString() ?? '');
-        setBloodPressure(donor.medicalDetails?.bloodPressure ?? '');
+        setHemoglobinLevel(
+          donor.medicalDetails?.hemoglobinLevel?.toString() ?? ""
+        );
+        setBloodPressure(donor.medicalDetails?.bloodPressure ?? "");
         setHasDiseases(donor.medicalDetails?.hasDiseases ?? false);
         setTakingMedication(donor.medicalDetails?.takingMedication ?? false);
-        setDiseaseDescription(donor.medicalDetails?.diseaseDescription ?? '');
+        setDiseaseDescription(donor.medicalDetails?.diseaseDescription ?? "");
         setRecentlyIll(donor.medicalDetails?.recentlyIll ?? false);
         setIsPregnant(donor.medicalDetails?.isPregnant ?? false);
 
-        setDob(donor.eligibilityCriteria?.dob ?? '');
+        setDob(donor.eligibilityCriteria?.dob ?? "");
         setAge(donor.eligibilityCriteria?.age ?? null);
         setWeight(
           donor.eligibilityCriteria && donor.eligibilityCriteria.weight != null
-            ? donor.eligibilityCriteria.weight.toString() : '');
+            ? donor.eligibilityCriteria.weight.toString()
+            : ""
+        );
         setWeightEligible(donor.eligibilityCriteria?.weightEligible ?? false);
-        setMedicalClearance(donor.eligibilityCriteria?.medicalClearance ?? false);
-        setRecentTattooOrPiercing(donor.eligibilityCriteria?.recentTattooOrPiercing ?? false);
+        setMedicalClearance(
+          donor.eligibilityCriteria?.medicalClearance ?? false
+        );
+        setRecentTattooOrPiercing(
+          donor.eligibilityCriteria?.recentTattooOrPiercing ?? false
+        );
         setRecentTravel(donor.eligibilityCriteria?.recentTravel ?? false);
-        setRecentTravelDetails(donor.eligibilityCriteria?.recentTravelDetails ?? '');
-        setRecentVaccination(donor.eligibilityCriteria?.recentVaccination ?? false);
+        setRecentTravelDetails(
+          donor.eligibilityCriteria?.recentTravelDetails ?? ""
+        );
+        setRecentVaccination(
+          donor.eligibilityCriteria?.recentVaccination ?? false
+        );
         setRecentSurgery(donor.eligibilityCriteria?.recentSurgery ?? false);
-        setChronicDiseases(donor.eligibilityCriteria?.chronicDiseases ?? '');
-        setAllergies(donor.eligibilityCriteria?.allergies ?? '');
-        setLastDonationDate(donor.eligibilityCriteria?.lastDonationDate ?? '');
+        setChronicDiseases(donor.eligibilityCriteria?.chronicDiseases ?? "");
+        setAllergies(donor.eligibilityCriteria?.allergies ?? "");
+        setLastDonationDate(donor.eligibilityCriteria?.lastDonationDate ?? "");
 
         setIsConsented(donor.consentForm?.isConsented ?? false);
 
-        setCity(donor.location?.city ?? '');
-        setStateVal(donor.location?.state ?? '');
-        setCountry(donor.location?.country ?? '');
-        setPincode(donor.location?.pincode ?? '');
+        setCity(donor.location?.city ?? "");
+        setStateVal(donor.location?.state ?? "");
+        setCountry(donor.location?.country ?? "");
+        setPincode(donor.location?.pincode ?? "");
       }
     };
     loadDonorData();
@@ -165,9 +228,9 @@ const DonorScreen: React.FC = () => {
 
   useEffect(() => {
     const fetchUserData = async () => {
-      const storedGender = await SecureStore.getItemAsync('gender');
+      const storedGender = await SecureStore.getItemAsync("gender");
       if (storedGender) setGender(storedGender);
-      const storedUserId = await SecureStore.getItemAsync('userId');
+      const storedUserId = await SecureStore.getItemAsync("userId");
       if (storedUserId) setUserId(storedUserId);
     };
     fetchUserData();
@@ -175,7 +238,7 @@ const DonorScreen: React.FC = () => {
 
   useEffect(() => {
     const fetchDob = async () => {
-      const storedDob = await SecureStore.getItemAsync('dob');
+      const storedDob = await SecureStore.getItemAsync("dob");
       if (storedDob) {
         setDob(storedDob);
         setAge(calculateAge(storedDob));
@@ -183,6 +246,20 @@ const DonorScreen: React.FC = () => {
     };
     fetchDob();
   }, []);
+  const [location, setLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+  const router = useRouter();
+  const params = useLocalSearchParams();
+  useEffect(() => {
+    if (params.latitude && params.longitude) {
+      setLocation({
+        latitude: Number(params.latitude),
+        longitude: Number(params.longitude),
+      });
+    }
+  }, [params.latitude, params.longitude]);
 
   const isFormValid = (): boolean => {
     if (
@@ -216,7 +293,7 @@ const DonorScreen: React.FC = () => {
         takingMedication,
         diseaseDescription,
         recentlyIll,
-        ...(gender && gender.toUpperCase() === 'FEMALE' && { isPregnant }),
+        ...(gender && gender.toUpperCase() === "FEMALE" && { isPregnant }),
       },
       eligibilityCriteria: {
         ageEligible: age !== null ? age >= 18 : false,
@@ -244,31 +321,37 @@ const DonorScreen: React.FC = () => {
         state: stateVal,
         country,
         pincode,
-      }
+      },
     };
 
-    return JSON.stringify(current) !== JSON.stringify({
-      medicalDetails: donorData.medicalDetails,
-      eligibilityCriteria: donorData.eligibilityCriteria,
-      consentForm: {
-        userId: donorData.consentForm.userId,
-        isConsented: donorData.consentForm.isConsented,
-        consentType: donorData.consentForm.consentType,
-      },
-      location: donorData.location,
-    });
+    return (
+      JSON.stringify(current) !==
+      JSON.stringify({
+        medicalDetails: donorData.medicalDetails,
+        eligibilityCriteria: donorData.eligibilityCriteria,
+        consentForm: {
+          userId: donorData.consentForm.userId,
+          isConsented: donorData.consentForm.isConsented,
+          consentType: donorData.consentForm.consentType,
+        },
+        location: donorData.location,
+      })
+    );
   };
 
   const handleSubmit = async () => {
     if (!isFormValid()) {
-      Alert.alert('Incomplete Form', 'Please fill all required fields.');
+      Alert.alert("Incomplete Form", "Please fill all required fields.");
       return;
     }
     setLoading(true);
     try {
       if (!isFormChanged()) {
-        Alert.alert('No changes detected', 'Using previously saved donor details.');
-        router.replace('/navigation/donate');
+        Alert.alert(
+          "No changes detected",
+          "Using previously saved donor details."
+        );
+        router.replace("/navigation/donate");
         return;
       }
 
@@ -282,7 +365,7 @@ const DonorScreen: React.FC = () => {
           takingMedication,
           diseaseDescription,
           recentlyIll,
-          ...(gender && gender.toUpperCase() === 'FEMALE' && { isPregnant }),
+          ...(gender && gender.toUpperCase() === "FEMALE" && { isPregnant }),
         },
         eligibilityCriteria: {
           ageEligible: age !== null ? age >= 18 : false,
@@ -311,20 +394,25 @@ const DonorScreen: React.FC = () => {
           state: stateVal,
           country,
           pincode,
-        }
+        },
       };
 
       const response = await registerDonor(payload);
       if (response && response.id) {
-        await SecureStore.setItemAsync('donorId', response.id);
-        await SecureStore.setItemAsync('donorData', JSON.stringify(response));
-        Alert.alert('Success', 'Your donor details have been saved!');
-        router.replace('/navigation/donate');
+        await SecureStore.setItemAsync("donorId", response.id);
+        await SecureStore.setItemAsync("donorData", JSON.stringify(response));
+        Alert.alert("Success", "Your donor details have been saved!");
+        router.replace("/navigation/donate");
       } else {
-        throw new Error('Registration succeeded but donorId missing in response.');
+        throw new Error(
+          "Registration succeeded but donorId missing in response."
+        );
       }
     } catch (error: any) {
-      Alert.alert('Registration Failed', error.message || 'Something went wrong!');
+      Alert.alert(
+        "Registration Failed",
+        error.message || "Something went wrong!"
+      );
     } finally {
       setLoading(false);
     }
@@ -332,8 +420,11 @@ const DonorScreen: React.FC = () => {
 
   return (
     <AuthProvider>
-      <AppLayout>
-        <ScrollView style={styles.bg} contentContainerStyle={styles.scrollContent}>
+      <AppLayout title="Donor Registration">
+        <ScrollView
+          style={styles.bg}
+          contentContainerStyle={styles.scrollContent}
+        >
           <Text style={styles.sectionTitle}>Medical Details</Text>
           <TextInput
             style={styles.input}
@@ -362,13 +453,16 @@ const DonorScreen: React.FC = () => {
           )}
           <View style={styles.switchRow}>
             <Text style={styles.label}>Taking Medication?</Text>
-            <Switch value={takingMedication} onValueChange={setTakingMedication} />
+            <Switch
+              value={takingMedication}
+              onValueChange={setTakingMedication}
+            />
           </View>
           <View style={styles.switchRow}>
             <Text style={styles.label}>Recently Ill?</Text>
             <Switch value={recentlyIll} onValueChange={setRecentlyIll} />
           </View>
-          {gender && gender.toUpperCase() === 'FEMALE' && (
+          {gender && gender.toUpperCase() === "FEMALE" && (
             <View style={styles.switchRow}>
               <Text style={styles.label}>Currently Pregnant?</Text>
               <Switch value={isPregnant} onValueChange={setIsPregnant} />
@@ -379,11 +473,15 @@ const DonorScreen: React.FC = () => {
           <TextInput
             value={dob}
             editable={false}
-            style={{ backgroundColor: '#f1f2f6', color: '#636e72', marginBottom: 8 }}
+            style={{
+              backgroundColor: "#f1f2f6",
+              color: "#636e72",
+              marginBottom: 8,
+            }}
           />
           {age !== null && (
-            <Text style={{ color: age >= 18 ? 'green' : 'red' }}>
-              Age: {age} ({age >= 18 ? 'Eligible' : 'Not eligible'})
+            <Text style={{ color: age >= 18 ? "green" : "red" }}>
+              Age: {age} ({age >= 18 ? "Eligible" : "Not eligible"})
             </Text>
           )}
           <TextInput
@@ -393,23 +491,31 @@ const DonorScreen: React.FC = () => {
             value={weight}
             onChangeText={setWeight}
           />
-          <Text style={{
-            color: weight ? (weightEligible ? 'green' : 'red') : '#636e72',
-            marginBottom: 8
-          }}>
+          <Text
+            style={{
+              color: weight ? (weightEligible ? "green" : "red") : "#636e72",
+              marginBottom: 8,
+            }}
+          >
             {weight
               ? weightEligible
-                ? 'Eligible for donation (weight ≥ 50kg)'
-                : 'Not eligible (weight < 50kg)'
-              : ''}
+                ? "Eligible for donation (weight ≥ 50kg)"
+                : "Not eligible (weight < 50kg)"
+              : ""}
           </Text>
           <View style={styles.switchRow}>
             <Text style={styles.label}>Medical Clearance?</Text>
-            <Switch value={medicalClearance} onValueChange={setMedicalClearance} />
+            <Switch
+              value={medicalClearance}
+              onValueChange={setMedicalClearance}
+            />
           </View>
           <View style={styles.switchRow}>
             <Text style={styles.label}>Recent Tattoo or Piercing?</Text>
-            <Switch value={recentTattooOrPiercing} onValueChange={setRecentTattooOrPiercing} />
+            <Switch
+              value={recentTattooOrPiercing}
+              onValueChange={setRecentTattooOrPiercing}
+            />
           </View>
           <View style={styles.switchRow}>
             <Text style={styles.label}>Recent Travel?</Text>
@@ -423,7 +529,10 @@ const DonorScreen: React.FC = () => {
           />
           <View style={styles.switchRow}>
             <Text style={styles.label}>Recent Vaccination?</Text>
-            <Switch value={recentVaccination} onValueChange={setRecentVaccination} />
+            <Switch
+              value={recentVaccination}
+              onValueChange={setRecentVaccination}
+            />
           </View>
           <View style={styles.switchRow}>
             <Text style={styles.label}>Recent Surgery?</Text>
@@ -479,25 +588,41 @@ const DonorScreen: React.FC = () => {
             value={pincode}
             onChangeText={setPincode}
           />
+          <View>
+            {/* ...other form fields... */}
+            <Button
+              title={location ? "Change Location" : "Pick Location on Map"}
+              onPress={() => router.push("/navigation/mapScreen")}
+            />
+            {location && (
+              <Text>
+                Selected: {location.latitude}, {location.longitude}
+              </Text>
+            )}
+            {/* ...submit button, which includes location in payload... */}
+          </View>
 
           <TouchableOpacity
             style={[
               styles.button,
-              { backgroundColor: isFormValid() && !loading ? "#00b894" : "#b2bec3" }
+              {
+                backgroundColor:
+                  isFormValid() && !loading ? "#00b894" : "#b2bec3",
+              },
             ]}
             onPress={handleSubmit}
             disabled={!isFormValid() || loading}
             activeOpacity={0.8}
           >
-            {loading
-              ? <ActivityIndicator color="#fff" />
-              : <Text style={styles.buttonText}>Save Donor Details</Text>
-            }
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Save Donor Details</Text>
+            )}
           </TouchableOpacity>
         </ScrollView>
       </AppLayout>
     </AuthProvider>
-
   );
 };
 
