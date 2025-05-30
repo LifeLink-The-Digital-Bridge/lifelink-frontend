@@ -16,7 +16,6 @@ import { router, useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import styles from "../../constants/styles/dashboardStyles";
 import { registerDonor } from "../../scripts/api/donorApi";
-import AppLayout from "../../components/AppLayout";
 import { addUserRole, refreshAuthTokens } from "../../scripts/api/roleApi";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
@@ -37,7 +36,7 @@ const DonorScreen: React.FC = () => {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      router.replace("/navigation/loginScreen");
+      router.replace("../(auth)/loginScreen");
     }
   }, [isAuthenticated]);
   const [roleLoading, setRoleLoading] = useState(true);
@@ -73,7 +72,7 @@ const DonorScreen: React.FC = () => {
           "Role Error",
           error.message || "Failed to assign donor role"
         );
-        router.replace("/navigation/loginScreen");
+        router.replace("/(auth)/loginScreen");
         return;
       } finally {
         setRoleLoading(false);
@@ -351,7 +350,7 @@ const DonorScreen: React.FC = () => {
           "No changes detected",
           "Using previously saved donor details."
         );
-        router.replace("/navigation/donate");
+        router.replace("/navigation/donateScreen");
         return;
       }
 
@@ -402,7 +401,7 @@ const DonorScreen: React.FC = () => {
         await SecureStore.setItemAsync("donorId", response.id);
         await SecureStore.setItemAsync("donorData", JSON.stringify(response));
         Alert.alert("Success", "Your donor details have been saved!");
-        router.replace("/navigation/donate");
+        router.replace("/navigation/donateScreen");
       } else {
         throw new Error(
           "Registration succeeded but donorId missing in response."
@@ -420,7 +419,6 @@ const DonorScreen: React.FC = () => {
 
   return (
     <AuthProvider>
-      <AppLayout title="Donor Registration">
         <ScrollView
           style={styles.bg}
           contentContainerStyle={styles.scrollContent}
@@ -621,7 +619,6 @@ const DonorScreen: React.FC = () => {
             )}
           </TouchableOpacity>
         </ScrollView>
-      </AppLayout>
     </AuthProvider>
   );
 };

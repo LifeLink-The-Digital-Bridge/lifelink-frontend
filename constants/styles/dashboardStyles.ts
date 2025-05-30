@@ -99,6 +99,37 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  searchBarContainer: {
+  marginVertical: 10,
+  paddingHorizontal: 10,
+},
+searchBar: {
+  backgroundColor: "#f1f2f6",
+  borderRadius: 8,
+  padding: 10,
+  fontSize: 16,
+  borderWidth: 1,
+  borderColor: "#dfe4ea",
+},
+searchResultsList: {
+  maxHeight: 200,
+  marginBottom: 10,
+},
+searchResultItem: {
+  backgroundColor: "#fff",
+  padding: 10,
+  borderBottomWidth: 1,
+  borderColor: "#dfe4ea",
+},
+searchResultName: {
+  fontWeight: "bold",
+  fontSize: 16,
+},
+searchResultEmail: {
+  color: "#636e72",
+  fontSize: 14,
+},
+
 });
 
 export default styles;

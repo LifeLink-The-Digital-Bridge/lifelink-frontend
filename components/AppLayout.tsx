@@ -2,21 +2,25 @@ import React from 'react';
 import { View, Text, StyleSheet, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const AppLayout = ({ children, title = "" }: { children: React.ReactNode, title?: string }) => (
+interface AppLayoutProps {
+  children: React.ReactNode;
+  title?: string;
+  hideHeader?: boolean;
+}
+
+const AppLayout = ({ children, title = "", hideHeader = false }: AppLayoutProps) => (
   <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
     <StatusBar barStyle="dark-content" backgroundColor="#f6f8fa" />
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>{title}</Text>
-      </View>
+      {!hideHeader && (
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>{title}</Text>
+        </View>
+      )}
       {/* Main Content */}
       <View style={styles.content}>
         {children}
-      </View>
-      {/* Footer */}
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>© {new Date().getFullYear()} LifeLink</Text>
       </View>
     </View>
   </SafeAreaView>

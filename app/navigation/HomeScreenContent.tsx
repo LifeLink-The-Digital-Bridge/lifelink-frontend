@@ -2,11 +2,9 @@ import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { Link } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
-import AppLayout from '../../components/AppLayout';
 
 export default function HomeScreenContent() {
   return (
-    <AppLayout>
     <View style={homeStyles.container}>
       <Image
         source={require('../../assets/images/lifelink_logo.jpg')}
@@ -16,19 +14,18 @@ export default function HomeScreenContent() {
       <Text style={homeStyles.subtitle}>
         <FontAwesome name="heartbeat" size={18} color="#e17055" /> Connecting donors and recipients across India.
       </Text>
-      <Link href="/navigation/loginScreen" asChild>
+      <Link href="/(auth)/loginScreen" asChild>
         <TouchableOpacity style={homeStyles.button}>
           <Text style={homeStyles.buttonText}>Login</Text>
         </TouchableOpacity>
       </Link>
-      <Link href="/navigation/registerScreen" asChild>
+      <Link href="/(auth)/registerScreen" asChild>
         <TouchableOpacity style={homeStyles.buttonSecondary}>
           <Text style={homeStyles.buttonText}>Register</Text>
         </TouchableOpacity>
       </Link>
       <Text style={homeStyles.footer}>© {new Date().getFullYear()} LifeLink</Text>
     </View>
-    </AppLayout>
 
   );
 }

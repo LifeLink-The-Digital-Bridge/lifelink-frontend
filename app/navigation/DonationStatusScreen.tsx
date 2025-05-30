@@ -3,7 +3,6 @@ import { View, Alert, Text, ScrollView, ActivityIndicator } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import { fetchDonationsByDonorId, Donation } from "../../scripts/api/donationStatusApi";
 import { AuthProvider } from "../utils/auth-context";
-import AppLayout from "../../components/AppLayout";
 import { useAuth } from "../utils/auth-context";
 import { router } from "expo-router";
 import donationStatusStyles from "../../constants/styles/donationStatusStyles";
@@ -16,7 +15,7 @@ const DonationStatusScreen = () => {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      router.replace("/navigation/loginScreen");
+      router.replace("/(auth)/loginScreen");
     }
   }, [isAuthenticated]);
   useEffect(() => {
@@ -43,7 +42,7 @@ const DonationStatusScreen = () => {
           "Role Error",
           error.message || "Failed to check donor role"
         );
-        router.replace("/navigation/loginScreen");
+        router.replace("/(auth)/loginScreen");
         return;
       } finally {
         setRoleLoading(false);
@@ -91,7 +90,6 @@ const DonationStatusScreen = () => {
 
   return (
     <AuthProvider>
-      <AppLayout>
         <ScrollView style={donationStatusStyles.container}>
           {donations.map((donation, idx) => (
             <View key={idx} style={donationStatusStyles.card}>
@@ -162,7 +160,6 @@ const DonationStatusScreen = () => {
             </View>
           ))}
         </ScrollView>
-      </AppLayout>
     </AuthProvider>
   );
 };

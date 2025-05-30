@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Picker } from "@react-native-picker/picker";
 import { DonationRequest } from "../../scripts/api/donationApi";
+import { BackHandler } from "react-native";
 import {
   BloodType,
   OrganType,
@@ -8,7 +9,6 @@ import {
   StemCellType,
 } from "../../scripts/api/donationApi";
 import { AuthProvider } from "../utils/auth-context";
-import AppLayout from "../../components/AppLayout";
 import { useAuth } from "../utils/auth-context";
 import { router } from "expo-router";
 
@@ -24,6 +24,7 @@ import {
 import * as SecureStore from "expo-secure-store";
 import styles from "../../constants/styles/dashboardStyles";
 import { registerDonation } from "../../scripts/api/donationApi";
+import AppLayout from "@/components/AppLayout";
 
 const BLOOD_TYPES = [
   "A_POSITIVE",
@@ -67,9 +68,19 @@ const DonationScreen = () => {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      router.replace("/navigation/loginScreen");
+      router.replace("../(auth)/loginScreen");
     }
   }, [isAuthenticated]);
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        router.replace("/(tabs)");
+        return true;  
+      }
+    );
+    return () => backHandler.remove();
+  }, []);
 
   useEffect(() => {
     const checkDonorRole = async () => {
@@ -96,7 +107,7 @@ const DonationScreen = () => {
           "Role Error",
           error.message || "Failed to check donor role"
         );
-        router.replace("/navigation/loginScreen");
+        router.replace("../(auth)/loginScreen");
         return;
       } finally {
         setRoleLoading(false);
@@ -163,7 +174,7 @@ const DonationScreen = () => {
         donationDate,
         status,
         locationId: Number(locationId),
-        bloodType: bloodType as BloodType,
+        ...(donationType === "BLOOD" && { bloodType: bloodType as BloodType }),
       };
 
       switch (donationType) {
@@ -186,6 +197,7 @@ const DonationScreen = () => {
 
       const response = await registerDonation(payload);
       Alert.alert("Success", "Donation recorded!");
+      router.replace("/(tabs)");
     } catch (error: any) {
       Alert.alert("Donation Failed", error.message || "Something went wrong!");
     } finally {
@@ -195,7 +207,7 @@ const DonationScreen = () => {
 
   return (
     <AuthProvider>
-      <AppLayout title="Donation">
+      <AppLayout title="Make a Donation">
         <ScrollView
           style={styles.bg}
           contentContainerStyle={styles.scrollContent}
