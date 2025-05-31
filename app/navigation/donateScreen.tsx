@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Picker } from "@react-native-picker/picker";
 import { DonationRequest } from "../../scripts/api/donationApi";
-import { BackHandler } from "react-native";
 import {
   BloodType,
   OrganType,
@@ -25,6 +24,7 @@ import * as SecureStore from "expo-secure-store";
 import styles from "../../constants/styles/dashboardStyles";
 import { registerDonation } from "../../scripts/api/donationApi";
 import AppLayout from "@/components/AppLayout";
+import { BackHandler } from "react-native";
 
 const BLOOD_TYPES = [
   "A_POSITIVE",
@@ -71,12 +71,24 @@ const DonationScreen = () => {
       router.replace("../(auth)/loginScreen");
     }
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        router.replace("/");
+        return true;
+      }
+    );
+    return () => backHandler.remove();
+  }, []);
+
   useEffect(() => {
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
       () => {
         router.replace("/(tabs)");
-        return true;  
+        return true;
       }
     );
     return () => backHandler.remove();

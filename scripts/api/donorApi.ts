@@ -1,4 +1,7 @@
-import * as SecureStore from 'expo-secure-store';
+import * as SecureStore from "expo-secure-store";
+import Constants from "expo-constants";
+
+const BASE_URL = Constants.expoConfig?.extra?.API_URL;
 
 export interface MedicalDetailsDTO {
   hemoglobinLevel: number;
@@ -21,30 +24,28 @@ export interface ConsentFormDTO {
 }
 
 export interface RegisterDonorRequest {
-  registrationDate: string; 
-  status: string; 
+  registrationDate: string;
+  status: string;
   medicalDetails: MedicalDetailsDTO;
   eligibilityCriteria: EligibilityCriteriaDTO;
   consentForm: ConsentFormDTO;
 }
-import Constants from 'expo-constants';
-const BASE_URL = Constants.expoConfig?.extra?.API_URL;
 
 export const registerDonor = async (payload: RegisterDonorRequest) => {
-  const token = await SecureStore.getItemAsync('jwt');
-  const userId = await SecureStore.getItemAsync('userId');
+  const token = await SecureStore.getItemAsync("jwt");
+  const userId = await SecureStore.getItemAsync("userId");
   const response = await fetch(`${BASE_URL}/donors/register`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Authorization': `Bearer ${token}`,
-      'id': userId || '',
-      'Content-Type': 'application/json'
+      Authorization: `Bearer ${token}`,
+      id: userId || "",
+      "Content-Type": "application/json",
     },
     body: JSON.stringify(payload),
   });
 
   if (!response.ok) {
-    let errorMessage = 'Failed to register as donor';
+    let errorMessage = "Failed to register as donor";
     try {
       const errorData = await response.text();
       errorMessage = errorData || errorMessage;
@@ -54,3 +55,26 @@ export const registerDonor = async (payload: RegisterDonorRequest) => {
 
   return response.json();
 };
+
+export const fetchDonorData = async (): Promise<any> => {
+  const token = await SecureStore.getItemAsync("jwt");
+  const donorId = await SecureStore.getItemAsync("donorId");
+  if (!token || !donorId) return null;
+
+  const response = await fetch(`${BASE_URL}/donors/${donorId}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      await SecureStore.deleteItemAsync("donorData");
+      await SecureStore.deleteItemAsync("donorId");
+    }
+    return null;
+  }
+  return await response.json();
+};
+

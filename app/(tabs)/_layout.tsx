@@ -18,7 +18,7 @@ export default function TabsLayout() {
           borderTopColor: "#dfe4ea",
         },
         tabBarLabelStyle: { fontWeight: "bold", fontSize: 13 },
-        headerShown: false, // <-- This hides the default header
+        headerShown: false, 
       }}
     >
       <Tabs.Screen

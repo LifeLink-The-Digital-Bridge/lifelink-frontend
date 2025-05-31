@@ -19,6 +19,7 @@ import { registerDonor } from "../../scripts/api/donorApi";
 import { addUserRole, refreshAuthTokens } from "../../scripts/api/roleApi";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
+import AppLayout from "@/components/AppLayout";
 
 const calculateAge = (dobString: string): number => {
   const today = new Date();
@@ -115,6 +116,11 @@ const DonorScreen: React.FC = () => {
   const [stateVal, setStateVal] = useState<string>("");
   const [country, setCountry] = useState<string>("");
   const [pincode, setPincode] = useState<string>("");
+
+  const [addressLine, setAddressLine] = useState<string>("");
+  const [landmark, setLandmark] = useState<string>("");
+  const [area, setArea] = useState<string>("");
+  const [district, setDistrict] = useState<string>("");
 
   const [gender, setGender] = useState<string>("");
   const [userId, setUserId] = useState<string>("");
@@ -271,6 +277,10 @@ const DonorScreen: React.FC = () => {
       !isConsented ||
       !dob ||
       !age ||
+      !addressLine ||
+      !landmark ||
+      !area ||
+      !district ||
       !city ||
       !stateVal ||
       !country ||
@@ -389,10 +399,16 @@ const DonorScreen: React.FC = () => {
           consentType: "BLOOD_DONATION",
         },
         location: {
-          city,
-          state: stateVal,
-          country,
-          pincode,
+          addressLine: addressLine || "",
+          landmark: landmark || "",
+          area: area || "",
+          district: district || "",
+          city: city || "",
+          state: stateVal || "",
+          country: country || "",
+          pincode: pincode || "",
+          latitude: location?.latitude || 0,
+          longitude: location?.longitude || 0,
         },
       };
 
@@ -419,6 +435,7 @@ const DonorScreen: React.FC = () => {
 
   return (
     <AuthProvider>
+      <AppLayout title="Become a Donor">
         <ScrollView
           style={styles.bg}
           contentContainerStyle={styles.scrollContent}
@@ -564,6 +581,31 @@ const DonorScreen: React.FC = () => {
           <Text style={styles.sectionTitle}>Location</Text>
           <TextInput
             style={styles.input}
+            placeholder="Address Line"
+            value={addressLine}
+            onChangeText={setAddressLine}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Landmark"
+            value={landmark}
+            onChangeText={setLandmark}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Area"
+            value={area}
+            onChangeText={setArea}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="District"
+            value={district}
+            onChangeText={setDistrict}
+          />
+
+          <TextInput
+            style={styles.input}
             placeholder="City"
             value={city}
             onChangeText={setCity}
@@ -619,6 +661,7 @@ const DonorScreen: React.FC = () => {
             )}
           </TouchableOpacity>
         </ScrollView>
+      </AppLayout>
     </AuthProvider>
   );
 };
