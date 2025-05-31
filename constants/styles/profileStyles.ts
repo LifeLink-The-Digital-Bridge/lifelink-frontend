@@ -112,7 +112,7 @@ export default StyleSheet.create({
     color: "red",
     fontSize: 18,
   },
-    segmentedControl: {
+  segmentedControl: {
     flexDirection: "row",
     justifyContent: "space-around",
     marginVertical: 16,
@@ -160,5 +160,18 @@ export default StyleSheet.create({
   contentItemText: {
     fontSize: 14,
     color: "#636e72",
+    marginBottom: 3,
+  },
+  seeAllButton: {
+    marginTop: 10,
+    alignItems: "center",
+    padding: 10,
+    backgroundColor: "#dfe6e9",
+    borderRadius: 8,
+  },
+  seeAllButtonText: {
+    color: "#0984e3",
+    fontWeight: "bold",
+    fontSize: 16,
   },
 });

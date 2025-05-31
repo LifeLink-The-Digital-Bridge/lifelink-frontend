@@ -78,3 +78,22 @@ export const fetchDonorData = async (): Promise<any> => {
   return await response.json();
 };
 
+export const fetchDonorByUserId = async (): Promise<any> => {
+  const token = await SecureStore.getItemAsync("jwt");
+  if (!token) return null;
+
+  const response = await fetch(`${BASE_URL}/donors/by-userId`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      return null; 
+    }
+    throw new Error("Failed to fetch donor by userId");
+  }
+  return await response.json();
+};

@@ -186,7 +186,7 @@ const DonationScreen = () => {
         donationDate,
         status,
         locationId: Number(locationId),
-        ...(donationType === "BLOOD" && { bloodType: bloodType as BloodType }),
+        bloodType: bloodType as BloodType,
       };
 
       switch (donationType) {

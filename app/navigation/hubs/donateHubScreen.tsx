@@ -1,12 +1,13 @@
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   ScrollView,
   Text,
   TouchableOpacity,
   View,
+  RefreshControl,
 } from "react-native";
 import styles from "../../../constants/styles/dashboardStyles";
 import { fetchDonorData } from "@/scripts/api/donorApi";
@@ -15,25 +16,38 @@ export default function DonateHubScreen() {
   const [loading, setLoading] = useState(true);
   const [donorData, setDonorData] = useState<any>(null);
   const router = useRouter();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadDonorData = useCallback(async () => {
+    setLoading(true);
+    setRefreshing(true);
+    try {
+      const donorData = await fetchDonorData();
+      if (donorData) {
+        setDonorData(donorData);
+        await SecureStore.setItemAsync("donorData", JSON.stringify(donorData));
+      } else {
+        await SecureStore.deleteItemAsync("donorData");
+      }
+    } catch (error) {
+      console.error("Failed to fetch donor data:", error);
+    }
+    setLoading(false);
+    setRefreshing(false);
+  }, []);
 
   useEffect(() => {
-    const loadDonorData = async () => {
-      setLoading(true);
+    const loadInitialData = async () => {
       const data = await SecureStore.getItemAsync("donorData");
       if (data) {
         setDonorData(JSON.parse(data));
         setLoading(false);
         return;
       }
-      const donorData = await fetchDonorData();
-      if (donorData) {
-        setDonorData(donorData);
-        await SecureStore.setItemAsync("donorData", JSON.stringify(donorData));
-      }
-      setLoading(false);
+      await loadDonorData();
     };
-    loadDonorData();
-  }, []);
+    loadInitialData();
+  }, [loadDonorData]);
 
   if (loading) {
     return <ActivityIndicator />;
@@ -41,7 +55,15 @@ export default function DonateHubScreen() {
 
   if (!donorData) {
     return (
-      <ScrollView contentContainerStyle={{ padding: 16 }}>
+      <ScrollView
+        contentContainerStyle={{ padding: 16 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={loadDonorData}
+          />
+        }
+      >
         <Text style={{ fontSize: 18, marginBottom: 16 }}>
           You are not registered as a donor.
         </Text>
@@ -56,7 +78,15 @@ export default function DonateHubScreen() {
   }
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 16 }}>
+    <ScrollView
+      contentContainerStyle={{ padding: 16 }}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={loadDonorData}
+        />
+      }
+    >
       <Text style={{ fontWeight: "bold", fontSize: 18, marginBottom: 8 }}>
         Your Donor Details
       </Text>

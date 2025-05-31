@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import {
   View,
   Text,
@@ -7,18 +6,20 @@ import {
   Alert,
   ScrollView,
   Image,
+  RefreshControl,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { Feather, FontAwesome, MaterialIcons } from "@expo/vector-icons";
+import { Feather, FontAwesome } from "@expo/vector-icons";
 import { useProfile } from "../../hooks/useProfile";
 import { useAuth } from "../utils/auth-context";
 import * as SecureStore from "expo-secure-store";
 import styles from "../../constants/styles/profileStyles";
+import { useState, useEffect, useCallback } from "react";
+import {
+  fetchDonationsByDonorId,
+  Donation,
+} from "../../scripts/api/donationStatusApi";
 
-const mockDonations = [
-  { id: 1, type: "Blood", date: "2024-06-01", status: "Completed" },
-  { id: 2, type: "Organ", date: "2024-05-15", status: "Pending" },
-];
 const mockReviews = [
   { id: 1, text: "Great donor, very helpful!", date: "2024-06-02" },
   { id: 2, text: "Quick response, thank you!", date: "2024-05-20" },
@@ -32,7 +33,7 @@ const formatDate = (dateStr: string) => {
   if (!dateStr) return "N/A";
   const date = new Date(dateStr);
   const day = date.getDate();
-  const month = date.toLocaleString('default', { month: 'long' });
+  const month = date.toLocaleString("default", { month: "long" });
   const year = date.getFullYear();
   return `${day} ${month} ${year}`;
 };
@@ -48,11 +49,41 @@ const ProfileScreen: React.FC = () => {
     isOwnProfile,
     handleFollow,
     handleUnfollow,
+    loadProfile,  
   } = useProfile();
-
+  const [donations, setDonations] = useState<Donation[]>([]);
+  const [donationsLoading, setDonationsLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [activeSegment, setActiveSegment] = useState("donations");
 
-  const handleLogout = async () => {
+  const loadDonations = useCallback(async () => {
+    const donorId = await SecureStore.getItemAsync("donorId");
+    if (!donorId) return;
+    setDonationsLoading(true);
+    try {
+      const data = await fetchDonationsByDonorId(donorId);
+      setDonations(data);
+    } catch (error) {
+      console.error("Failed to fetch donations:", error);
+      setDonations([]);
+    }
+    setDonationsLoading(false);
+  }, []);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([
+      loadDonations(),
+      loadProfile?.(), 
+    ]);
+    setRefreshing(false);
+  }, [loadDonations, loadProfile]);
+
+  useEffect(() => {
+    loadDonations();
+  }, []);
+
+  const handleLogout = useCallback(async () => {
     const keysToDelete = [
       "jwt",
       "refreshToken",
@@ -68,13 +99,33 @@ const ProfileScreen: React.FC = () => {
     await Promise.all(keysToDelete.map((key) => SecureStore.deleteItemAsync(key)));
     await logout();
     router.replace("/(auth)/loginScreen");
-  };
+  }, [logout, router]);
+
+  const onFollow = useCallback(async () => {
+    try {
+      await handleFollow();
+      Alert.alert("Success", "You are now following this user.");
+    } catch (error: any) {
+      Alert.alert("Error", error.message || "Failed to follow user");
+    }
+  }, [handleFollow]);
+
+  const onUnfollow = useCallback(async () => {
+    try {
+      await handleUnfollow();
+      Alert.alert("Success", "You have unfollowed this user.");
+    } catch (error: any) {
+      Alert.alert("Error", error.message || "Failed to unfollow user");
+    }
+  }, [handleUnfollow]);
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#0984e3" />
-        <Text style={{ marginTop: 10, color: "#636e72" }}>Loading profile...</Text>
+        <Text style={{ marginTop: 10, color: "#636e72" }}>
+          Loading profile...
+        </Text>
       </View>
     );
   }
@@ -87,47 +138,73 @@ const ProfileScreen: React.FC = () => {
     );
   }
 
-  const onFollow = async () => {
-    try {
-      await handleFollow();
-      Alert.alert("Success", "You are now following this user.");
-    } catch (error: any) {
-      Alert.alert("Error", error.message || "Failed to follow user");
-    }
-  };
-
-  const onUnfollow = async () => {
-    try {
-      await handleUnfollow();
-      Alert.alert("Success", "You have unfollowed this user.");
-    } catch (error: any) {
-      Alert.alert("Error", error.message || "Failed to unfollow user");
-    }
-  };
-
   const renderContent = () => {
     switch (activeSegment) {
       case "donations":
-        return mockDonations.map((item) => (
-          <View key={item.id} style={styles.contentItem}>
-            <Text style={styles.contentItemTitle}>{item.type}</Text>
-            <Text style={styles.contentItemText}>Date: {formatDate(item.date)}</Text>
-            <Text style={styles.contentItemText}>Status: {item.status}</Text>
-          </View>
-        ));
+        if (donationsLoading) {
+          return (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color="#0984e3" />
+              <Text style={{ marginTop: 10, color: "#636e72" }}>
+                Loading donations...
+              </Text>
+            </View>
+          );
+        }
+        if (!donations.length) {
+          return (
+            <View style={styles.contentItem}>
+              <Text style={styles.contentItemText}>No donations found.</Text>
+            </View>
+          );
+        }
+        return (
+          <>
+            {donations.slice(0, 3).map((item, idx) => (
+              <TouchableOpacity
+                key={idx}
+                style={styles.contentItem}
+                onPress={() => router.push("/navigation/DonationStatusScreen")}
+              >
+                <Text style={styles.contentItemTitle}>{item.donationType}</Text>
+                <Text style={styles.contentItemText}>
+                  Date: {formatDate(item.donationDate)}
+                </Text>
+                <Text style={styles.contentItemText}>
+                  Status: {item.status}
+                </Text>
+                {item.quantity && (
+                  <Text style={styles.contentItemText}>
+                    Quantity: {item.quantity}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity
+              style={styles.seeAllButton}
+              onPress={() => router.push("/navigation/DonationStatusScreen")}
+            >
+              <Text style={styles.seeAllButtonText}>See All Donations</Text>
+            </TouchableOpacity>
+          </>
+        );
       case "reviews":
         return mockReviews.map((item) => (
           <View key={item.id} style={styles.contentItem}>
             <Text style={styles.contentItemTitle}>Review</Text>
             <Text style={styles.contentItemText}>{item.text}</Text>
-            <Text style={styles.contentItemText}>Date: {formatDate(item.date)}</Text>
+            <Text style={styles.contentItemText}>
+              Date: {formatDate(item.date)}
+            </Text>
           </View>
         ));
       case "receives":
         return mockReceives.map((item) => (
           <View key={item.id} style={styles.contentItem}>
             <Text style={styles.contentItemTitle}>{item.type}</Text>
-            <Text style={styles.contentItemText}>Date: {formatDate(item.date)}</Text>
+            <Text style={styles.contentItemText}>
+              Date: {formatDate(item.date)}
+            </Text>
             <Text style={styles.contentItemText}>Status: {item.status}</Text>
           </View>
         ));
@@ -137,8 +214,15 @@ const ProfileScreen: React.FC = () => {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollContainer}>
-      {/* Profile Header: Pic on left, info on right */}
+    <ScrollView
+      contentContainerStyle={styles.scrollContainer}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+        />
+      }
+    >
       <View style={styles.profileHeader}>
         <View style={styles.avatarContainer}>
           {profile.profileImageUrl ? (
@@ -157,21 +241,29 @@ const ProfileScreen: React.FC = () => {
         </View>
       </View>
 
-      {/* Followers and Following */}
       <View style={styles.statRow}>
         <View style={styles.statItem}>
-          <Feather name="users" size={20} color="#636e72" style={styles.statIcon} />
+          <Feather
+            name="users"
+            size={20}
+            color="#636e72"
+            style={styles.statIcon}
+          />
           <Text style={styles.statLabel}>Followers</Text>
           <Text style={styles.statValue}>{profile.followers ?? 0}</Text>
         </View>
         <View style={styles.statItem}>
-          <Feather name="user-plus" size={20} color="#636e72" style={styles.statIcon} />
+          <Feather
+            name="user-plus"
+            size={20}
+            color="#636e72"
+            style={styles.statIcon}
+          />
           <Text style={styles.statLabel}>Following</Text>
           <Text style={styles.statValue}>{profile.following ?? 0}</Text>
         </View>
       </View>
 
-      {/* Segmented Control */}
       <View style={styles.segmentedControl}>
         <TouchableOpacity
           style={[
@@ -223,12 +315,8 @@ const ProfileScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Content Grid */}
-      <View style={styles.contentGrid}>
-        {renderContent()}
-      </View>
+      <View style={styles.contentGrid}>{renderContent()}</View>
 
-      {/* Actions */}
       <View style={styles.actionsContainer}>
         {isOwnProfile && (
           <>
@@ -257,7 +345,11 @@ const ProfileScreen: React.FC = () => {
             onPress={isFollowing ? onUnfollow : onFollow}
             disabled={followLoading}
           >
-            <Feather name={isFollowing ? "user-minus" : "user-plus"} size={20} color="#fff" />
+            <Feather
+              name={isFollowing ? "user-minus" : "user-plus"}
+              size={20}
+              color="#fff"
+            />
             <Text style={styles.actionButtonText}>
               {isFollowing ? "Unfollow" : "Follow"}
             </Text>

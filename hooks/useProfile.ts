@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import * as SecureStore from "expo-secure-store";
 import { useLocalSearchParams } from "expo-router";
 import { UserDTO, fetchUserProfile, fetchIsFollowing } from "../scripts/api/profile";
@@ -22,29 +22,30 @@ export const useProfile = () => {
 
   const profileUsername = paramUsername || currentUsername;
 
-  useEffect(() => {
-    const loadProfile = async () => {
-      setLoading(true);
-      try {
-        if (!profileUsername) return;
-        const token = (await SecureStore.getItemAsync("jwt")) || "";
-        const data = await fetchUserProfile(profileUsername, token);
-        setProfile(data);
+  const loadProfile = useCallback(async () => {
+    setLoading(true);
+    try {
+      if (!profileUsername) return;
+      const token = (await SecureStore.getItemAsync("jwt")) || "";
+      const data = await fetchUserProfile(profileUsername, token);
+      setProfile(data);
 
-        if (data.id && currentUserId && data.id !== currentUserId) {
-          const following = await fetchIsFollowing(data.id, token);
-          setIsFollowing(following);
-        } else {
-          setIsFollowing(false);
-        }
-      } catch (error: any) {
-        setProfile(null);
-      } finally {
-        setLoading(false);
+      if (data.id && currentUserId && data.id !== currentUserId) {
+        const following = await fetchIsFollowing(data.id, token);
+        setIsFollowing(following);
+      } else {
+        setIsFollowing(false);
       }
-    };
-    loadProfile();
+    } catch (error: any) {
+      setProfile(null);
+    } finally {
+      setLoading(false);
+    }
   }, [profileUsername, currentUserId]);
+
+  useEffect(() => {
+    loadProfile();
+  }, [loadProfile]);
 
   const handleFollow = async () => {
     setFollowLoading(true);
@@ -102,5 +103,6 @@ export const useProfile = () => {
     isOwnProfile: profile && currentUserId === profile.id,
     handleFollow,
     handleUnfollow,
+    loadProfile,
   };
 };

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
@@ -6,18 +6,21 @@ import {
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
-  Alert,
+  ScrollView,
+  Animated,
 } from "react-native";
 import { MaterialIcons, Feather } from "@expo/vector-icons";
 import * as SecureStore from "expo-secure-store";
 import { useRouter } from "expo-router";
 import { useAuth } from "../utils/auth-context";
+import { fetchDonorByUserId, fetchDonorData } from "@/scripts/api/donorApi";
 
 const Dashboard = () => {
   const { logout, isAuthenticated } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [donorId, setDonorId] = useState<string | null>(null);
+  const [donorData, setDonorData] = useState<any>(null);
   const [userData, setUserData] = useState({
     username: "",
     email: "",
@@ -34,6 +37,8 @@ const Dashboard = () => {
     score: 0,
     reviews: 0,
   });
+  const [showChatIcon, setShowChatIcon] = useState(true);
+  const scrollY = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -75,12 +80,36 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
-    const fetchDonorId = async () => {
-      const id = await SecureStore.getItemAsync("donorId");
-      setDonorId(id);
+    const checkDonorStatus = async () => {
+      let donorId = await SecureStore.getItemAsync("donorId");
+      if (!donorId) {
+        const donorData = await fetchDonorByUserId();
+        if (donorData) {
+          donorId = donorData.id;
+          await SecureStore.setItemAsync("donorId", donorId ?? "");
+          setDonorId(donorId);
+          setDonorData(donorData);
+        }
+      } else {
+        const donorData = await fetchDonorData();
+        setDonorData(donorData);
+      }
     };
-    fetchDonorId();
-  }, []);
+    if (userData.userId) {
+      checkDonorStatus();
+    }
+  }, [userData.userId]);
+
+  const handleScroll = Animated.event(
+    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+    {
+      useNativeDriver: false,
+      listener: (event: { nativeEvent: { contentOffset: { y: number } } }) => {
+        const y = event.nativeEvent.contentOffset.y;
+        setShowChatIcon(y <= 10);
+      },
+    }
+  );
 
   if (loading) {
     return (
@@ -95,34 +124,40 @@ const Dashboard = () => {
 
   return (
     <View style={styles.container}>
-      {/* Search Bar & Notification */}
-      <View style={styles.topBar}>
-        <View style={styles.searchContainer}>
-          <MaterialIcons name="search" size={22} color="#636e72" />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search"
-            placeholderTextColor="#b2bec3"
-          />
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 80 }}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+      >
+        <View style={styles.topBar}>
+          <View style={styles.searchContainer}>
+            <MaterialIcons name="search" size={22} color="#636e72" />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search"
+              placeholderTextColor="#b2bec3"
+            />
+          </View>
+          <TouchableOpacity style={styles.bellButton}>
+            <Feather name="bell" size={24} color="#0984e3" />
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity style={styles.bellButton}>
-          <Feather name="bell" size={24} color="#0984e3" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Welcome Message */}
-      <Text style={styles.welcomeText}>
-        Welcome, <Text style={{ fontWeight: "bold" }}>{userData.username}</Text>{" "}
-        👋
-      </Text>
-      <Text style={styles.subText}>We're glad to have you here!</Text>
-
-      {/* Future: Reviews Section */}
-      <View style={styles.reviewPlaceholder}>
-        <Text style={{ color: "#636e72" }}>
-          Reviews from receivers will appear here (coming soon!)
+        <Text style={styles.welcomeText}>
+          Welcome, <Text style={{ fontWeight: "bold" }}>{userData.username}</Text> 👋
         </Text>
-      </View>
+        <Text style={styles.subText}>We're glad to have you here!</Text>
+        
+      </ScrollView>
+      {showChatIcon && (
+        <View style={styles.chatBotIcon}>
+          <TouchableOpacity
+            style={styles.chatBotButton}
+            onPress={() => alert("Open chat with bot")}
+          >
+            <Feather name="message-circle" size={24} color="#fff" />
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 };
@@ -179,6 +214,22 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#f6f8fa",
+  },
+chatBotIcon: {
+  position: "absolute",
+  bottom: 40, 
+  right: 20,
+  zIndex: 999,
+},
+
+  chatBotButton: {
+    backgroundColor: "#0984e3",
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 4,
   },
 });
 

@@ -4,7 +4,7 @@ import { MaterialIcons, Feather, Ionicons } from "@expo/vector-icons";
 import { Redirect } from "expo-router";
 
 export default function TabsLayout() {
-    const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) return null;
   if (!isAuthenticated) return <Redirect href="/(auth)/loginScreen" />;
@@ -18,7 +18,7 @@ export default function TabsLayout() {
           borderTopColor: "#dfe4ea",
         },
         tabBarLabelStyle: { fontWeight: "bold", fontSize: 13 },
-        headerShown: false, 
+        headerShown: false,
       }}
     >
       <Tabs.Screen
@@ -40,11 +40,11 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="chat"
+        name="maps"
         options={{
-          title: "Chat",
+          title: "Maps",
           tabBarIcon: ({ color, size }) => (
-            <Feather name="message-circle" size={size} color={color} />
+            <MaterialIcons name="map" size={size} color={color} />
           ),
         }}
       />
