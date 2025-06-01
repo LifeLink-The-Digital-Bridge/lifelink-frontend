@@ -1,37 +1,55 @@
-import * as SecureStore from 'expo-secure-store';
-import Constants from 'expo-constants';
+import * as SecureStore from "expo-secure-store";
+import Constants from "expo-constants";
 
 const BASE_URL = Constants.expoConfig?.extra?.API_URL;
 
-export const addUserRole = async () => {
-  const token = await SecureStore.getItemAsync('jwt');
+export const addDonorRole = async (): Promise<string> => {
+  const token = await SecureStore.getItemAsync("jwt");
+  const userId = await SecureStore.getItemAsync("userId");
+  if (!token || !userId) throw new Error("Not authenticated");
   const response = await fetch(`${BASE_URL}/donors/addRole`, {
-    method: 'PUT',
+    method: "PUT",
     headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    }
+      Authorization: `Bearer ${token}`,
+      id: userId,
+    },
   });
-
-  const text = await response.text();
-
   if (!response.ok) {
-    throw new Error(text || 'Failed to add role');
+    const error = await response.text();
+    throw new Error(error || "Failed to add donor role");
   }
+  return await response.text();
+};
 
-  return text;
+export const addRecipientRole = async (): Promise<string> => {
+  const token = await SecureStore.getItemAsync("jwt");
+  const userId = await SecureStore.getItemAsync("userId");
+  if (!token || !userId) throw new Error("Not authenticated");
+  const response = await fetch(`${BASE_URL}/recipients/addRole`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      id: userId,
+    },
+  });
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(error || "Failed to add recipient role");
+  }
+  return await response.text();
 };
 
 export const refreshAuthTokens = async () => {
-  const refreshToken = await SecureStore.getItemAsync('refreshToken');
-  
-  const response = await fetch(`${BASE_URL}/auth/refresh?refreshToken=${refreshToken}`, {
-    method: 'POST'
-  });
-
+  const refreshToken = await SecureStore.getItemAsync("refreshToken");
+  if (!refreshToken) throw new Error("No refresh token found");
+  const response = await fetch(
+    `${BASE_URL}/auth/refresh?refreshToken=${refreshToken}`,
+    {
+      method: "POST",
+    }
+  );
   if (!response.ok) {
-    throw new Error('Failed to refresh tokens');
+    throw new Error("Failed to refresh tokens");
   }
-
-  return response.json();
+  return await response.json();
 };

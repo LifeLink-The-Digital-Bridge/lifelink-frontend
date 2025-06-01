@@ -1,10 +1,10 @@
-import ReceiveScreen from "../navigation/receiverScreen";
 import React from "react";
 import AppLayout from "../../components/AppLayout";
+import RecipientHubScreen from "../navigation/hubs/recipientHubScreen";
 export default function receiveScreen() {
   return (
     <AppLayout title="Receive">
-      <ReceiveScreen />
+      <RecipientHubScreen />
     </AppLayout>
   );
 }
