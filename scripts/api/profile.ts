@@ -1,5 +1,5 @@
 import * as SecureStore from "expo-secure-store";
-import Constants from 'expo-constants';
+import Constants from "expo-constants";
 
 const BASE_URL = Constants.expoConfig?.extra?.API_URL;
 
@@ -23,6 +23,15 @@ export type UserDTO = {
   score?: number;
   reviews?: number;
 };
+
+export interface UpdateProfileRequest {
+  name: string;
+  phone: string;
+  dob: string;
+  gender: string;
+  profileImageUrl: string;
+  profileVisibility: string;
+}
 
 export const fetchUserProfile = async (
   username: string,
@@ -57,4 +66,27 @@ export const fetchIsFollowing = async (
   } catch {
     return false;
   }
+};
+
+export const updateUserProfile = async (
+  userId: string,
+  payload: UpdateProfileRequest
+): Promise<UserDTO> => {
+  const token = await SecureStore.getItemAsync("jwt");
+  if (!token) throw new Error("No token found");
+
+  const response = await fetch(`${BASE_URL}/users/update/${userId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const error = await response.text().catch(() => "Failed to update profile");
+    throw new Error(error);
+  }
+  return await response.json();
 };

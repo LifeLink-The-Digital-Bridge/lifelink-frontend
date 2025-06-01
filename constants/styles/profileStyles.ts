@@ -174,4 +174,14 @@ export default StyleSheet.create({
     fontWeight: "bold",
     fontSize: 16,
   },
+  searchInput: {
+  height: 40,
+  borderColor: "#ccc",
+  borderWidth: 1,
+  borderRadius: 8,
+  paddingHorizontal: 10,
+  marginBottom: 12,
+  backgroundColor: "#fff",
+},
+
 });

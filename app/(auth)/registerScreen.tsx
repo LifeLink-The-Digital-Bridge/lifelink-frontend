@@ -24,6 +24,48 @@ const genderOptions = [
   { label: "Other", value: "OTHER" },
 ];
 
+const validateForm = (form: any, requiredFields: string[]) => {
+  const errors: { [key: string]: string } = {};
+  requiredFields.forEach((field) => {
+    if (!form[field]) {
+      errors[field] = `${
+        field.charAt(0).toUpperCase() + field.slice(1)
+      } is required`;
+    }
+  });
+  if (form.email && !/^\S+@\S+\.\S+$/.test(form.email)) {
+    errors.email = "Invalid email format";
+  }
+  if (form.dob && !/^\d{4}-\d{2}-\d{2}$/.test(form.dob)) {
+    errors.dob = "Date must be in YYYY-MM-DD format";
+  }
+  if (form.phone && !/^\d{10}$/.test(form.phone)) {
+    errors.phone = "Phone must be 10 digits";
+  }
+  return errors;
+};
+
+const pickImage = async (callback: (uri: string) => void) => {
+  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  if (status !== "granted") {
+    Alert.alert(
+      "Permission denied",
+      "We need camera roll permissions to select a profile image."
+    );
+    return;
+  }
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    allowsEditing: true,
+    aspect: [1, 1],
+    base64: true,
+    quality: 0.7,
+  });
+  if (!result.canceled && result.assets[0].base64) {
+    callback(`data:image/jpeg;base64,${result.assets[0].base64}`);
+  }
+};
+
 export default function RegisterScreen() {
   const [formData, setFormData] = useState<RegisterRequest>({
     name: "",
@@ -35,35 +77,12 @@ export default function RegisterScreen() {
     gender: "",
     profileImageUrl: "",
   });
-
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(false);
-
-  const pickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert(
-        "Permission denied",
-        "We need camera roll permissions to select a profile image."
-      );
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      base64: true,
-      quality: 0.7,
-    });
-
-    if (!result.canceled) {
-      setFormData((prev) => ({
-        ...prev,
-        profileImageUrl: `data:image/jpeg;base64,${result.assets[0].base64}`,
-      }));
-    }
-  };
 
   const handleChange = (key: keyof RegisterRequest, value: string) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
+    setErrors((prev) => ({ ...prev, [key]: "" }));
   };
 
   const handleRegister = async () => {
@@ -77,18 +96,12 @@ export default function RegisterScreen() {
       "gender",
       "profileImageUrl",
     ];
-    const emptyField = requiredFields.find((field) => !formData[field]);
-
-    if (emptyField) {
-      Alert.alert(
-        "Validation Error",
-        `Please fill in the ${emptyField} field.`
-      );
+    const validationErrors = validateForm(formData, requiredFields);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
       return;
     }
-
     setLoading(true);
-
     try {
       const data = await registerUser(formData);
       Alert.alert("Registration Successful", `Welcome, ${data.username}`);
@@ -110,6 +123,7 @@ export default function RegisterScreen() {
           value={formData.name}
           onChangeText={(text) => handleChange("name", text)}
         />
+        {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
         <TextInput
           style={styles.input}
           placeholder="Email"
@@ -118,6 +132,7 @@ export default function RegisterScreen() {
           value={formData.email}
           onChangeText={(text) => handleChange("email", text)}
         />
+        {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
         <TextInput
           style={styles.input}
           placeholder="Username"
@@ -125,6 +140,9 @@ export default function RegisterScreen() {
           value={formData.username}
           onChangeText={(text) => handleChange("username", text)}
         />
+        {errors.username && (
+          <Text style={styles.errorText}>{errors.username}</Text>
+        )}
         <TextInput
           style={styles.input}
           placeholder="Password"
@@ -132,6 +150,9 @@ export default function RegisterScreen() {
           value={formData.password}
           onChangeText={(text) => handleChange("password", text)}
         />
+        {errors.password && (
+          <Text style={styles.errorText}>{errors.password}</Text>
+        )}
         <TextInput
           style={styles.input}
           placeholder="Phone"
@@ -139,13 +160,14 @@ export default function RegisterScreen() {
           value={formData.phone}
           onChangeText={(text) => handleChange("phone", text)}
         />
+        {errors.phone && <Text style={styles.errorText}>{errors.phone}</Text>}
         <TextInput
           style={styles.input}
           placeholder="Date of Birth (YYYY-MM-DD)"
           value={formData.dob}
           onChangeText={(text) => handleChange("dob", text)}
         />
-
+        {errors.dob && <Text style={styles.errorText}>{errors.dob}</Text>}
         <View style={[styles.input, { padding: 0 }]}>
           <Picker
             selectedValue={formData.gender}
@@ -160,15 +182,23 @@ export default function RegisterScreen() {
             ))}
           </Picker>
         </View>
-
-        <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
-          <Text style={styles.imagePickerText}>
+        {errors.gender && <Text style={styles.errorText}>{errors.gender}</Text>}
+        <TouchableOpacity
+          style={[styles.imagePicker, { backgroundColor: "#00b894" }]}
+          onPress={() =>
+            pickImage((uri) => handleChange("profileImageUrl", uri))
+          }
+        >
+          <Text style={[styles.imagePickerText, { color: "#fff" }]}>
             {formData.profileImageUrl
               ? "Change Profile Image"
               : "Upload Profile Image"}
           </Text>
         </TouchableOpacity>
-        {formData.profileImageUrl ? (
+        {errors.profileImageUrl && (
+          <Text style={styles.errorText}>{errors.profileImageUrl}</Text>
+        )}
+        {formData.profileImageUrl && (
           <Image
             source={{ uri: formData.profileImageUrl }}
             style={{
@@ -179,8 +209,7 @@ export default function RegisterScreen() {
               marginBottom: 10,
             }}
           />
-        ) : null}
-
+        )}
         <TouchableOpacity
           style={styles.button}
           onPress={handleRegister}
