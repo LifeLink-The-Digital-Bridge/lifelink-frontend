@@ -49,7 +49,7 @@ const ProfileScreen: React.FC = () => {
     isOwnProfile,
     handleFollow,
     handleUnfollow,
-    loadProfile,  
+    loadProfile,
   } = useProfile();
   const [donations, setDonations] = useState<Donation[]>([]);
   const [donationsLoading, setDonationsLoading] = useState(false);
@@ -72,10 +72,7 @@ const ProfileScreen: React.FC = () => {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([
-      loadDonations(),
-      loadProfile?.(), 
-    ]);
+    await Promise.all([loadDonations(), loadProfile?.()]);
     setRefreshing(false);
   }, [loadDonations, loadProfile]);
 
@@ -96,7 +93,9 @@ const ProfileScreen: React.FC = () => {
       "donorId",
       "donorData",
     ];
-    await Promise.all(keysToDelete.map((key) => SecureStore.deleteItemAsync(key)));
+    await Promise.all(
+      keysToDelete.map((key) => SecureStore.deleteItemAsync(key))
+    );
     await logout();
     router.replace("/(auth)/loginScreen");
   }, [logout, router]);
@@ -134,6 +133,13 @@ const ProfileScreen: React.FC = () => {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>Profile not found.</Text>
+        <TouchableOpacity
+          style={[styles.actionButton, { backgroundColor: "#d63031" }]}
+          onPress={handleLogout}
+        >
+          <Feather name="log-out" size={20} color="#fff" />
+          <Text style={styles.actionButtonText}>Logout</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -217,10 +223,7 @@ const ProfileScreen: React.FC = () => {
     <ScrollView
       contentContainerStyle={styles.scrollContainer}
       refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-        />
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
     >
       <View style={styles.profileHeader}>

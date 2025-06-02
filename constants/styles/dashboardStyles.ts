@@ -40,6 +40,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   label: {
+    justifyContent: "flex-start",
     fontSize: 16,
     color: "#374151",
     fontWeight: "500",

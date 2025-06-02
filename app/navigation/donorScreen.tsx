@@ -16,7 +16,7 @@ import { router, useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import styles from "../../constants/styles/dashboardStyles";
 import { registerDonor } from "../../scripts/api/donorApi";
-import { addUserRole, refreshAuthTokens } from "../../scripts/api/roleApi";
+import { addDonorRole, refreshAuthTokens } from "../../scripts/api/roleApi";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import AppLayout from "@/components/AppLayout";
@@ -54,7 +54,7 @@ const DonorScreen: React.FC = () => {
         }
 
         if (!roles.includes("DONOR")) {
-          await addUserRole();
+          await addDonorRole();
           const newTokens = await refreshAuthTokens();
 
           await Promise.all([

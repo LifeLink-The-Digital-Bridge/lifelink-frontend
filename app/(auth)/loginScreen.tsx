@@ -13,6 +13,7 @@ import styles from "../../constants/styles/loginStyles";
 import * as SecureStore from "expo-secure-store";
 import { useAuth } from "../utils/auth-context";
 import AppLayout from "../../components/AppLayout";
+import { Feather } from "@expo/vector-icons";
 
 function getLoginType(identifier: string): "username" | "email" {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -24,6 +25,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { setIsAuthenticated } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async () => {
     if (!identifier || !password) {
@@ -72,13 +74,33 @@ export default function LoginScreen() {
           value={identifier}
           onChangeText={setIdentifier}
         />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
+        <View style={{ position: "relative" }}>
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            secureTextEntry={!showPassword}
+            value={password}
+            onChangeText={setPassword}
+          />
+          <TouchableOpacity
+            style={{
+              position: "absolute",
+              right: 15,
+              top: 8,
+              height: 40,
+              justifyContent: "center",
+              alignItems: "center",
+              zIndex: 1,
+            }}
+            onPress={() => setShowPassword((prev) => !prev)}
+          >
+            <Feather
+              name={showPassword ? "eye" : "eye-off"}
+              size={22}
+              color="#636e72"
+            />
+          </TouchableOpacity>
+        </View>
         <TouchableOpacity
           style={styles.button}
           onPress={handleLogin}

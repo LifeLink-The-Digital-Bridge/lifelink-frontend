@@ -12,7 +12,7 @@ export default StyleSheet.create({
     marginBottom: 24,
   },
   avatarContainer: {
-    marginRight: 16,
+    marginRight: 20,
   },
   profileImage: {
     width: 100,
@@ -20,6 +20,7 @@ export default StyleSheet.create({
     borderRadius: 50,
   },
   profileInfo: {
+    marginTop: 13,
     flex: 1,
     justifyContent: "center",
   },
@@ -30,19 +31,20 @@ export default StyleSheet.create({
     marginBottom: 2,
   },
   username: {
-    fontSize: 16,
-    color: "#636e72",
-    marginBottom: 4,
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#222",
+    marginBottom: 2,
   },
   email: {
-    fontSize: 14,
+    fontSize: 15,
     color: "#636e72",
-    marginBottom: 4,
+    marginBottom: 2,
   },
   dob: {
     fontSize: 14,
     color: "#636e72",
-    marginBottom: 16,
+    marginBottom: 0,
   },
   statRow: {
     flexDirection: "row",
@@ -175,13 +177,13 @@ export default StyleSheet.create({
     fontSize: 16,
   },
   searchInput: {
-  height: 40,
-  borderColor: "#ccc",
-  borderWidth: 1,
-  borderRadius: 8,
-  paddingHorizontal: 10,
-  marginBottom: 12,
-  backgroundColor: "#fff",
-},
+    height: 40,
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    marginBottom: 12,
+    backgroundColor: "#fff",
+  },
 
 });

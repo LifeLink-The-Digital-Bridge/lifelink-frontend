@@ -16,6 +16,7 @@ import { router } from "expo-router";
 import { registerUser } from "../../scripts/api/registerApi";
 import type { RegisterRequest } from "../../scripts/api/registerApi";
 import AppLayout from "../../components/AppLayout";
+import { Feather } from "@expo/vector-icons";
 
 const genderOptions = [
   { label: "Select Gender", value: "" },
@@ -67,6 +68,7 @@ const pickImage = async (callback: (uri: string) => void) => {
 };
 
 export default function RegisterScreen() {
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState<RegisterRequest>({
     name: "",
     email: "",
@@ -143,13 +145,33 @@ export default function RegisterScreen() {
         {errors.username && (
           <Text style={styles.errorText}>{errors.username}</Text>
         )}
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          secureTextEntry
-          value={formData.password}
-          onChangeText={(text) => handleChange("password", text)}
-        />
+        <View style={{ position: "relative" }}>
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            secureTextEntry={!showPassword}
+            value={formData.password}
+            onChangeText={(text) => handleChange("password", text)}
+          />
+          <TouchableOpacity
+            style={{
+              position: "absolute",
+              right: 15,
+              top: 8,
+              height: 40,
+              justifyContent: "center",
+              alignItems: "center",
+              zIndex: 1,
+            }}
+            onPress={() => setShowPassword((prev) => !prev)}
+          >
+            <Feather
+              name={showPassword ? "eye" : "eye-off"}
+              size={22}
+              color="#636e72"
+            />
+          </TouchableOpacity>
+        </View>
         {errors.password && (
           <Text style={styles.errorText}>{errors.password}</Text>
         )}
