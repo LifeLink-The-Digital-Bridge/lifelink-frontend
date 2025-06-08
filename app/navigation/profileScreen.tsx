@@ -19,14 +19,15 @@ import {
   fetchDonationsByDonorId,
   Donation,
 } from "../../scripts/api/donationStatusApi";
+import {
+  getRecipientByUserId,
+  getRecipientRequests,
+  ReceiveRequestDTO,
+} from "../../scripts/api/recipientApi";
 
 const mockReviews = [
   { id: 1, text: "Great donor, very helpful!", date: "2024-06-02" },
   { id: 2, text: "Quick response, thank you!", date: "2024-05-20" },
-];
-const mockReceives = [
-  { id: 1, type: "Blood", date: "2024-04-10", status: "Completed" },
-  { id: 2, type: "Medicine", date: "2024-03-22", status: "Pending" },
 ];
 
 const formatDate = (dateStr: string) => {
@@ -51,8 +52,11 @@ const ProfileScreen: React.FC = () => {
     handleUnfollow,
     loadProfile,
   } = useProfile();
+
   const [donations, setDonations] = useState<Donation[]>([]);
   const [donationsLoading, setDonationsLoading] = useState(false);
+  const [receives, setReceives] = useState<ReceiveRequestDTO[]>([]);
+  const [receivesLoading, setReceivesLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [activeSegment, setActiveSegment] = useState("donations");
 
@@ -70,14 +74,32 @@ const ProfileScreen: React.FC = () => {
     setDonationsLoading(false);
   }, []);
 
+  const loadReceives = useCallback(async () => {
+    setReceivesLoading(true);
+    try {
+      const recipient = await getRecipientByUserId();
+      if (recipient?.id) {
+        const requests = await getRecipientRequests(recipient.id);
+        setReceives(requests);
+      } else {
+        setReceives([]);
+      }
+    } catch (error) {
+      console.error("Failed to fetch receives:", error);
+      setReceives([]);
+    }
+    setReceivesLoading(false);
+  }, []);
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([loadDonations(), loadProfile?.()]);
+    await Promise.all([loadDonations(), loadReceives(), loadProfile?.()]);
     setRefreshing(false);
-  }, [loadDonations, loadProfile]);
+  }, [loadDonations, loadReceives, loadProfile]);
 
   useEffect(() => {
     loadDonations();
+    loadReceives();
   }, []);
 
   const handleLogout = useCallback(async () => {
@@ -92,6 +114,7 @@ const ProfileScreen: React.FC = () => {
       "dob",
       "donorId",
       "donorData",
+      "recipientData",
     ];
     await Promise.all(
       keysToDelete.map((key) => SecureStore.deleteItemAsync(key))
@@ -99,6 +122,20 @@ const ProfileScreen: React.FC = () => {
     await logout();
     router.replace("/(auth)/loginScreen");
   }, [logout, router]);
+  const confirmLogout = useCallback(() => {
+    Alert.alert(
+      "Confirm Logout",
+      "Are you sure you want to logout?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "OK",
+          onPress: () => handleLogout(),
+        },
+      ],
+      { cancelable: true }
+    );
+  }, [handleLogout]);
 
   const onFollow = useCallback(async () => {
     try {
@@ -205,15 +242,62 @@ const ProfileScreen: React.FC = () => {
           </View>
         ));
       case "receives":
-        return mockReceives.map((item) => (
-          <View key={item.id} style={styles.contentItem}>
-            <Text style={styles.contentItemTitle}>{item.type}</Text>
-            <Text style={styles.contentItemText}>
-              Date: {formatDate(item.date)}
-            </Text>
-            <Text style={styles.contentItemText}>Status: {item.status}</Text>
-          </View>
-        ));
+        if (receivesLoading) {
+          return (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color="#0984e3" />
+              <Text style={{ marginTop: 10, color: "#636e72" }}>
+                Loading receives...
+              </Text>
+            </View>
+          );
+        }
+        if (!receives.length) {
+          return (
+            <View style={styles.contentItem}>
+              <Text style={styles.contentItemText}>
+                No receive requests found.
+              </Text>
+            </View>
+          );
+        }
+        return (
+          <>
+            {receives.slice(0, 3).map((item, idx) => (
+              <TouchableOpacity
+                key={idx}
+                style={styles.contentItem}
+                onPress={() => router.push("/navigation/RecipientStatusScreen")}
+              >
+                <Text style={styles.contentItemTitle}>
+                  {item.requestedOrgan || item.requestedBloodType}
+                </Text>
+                <Text style={styles.contentItemText}>
+                  Date: {formatDate(item.requestDate)}
+                </Text>
+                <Text style={styles.contentItemText}>
+                  Status: {item.status}
+                </Text>
+                {item.quantity && (
+                  <Text style={styles.contentItemText}>
+                    Quantity: {item.quantity}
+                  </Text>
+                )}
+                {item.urgencyLevel && (
+                  <Text style={styles.contentItemText}>
+                    Urgency: {item.urgencyLevel}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity
+              style={styles.seeAllButton}
+              onPress={() => router.push("/navigation/RecipientStatusScreen")}
+            >
+              <Text style={styles.seeAllButtonText}>See All Receives</Text>
+            </TouchableOpacity>
+          </>
+        );
       default:
         return null;
     }
@@ -332,7 +416,7 @@ const ProfileScreen: React.FC = () => {
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.actionButton, { backgroundColor: "#d63031" }]}
-              onPress={handleLogout}
+              onPress={confirmLogout}
             >
               <Feather name="log-out" size={20} color="#fff" />
               <Text style={styles.actionButtonText}>Logout</Text>

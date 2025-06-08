@@ -4,6 +4,7 @@ import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import { AuthProvider } from "../utils/auth-context";
+import AppLayout from "@/components/AppLayout";
 
 const MapScreen = () => {
   const router = useRouter();
@@ -52,6 +53,7 @@ const MapScreen = () => {
 
   return (
     <AuthProvider>
+      <AppLayout title="Select Location" hideHeader>
         <View style={{ flex: 1 }}>
           <MapView
             style={{ flex: 1 }}
@@ -65,6 +67,7 @@ const MapScreen = () => {
           </MapView>
           <Button title="Confirm Location" onPress={handleConfirm} />
         </View>
+      </AppLayout>
     </AuthProvider>
   );
 };

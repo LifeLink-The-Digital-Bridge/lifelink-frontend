@@ -8,6 +8,7 @@ import {
   Switch,
   TouchableOpacity,
   ActivityIndicator,
+  Button,
 } from "react-native";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
@@ -79,9 +80,6 @@ const RecipientScreen: React.FC = () => {
   const [locationError, setLocationError] = useState<string | null>(null);
 
   const [availability, setAvailability] = useState("AVAILABLE");
-  const [requiredBloodType, setRequiredBloodType] = useState("");
-  const [organNeeded, setOrganNeeded] = useState("");
-  const [urgencyLevel, setUrgencyLevel] = useState("HIGH");
   const [diagnosis, setDiagnosis] = useState("");
   const [allergies, setAllergies] = useState("");
   const [currentMedications, setCurrentMedications] = useState("");
@@ -110,9 +108,6 @@ const RecipientScreen: React.FC = () => {
         const recipient = JSON.parse(data);
         setRecipientData(recipient);
         setAvailability(recipient.availability || "AVAILABLE");
-        setRequiredBloodType(recipient.requiredBloodType || "");
-        setOrganNeeded(recipient.organNeeded || "");
-        setUrgencyLevel(recipient.urgencyLevel || "HIGH");
         setDiagnosis(recipient.medicalDetails?.diagnosis || "");
         setAllergies(recipient.medicalDetails?.allergies || "");
         setCurrentMedications(
@@ -183,8 +178,6 @@ const RecipientScreen: React.FC = () => {
 
   const isFormValid = (): boolean => {
     return (
-      !!requiredBloodType &&
-      !!organNeeded &&
       !!diagnosis &&
       !!addressLine &&
       !!city &&
@@ -232,9 +225,6 @@ const RecipientScreen: React.FC = () => {
       }
       const payload = {
         availability,
-        requiredBloodType,
-        organNeeded,
-        urgencyLevel,
         location: {
           addressLine,
           landmark,
@@ -301,175 +291,136 @@ const RecipientScreen: React.FC = () => {
   }
 
   return (
-  <AppLayout title="Become a Recipient">
-    <ScrollView style={styles.bg} contentContainerStyle={styles.scrollContent}>
-      <Text style={styles.sectionTitle}>Recipient Registration</Text>
-
-      <Text style={styles.label}>Required Blood Type</Text>
-      <View style={styles.input}>
-        <Picker
-          selectedValue={requiredBloodType}
-          onValueChange={setRequiredBloodType}
-        >
-          <Picker.Item label="Select Blood Type" value="" />
-          {BLOOD_TYPES.map((bt) => (
-            <Picker.Item
-              label={bt
-                .replace("_POSITIVE", "+")
-                .replace("_NEGATIVE", "-")
-                .replace("_", " ")}
-              value={bt}
-              key={bt}
-            />
-          ))}
-        </Picker>
-      </View>
-
-      <Text style={styles.label}>Organ Needed</Text>
-      <View style={styles.input}>
-        <Picker
-          selectedValue={organNeeded}
-          onValueChange={setOrganNeeded}
-        >
-          <Picker.Item label="Select Organ" value="" />
-          {ORGAN_TYPES.map((ot) => (
-            <Picker.Item
-              label={ot.charAt(0) + ot.slice(1).toLowerCase()}
-              value={ot}
-              key={ot}
-            />
-          ))}
-        </Picker>
-      </View>
-
-      <TextInput
-        style={styles.input}
-        placeholder="Urgency Level"
-        value={urgencyLevel}
-        onChangeText={setUrgencyLevel}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Diagnosis"
-        value={diagnosis}
-        onChangeText={setDiagnosis}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Allergies"
-        value={allergies}
-        onChangeText={setAllergies}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Current Medications"
-        value={currentMedications}
-        onChangeText={setCurrentMedications}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Additional Notes"
-        value={additionalNotes}
-        onChangeText={setAdditionalNotes}
-      />
-      <View style={styles.switchRow}>
-        <Text style={styles.label}>Medically Eligible?</Text>
-        <Switch value={medicallyEligible} onValueChange={setMedicallyEligible} />
-      </View>
-      <View style={styles.switchRow}>
-        <Text style={styles.label}>Legal Clearance?</Text>
-        <Switch value={legalClearance} onValueChange={setLegalClearance} />
-      </View>
-      <TextInput
-        style={styles.input}
-        placeholder="Eligibility Notes"
-        value={eligibilityNotes}
-        onChangeText={setEligibilityNotes}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Last Reviewed (YYYY-MM-DD)"
-        value={lastReviewed}
-        onChangeText={setLastReviewed}
-      />
-      <View style={styles.switchRow}>
-        <Text style={styles.label}>Consent to be a recipient?</Text>
-        <Switch value={isConsented} onValueChange={setIsConsented} />
-      </View>
-      <TextInput
-        style={styles.input}
-        placeholder="Address Line"
-        value={addressLine}
-        onChangeText={setAddressLine}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Landmark"
-        value={landmark}
-        onChangeText={setLandmark}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Area"
-        value={area}
-        onChangeText={setArea}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="District"
-        value={district}
-        onChangeText={setDistrict}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="City"
-        value={city}
-        onChangeText={setCity}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="State"
-        value={stateVal}
-        onChangeText={setStateVal}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Country"
-        value={country}
-        onChangeText={setCountry}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Pincode"
-        value={pincode}
-        onChangeText={setPincode}
-      />
-      {mapRegion && (
-        <MapView
-          style={{ height: 200, marginVertical: 16 }}
-          region={mapRegion}
-          onPress={(e) => {
-            setMarker(e.nativeEvent.coordinate);
-            setLatitude(e.nativeEvent.coordinate.latitude);
-            setLongitude(e.nativeEvent.coordinate.longitude);
-          }}
-        >
-          {marker && <Marker coordinate={marker} />}
-        </MapView>
-      )}
-      <TouchableOpacity
-        style={styles.button}
-        onPress={handleSubmit}
-        disabled={loading}
+    <AppLayout title="Become a Recipient">
+      <ScrollView
+        style={styles.bg}
+        contentContainerStyle={styles.scrollContent}
       >
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Save Recipient Details</Text>
-        )}
-      </TouchableOpacity>
-    </ScrollView>
-  </AppLayout>
+        <Text style={styles.sectionTitle}>Recipient Registration</Text>
+
+        <TextInput
+          style={styles.input}
+          placeholder="Diagnosis"
+          value={diagnosis}
+          onChangeText={setDiagnosis}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Allergies"
+          value={allergies}
+          onChangeText={setAllergies}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Current Medications"
+          value={currentMedications}
+          onChangeText={setCurrentMedications}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Additional Notes"
+          value={additionalNotes}
+          onChangeText={setAdditionalNotes}
+        />
+        <View style={styles.switchRow}>
+          <Text style={styles.label}>Medically Eligible?</Text>
+          <Switch
+            value={medicallyEligible}
+            onValueChange={setMedicallyEligible}
+          />
+        </View>
+        <View style={styles.switchRow}>
+          <Text style={styles.label}>Legal Clearance?</Text>
+          <Switch value={legalClearance} onValueChange={setLegalClearance} />
+        </View>
+        <TextInput
+          style={styles.input}
+          placeholder="Eligibility Notes"
+          value={eligibilityNotes}
+          onChangeText={setEligibilityNotes}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Last Reviewed (YYYY-MM-DD)"
+          value={lastReviewed}
+          onChangeText={setLastReviewed}
+        />
+        <View style={styles.switchRow}>
+          <Text style={styles.label}>Consent to be a recipient?</Text>
+          <Switch value={isConsented} onValueChange={setIsConsented} />
+        </View>
+        <TextInput
+          style={styles.input}
+          placeholder="Address Line"
+          value={addressLine}
+          onChangeText={setAddressLine}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Landmark"
+          value={landmark}
+          onChangeText={setLandmark}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Area"
+          value={area}
+          onChangeText={setArea}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="District"
+          value={district}
+          onChangeText={setDistrict}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="City"
+          value={city}
+          onChangeText={setCity}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="State"
+          value={stateVal}
+          onChangeText={setStateVal}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Country"
+          value={country}
+          onChangeText={setCountry}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Pincode"
+          value={pincode}
+          onChangeText={setPincode}
+        />
+        <View>
+          <Button
+            title={location ? "Change Location" : "Pick Location on Map"}
+            onPress={() => router.push("/navigation/mapScreen")}
+          />
+          {latitude !== null && longitude !== null && (
+            <Text>
+              Selected: {latitude}, {longitude}
+            </Text>
+          )}
+        </View>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={handleSubmit}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Save Recipient Details</Text>
+          )}
+        </TouchableOpacity>
+      </ScrollView>
+    </AppLayout>
   );
 };
 

@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { View, Alert, Text, ScrollView, ActivityIndicator } from "react-native";
 import * as SecureStore from "expo-secure-store";
-import { fetchDonationsByDonorId, Donation } from "../../scripts/api/donationStatusApi";
+import {
+  fetchDonationsByDonorId,
+  Donation,
+} from "../../scripts/api/donationStatusApi";
 import { AuthProvider } from "../utils/auth-context";
 import { useAuth } from "../utils/auth-context";
 import { router } from "expo-router";
 import donationStatusStyles from "../../constants/styles/donationStatusStyles";
+import Applayout from "../../components/AppLayout";
 
 const DonationStatusScreen = () => {
   const [donations, setDonations] = useState<Donation[]>([]);
@@ -90,6 +94,7 @@ const DonationStatusScreen = () => {
 
   return (
     <AuthProvider>
+      <Applayout title="Donation Status">
         <ScrollView style={donationStatusStyles.container}>
           {donations.map((donation, idx) => (
             <View key={idx} style={donationStatusStyles.card}>
@@ -160,6 +165,7 @@ const DonationStatusScreen = () => {
             </View>
           ))}
         </ScrollView>
+      </Applayout>
     </AuthProvider>
   );
 };

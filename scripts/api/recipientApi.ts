@@ -60,9 +60,6 @@ export interface ReceiveRequestDTO {
 
 export interface RegisterRecipientDTO {
   availability: string;
-  requiredBloodType: string;
-  organNeeded: string;
-  urgencyLevel: string;
   location: Location;
   medicalDetails: MedicalDetails;
   eligibilityCriteria: EligibilityCriteria;

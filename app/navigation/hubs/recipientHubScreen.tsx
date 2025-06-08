@@ -219,7 +219,7 @@ const RecipientHubScreen = () => {
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.button, { backgroundColor: "#0984e3", marginTop: 12 }]}
-        onPress={() => router.push("/navigation/RecipientScreen")}
+        onPress={() => router.push("/navigation/RecipientRequestScreen")}
       >
         <Text style={styles.buttonText}>Create New Request</Text>
       </TouchableOpacity>

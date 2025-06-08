@@ -629,7 +629,6 @@ const DonorScreen: React.FC = () => {
             onChangeText={setPincode}
           />
           <View>
-            {/* ...other form fields... */}
             <Button
               title={location ? "Change Location" : "Pick Location on Map"}
               onPress={() => router.push("/navigation/mapScreen")}
@@ -639,7 +638,6 @@ const DonorScreen: React.FC = () => {
                 Selected: {location.latitude}, {location.longitude}
               </Text>
             )}
-            {/* ...submit button, which includes location in payload... */}
           </View>
 
           <TouchableOpacity
