@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   ScrollView,
   Animated,
+  Modal,
 } from "react-native";
 import { MaterialIcons, Feather } from "@expo/vector-icons";
 import * as SecureStore from "expo-secure-store";
@@ -38,6 +39,7 @@ const Dashboard = () => {
     reviews: 0,
   });
   const [showChatIcon, setShowChatIcon] = useState(true);
+  const [menuVisible, setMenuVisible] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -124,29 +126,77 @@ const Dashboard = () => {
 
   return (
     <View style={styles.container}>
+      <Modal visible={menuVisible} transparent animationType="slide">
+        <View style={styles.sidebarOverlay}>
+          <View style={styles.sidebarContainer}>
+            <Text style={styles.sidebarTitle}>Menu</Text>
+            <TouchableOpacity
+              style={styles.menuItemButton}
+              onPress={() => {
+                setMenuVisible(false);
+                router.push("/navigation/RaiseFund");
+              }}
+            >
+              <Text style={styles.menuItem}>Raise Fund</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.menuItemButton}
+              onPress={() => {
+                setMenuVisible(false);
+                router.push("/navigation/DonationStatusScreen");
+              }}
+            >
+              <Text style={styles.menuItem}>My Donations</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.menuItemButton}
+              onPress={() => {
+                setMenuVisible(false);
+                router.push("/navigation/RecipientStatusScreen");
+              }}
+            >
+              <Text style={styles.menuItem}>Receiver Requests</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.menuItemButton}
+              onPress={() => setMenuVisible(false)}
+            >
+              <Text style={[styles.menuItem, { color: "#636e72" }]}>Close</Text>
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity style={{ flex: 1 }} onPress={() => setMenuVisible(false)} />
+        </View>
+      </Modal>
+
+      <View style={styles.topBar}>
+        <TouchableOpacity
+          style={styles.menuButton}
+          onPress={() => setMenuVisible(true)}
+        >
+          <Feather name="menu" size={24} color="#0984e3" />
+        </TouchableOpacity>
+        <View style={styles.searchContainer}>
+          <MaterialIcons name="search" size={22} color="#636e72" />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search"
+            placeholderTextColor="#b2bec3"
+          />
+        </View>
+        <TouchableOpacity style={styles.bellButton}>
+          <Feather name="bell" size={24} color="#0984e3" />
+        </TouchableOpacity>
+      </View>
+
       <ScrollView
         contentContainerStyle={{ paddingBottom: 80 }}
         onScroll={handleScroll}
         scrollEventThrottle={16}
       >
-        <View style={styles.topBar}>
-          <View style={styles.searchContainer}>
-            <MaterialIcons name="search" size={22} color="#636e72" />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search"
-              placeholderTextColor="#b2bec3"
-            />
-          </View>
-          <TouchableOpacity style={styles.bellButton}>
-            <Feather name="bell" size={24} color="#0984e3" />
-          </TouchableOpacity>
-        </View>
         <Text style={styles.welcomeText}>
           Welcome, <Text style={{ fontWeight: "bold" }}>{userData.username}</Text> 👋
         </Text>
         <Text style={styles.subText}>We're glad to have you here!</Text>
-        
       </ScrollView>
       {showChatIcon && (
         <View style={styles.chatBotIcon}>
@@ -165,6 +215,12 @@ const Dashboard = () => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f6f8fa", padding: 18 },
   topBar: { flexDirection: "row", alignItems: "center", marginBottom: 18 },
+  menuButton: {
+    marginRight: 14,
+    backgroundColor: "#e3eafc",
+    borderRadius: 24,
+    padding: 8,
+  },
   searchContainer: {
     flex: 1,
     flexDirection: "row",
@@ -197,31 +253,18 @@ const styles = StyleSheet.create({
     color: "#636e72",
     marginBottom: 18,
   },
-  reviewPlaceholder: {
-    minHeight: 80,
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 8,
-    shadowColor: "#000",
-    shadowOpacity: 0.04,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 1,
-  },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#f6f8fa",
   },
-chatBotIcon: {
-  position: "absolute",
-  bottom: 40, 
-  right: 20,
-  zIndex: 999,
-},
-
+  chatBotIcon: {
+    position: "absolute",
+    bottom: 40,
+    right: 20,
+    zIndex: 999,
+  },
   chatBotButton: {
     backgroundColor: "#0984e3",
     width: 56,
@@ -230,6 +273,37 @@ chatBotIcon: {
     justifyContent: "center",
     alignItems: "center",
     elevation: 4,
+  },
+  sidebarOverlay: {
+    flex: 1,
+    flexDirection: 'row',
+    backgroundColor: 'rgba(0,0,0,0.2)',
+  },
+  sidebarContainer: {
+    width: 240,
+    backgroundColor: '#fff',
+    paddingTop: 60,
+    paddingHorizontal: 20,
+    borderTopRightRadius: 16,
+    borderBottomRightRadius: 16,
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 2, height: 0 },
+    zIndex: 1000,
+  },
+  sidebarTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#0984e3",
+    marginBottom: 24,
+  },
+  menuItemButton: {
+    paddingVertical: 12,
+  },
+  menuItem: {
+    fontSize: 16,
+    color: "#0984e3",
   },
 });
 
