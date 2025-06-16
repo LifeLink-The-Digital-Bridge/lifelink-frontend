@@ -8,8 +8,8 @@ import {
   ActivityIndicator,
   ScrollView,
   Animated,
-  Modal,
 } from "react-native";
+import Modal from "react-native-modal";
 import { MaterialIcons, Feather } from "@expo/vector-icons";
 import * as SecureStore from "expo-secure-store";
 import { useRouter } from "expo-router";
@@ -126,45 +126,53 @@ const Dashboard = () => {
 
   return (
     <View style={styles.container}>
-      <Modal visible={menuVisible} transparent animationType="slide">
-        <View style={styles.sidebarOverlay}>
-          <View style={styles.sidebarContainer}>
-            <Text style={styles.sidebarTitle}>Menu</Text>
-            <TouchableOpacity
-              style={styles.menuItemButton}
-              onPress={() => {
-                setMenuVisible(false);
-                router.push("/navigation/RaiseFund");
-              }}
-            >
-              <Text style={styles.menuItem}>Raise Fund</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.menuItemButton}
-              onPress={() => {
-                setMenuVisible(false);
-                router.push("/navigation/DonationStatusScreen");
-              }}
-            >
-              <Text style={styles.menuItem}>My Donations</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.menuItemButton}
-              onPress={() => {
-                setMenuVisible(false);
-                router.push("/navigation/RecipientStatusScreen");
-              }}
-            >
-              <Text style={styles.menuItem}>Receiver Requests</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.menuItemButton}
-              onPress={() => setMenuVisible(false)}
-            >
-              <Text style={[styles.menuItem, { color: "#636e72" }]}>Close</Text>
-            </TouchableOpacity>
-          </View>
-          <TouchableOpacity style={{ flex: 1 }} onPress={() => setMenuVisible(false)} />
+      <Modal
+        isVisible={menuVisible}
+        animationIn="slideInLeft"
+        animationOut="slideOutLeft"
+        onBackdropPress={() => setMenuVisible(false)}
+        backdropOpacity={0.2}
+        style={{
+          margin: 0,
+          justifyContent: "flex-start",
+          alignItems: "flex-start",
+        }}
+      >
+        <View style={styles.sidebarContainer}>
+          <Text style={styles.sidebarTitle}>Menu</Text>
+          <TouchableOpacity
+            style={styles.menuItemButton}
+            onPress={() => {
+              setMenuVisible(false);
+              router.push("/navigation/RaiseFund");
+            }}
+          >
+            <Text style={styles.menuItem}>Raise Fund</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.menuItemButton}
+            onPress={() => {
+              setMenuVisible(false);
+              router.push("/navigation/DonationStatusScreen");
+            }}
+          >
+            <Text style={styles.menuItem}>My Donations</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.menuItemButton}
+            onPress={() => {
+              setMenuVisible(false);
+              router.push("/navigation/RecipientStatusScreen");
+            }}
+          >
+            <Text style={styles.menuItem}>Receiver Requests</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.menuItemButton}
+            onPress={() => setMenuVisible(false)}
+          >
+            <Text style={[styles.menuItem, { color: "#636e72" }]}>Close</Text>
+          </TouchableOpacity>
         </View>
       </Modal>
 
@@ -194,7 +202,8 @@ const Dashboard = () => {
         scrollEventThrottle={16}
       >
         <Text style={styles.welcomeText}>
-          Welcome, <Text style={{ fontWeight: "bold" }}>{userData.username}</Text> 👋
+          Welcome,{" "}
+          <Text style={{ fontWeight: "bold" }}>{userData.username}</Text> 👋
         </Text>
         <Text style={styles.subText}>We're glad to have you here!</Text>
       </ScrollView>
@@ -276,22 +285,25 @@ const styles = StyleSheet.create({
   },
   sidebarOverlay: {
     flex: 1,
-    flexDirection: 'row',
-    backgroundColor: 'rgba(0,0,0,0.2)',
+    flexDirection: "row",
+    backgroundColor: "rgba(0,0,0,0.2)",
   },
-  sidebarContainer: {
-    width: 240,
-    backgroundColor: '#fff',
-    paddingTop: 60,
-    paddingHorizontal: 20,
-    borderTopRightRadius: 16,
-    borderBottomRightRadius: 16,
-    elevation: 8,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 2, height: 0 },
-    zIndex: 1000,
-  },
+sidebarContainer: {
+  width: 240,
+  height: '100%',
+  backgroundColor: "#fff",
+  paddingTop: 20,
+  paddingHorizontal: 20,
+  borderTopRightRadius: 16,
+  borderBottomRightRadius: 16,
+  elevation: 8,
+  shadowColor: "#000",
+  shadowOpacity: 0.1,
+  shadowOffset: { width: 2, height: 0 },
+  zIndex: 1000,
+  justifyContent: 'flex-start',
+},
+
   sidebarTitle: {
     fontSize: 20,
     fontWeight: "bold",
