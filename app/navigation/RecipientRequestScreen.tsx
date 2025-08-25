@@ -9,10 +9,10 @@ import {
   ScrollView,
 } from "react-native";
 import { router } from "expo-router";
-import { createReceiveRequest } from "../../scripts/api/recipientApi";
+import { createReceiveRequest } from "../api/recipientApi";
 import * as SecureStore from "expo-secure-store";
 import { Picker } from "@react-native-picker/picker";
-import { useAuth } from "../utils/auth-context";
+import { useAuth } from "../../utils/auth-context";
 import AppLayout from "../../components/AppLayout";
 import styles from "../../constants/styles/dashboardStyles";
 

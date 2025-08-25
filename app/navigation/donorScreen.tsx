@@ -11,12 +11,12 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import { AuthProvider, useAuth } from "../utils/auth-context";
+import { AuthProvider, useAuth } from "../../utils/auth-context";
 import { router, useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import styles from "../../constants/styles/dashboardStyles";
-import { registerDonor } from "../../scripts/api/donorApi";
-import { addDonorRole, refreshAuthTokens } from "../../scripts/api/roleApi";
+import { registerDonor } from "../api/donorApi";
+import { addDonorRole, refreshAuthTokens } from "../api/roleApi";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import AppLayout from "@/components/AppLayout";

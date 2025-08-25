@@ -13,8 +13,8 @@ import * as ImagePicker from "expo-image-picker";
 import { Picker } from "@react-native-picker/picker";
 import styles from "../../constants/styles/loginStyles";
 import { router } from "expo-router";
-import { registerUser } from "../../scripts/api/registerApi";
-import type { RegisterRequest } from "../../scripts/api/registerApi";
+import { registerUser } from "../api/registerApi";
+import type { RegisterRequest } from "../api/registerApi";
 import AppLayout from "../../components/AppLayout";
 import { Feather } from "@expo/vector-icons";
 

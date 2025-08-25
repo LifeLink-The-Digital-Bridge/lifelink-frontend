@@ -10,7 +10,7 @@ import {
   RefreshControl,
 } from "react-native";
 import styles from "../../../constants/styles/dashboardStyles";
-import { fetchDonorData } from "@/scripts/api/donorApi";
+import { fetchDonorData } from "../../api/donorApi";
 
 export default function DonateHubScreen() {
   const [loading, setLoading] = useState(true);

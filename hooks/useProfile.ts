@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import * as SecureStore from "expo-secure-store";
 import { useLocalSearchParams } from "expo-router";
-import { UserDTO, fetchUserProfile, fetchIsFollowing } from "../scripts/api/profile";
+import { UserDTO, fetchUserProfile, fetchIsFollowing } from "../app/api/profile";
 import Constants from 'expo-constants';
 
 const BASE_URL = Constants.expoConfig?.extra?.API_URL;

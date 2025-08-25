@@ -4,9 +4,9 @@ import * as SecureStore from "expo-secure-store";
 import {
   fetchDonationsByDonorId,
   Donation,
-} from "../../scripts/api/donationStatusApi";
-import { AuthProvider } from "../utils/auth-context";
-import { useAuth } from "../utils/auth-context";
+} from "../api/donationStatusApi";
+import { AuthProvider } from "../../utils/auth-context";
+import { useAuth } from "../../utils/auth-context";
 import { router } from "expo-router";
 import donationStatusStyles from "../../constants/styles/donationStatusStyles";
 import Applayout from "../../components/AppLayout";

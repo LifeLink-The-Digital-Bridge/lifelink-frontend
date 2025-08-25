@@ -1,4 +1,4 @@
-import { getJwt } from '../../app/utils/JWT';
+import { getJwt } from '../../utils/JWT';
 import Constants from 'expo-constants';
 
 const BASE_URL = Constants.expoConfig?.extra?.API_URL;

@@ -11,19 +11,19 @@ import {
 import { useRouter } from "expo-router";
 import { Feather, FontAwesome } from "@expo/vector-icons";
 import { useProfile } from "../../hooks/useProfile";
-import { useAuth } from "../utils/auth-context";
+import { useAuth } from "../../utils/auth-context";
 import * as SecureStore from "expo-secure-store";
 import styles from "../../constants/styles/profileStyles";
 import { useState, useEffect, useCallback } from "react";
 import {
   fetchDonationsByDonorId,
   Donation,
-} from "../../scripts/api/donationStatusApi";
+} from "../api/donationStatusApi";
 import {
   getRecipientByUserId,
   getRecipientRequests,
   ReceiveRequestDTO,
-} from "../../scripts/api/recipientApi";
+} from "../api/recipientApi";
 
 const mockReviews = [
   { id: 1, text: "Great donor, very helpful!", date: "2024-06-02" },

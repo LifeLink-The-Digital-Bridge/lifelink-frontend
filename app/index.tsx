@@ -1,7 +1,7 @@
 import { Redirect } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, View, Image } from "react-native";
-import { useAuth } from "./utils/auth-context";
+import { useAuth } from "../utils/auth-context";
 import HomeScreenContent from "./navigation/HomeScreenContent";
 import * as SplashScreen from "expo-splash-screen";
 import AppLayout from "../components/AppLayout";

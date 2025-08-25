@@ -12,8 +12,8 @@ import {
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import styles from "../../../constants/styles/dashboardStyles";
-import { getRecipientByUserId } from "../../../scripts/api/recipientApi";
-import { useAuth } from "../../utils/auth-context";
+import { getRecipientByUserId } from "../../api/recipientApi";
+import { useAuth } from "../../../utils/auth-context";
 
 const RecipientHubScreen = () => {
   const [loading, setLoading] = useState(true);

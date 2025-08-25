@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router/tabs";
-import { useAuth } from '../utils/auth-context';
+import { useAuth } from '../../utils/auth-context';
 import { MaterialIcons, Feather, Ionicons } from "@expo/vector-icons";
 import { Redirect } from "expo-router";
 

@@ -12,7 +12,7 @@ import {
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
-import { updateUserProfile, fetchUserProfile, UserDTO } from "../../scripts/api/profile";
+import { updateUserProfile, fetchUserProfile, UserDTO } from "../api/profile";
 import { Feather } from "@expo/vector-icons";
 import AppLayout from "@/components/AppLayout";
 import { Picker } from "@react-native-picker/picker";

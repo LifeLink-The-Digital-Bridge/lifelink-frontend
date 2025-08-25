@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { Picker } from "@react-native-picker/picker";
-import { DonationRequest } from "../../scripts/api/donationApi";
+import { DonationRequest } from "../api/donationApi";
 import {
   BloodType,
   OrganType,
   TissueType,
   StemCellType,
-} from "../../scripts/api/donationApi";
-import { AuthProvider } from "../utils/auth-context";
-import { useAuth } from "../utils/auth-context";
+} from "../api/donationApi";
+import { AuthProvider } from "../../utils/auth-context";
+import { useAuth } from "../../utils/auth-context";
 import { router } from "expo-router";
 
 import {
@@ -22,7 +22,7 @@ import {
 } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import styles from "../../constants/styles/dashboardStyles";
-import { registerDonation } from "../../scripts/api/donationApi";
+import { registerDonation } from "../api/donationApi";
 import AppLayout from "@/components/AppLayout";
 import { BackHandler } from "react-native";
 

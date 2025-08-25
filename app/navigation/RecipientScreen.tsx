@@ -13,12 +13,12 @@ import {
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import styles from "../../constants/styles/dashboardStyles";
-import { registerRecipient } from "../../scripts/api/recipientApi";
-import { addRecipientRole, refreshAuthTokens } from "../../scripts/api/roleApi";
+import { registerRecipient } from "../api/recipientApi";
+import { addRecipientRole, refreshAuthTokens } from "../api/roleApi";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import AppLayout from "@/components/AppLayout";
-import { useAuth } from "../utils/auth-context";
+import { useAuth } from "../../utils/auth-context";
 import { Picker } from "@react-native-picker/picker";
 
 const RecipientScreen: React.FC = () => {

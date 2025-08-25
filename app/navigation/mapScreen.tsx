@@ -3,7 +3,7 @@ import { View, Button } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
-import { AuthProvider } from "../utils/auth-context";
+import { AuthProvider } from "../../utils/auth-context";
 import AppLayout from "@/components/AppLayout";
 
 const MapScreen = () => {

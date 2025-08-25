@@ -8,10 +8,10 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { router } from "expo-router";
-import { loginUser } from "../../scripts/api/loginApi";
+import { loginUser } from "../api/loginApi";
 import styles from "../../constants/styles/loginStyles";
 import * as SecureStore from "expo-secure-store";
-import { useAuth } from "../utils/auth-context";
+import { useAuth } from "../../utils/auth-context";
 import AppLayout from "../../components/AppLayout";
 import { Feather } from "@expo/vector-icons";
 

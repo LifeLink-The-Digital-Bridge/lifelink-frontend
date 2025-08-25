@@ -13,8 +13,8 @@ import Modal from "react-native-modal";
 import { MaterialIcons, Feather } from "@expo/vector-icons";
 import * as SecureStore from "expo-secure-store";
 import { useRouter } from "expo-router";
-import { useAuth } from "../utils/auth-context";
-import { fetchDonorByUserId, fetchDonorData } from "@/scripts/api/donorApi";
+import { useAuth } from "../../utils/auth-context";
+import { fetchDonorByUserId, fetchDonorData } from "../api/donorApi";
 
 const Dashboard = () => {
   const { logout, isAuthenticated } = useAuth();
@@ -203,7 +203,7 @@ const Dashboard = () => {
       >
         <Text style={styles.welcomeText}>
           Welcome,{" "}
-          <Text style={{ fontWeight: "bold" }}>{userData.username}</Text> 👋
+          <Text style={{ fontWeight: "bold" }}>{userData.username}</Text> 
         </Text>
         <Text style={styles.subText}>We're glad to have you here!</Text>
       </ScrollView>
