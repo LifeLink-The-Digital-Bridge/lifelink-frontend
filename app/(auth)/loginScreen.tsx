@@ -1,40 +1,55 @@
 import React, { useState } from "react";
 import {
-  View,
+  ScrollView,
   Text,
   TextInput,
   TouchableOpacity,
+  View,
   Alert,
-  ActivityIndicator,
 } from "react-native";
 import { router } from "expo-router";
-import { loginUser } from "../api/loginApi";
-import styles from "../../constants/styles/loginStyles";
 import * as SecureStore from "expo-secure-store";
-import { useAuth } from "../../utils/auth-context";
 import AppLayout from "../../components/AppLayout";
-import { Feather } from "@expo/vector-icons";
-
-function getLoginType(identifier: string): "username" | "email" {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(identifier) ? "email" : "username";
-}
+import { LoadingButton } from '../../components/common/Button/LoadingButton';
+import { PasswordInput } from '../../components/common/Input/PasswordInput';
+import { ValidationMessage } from '../../components/common/validationMessage';
+import { useAuth } from "../../utils/auth-context";
+import { useTheme } from "../../utils/theme-context";
+import { validateField, validationRules, getLoginType } from "../../utils/validation";
+import { loginUser } from "../api/loginApi";
+import { lightTheme, darkTheme, createAuthStyles } from "../../constants/styles/authStyles";
 
 export default function LoginScreen() {
+  const { isDark } = useTheme();
+  const theme = isDark ? darkTheme : lightTheme;
+  const styles = createAuthStyles(theme);
+
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<{identifier?: string; password?: string}>({});
+  const [focusedInput, setFocusedInput] = useState<string | null>(null);
   const { setIsAuthenticated } = useAuth();
-  const [showPassword, setShowPassword] = useState(false);
+
+  const validateForm = (): boolean => {
+    const newErrors: {identifier?: string; password?: string} = {};
+
+    const identifierError = validateField(identifier, validationRules.identifier, 'Username/Email');
+    if (identifierError) {
+      newErrors.identifier = identifierError;
+    }
+
+    const passwordError = validateField(password, validationRules.password, 'Password');
+    if (passwordError) {
+      newErrors.password = passwordError;
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleLogin = async () => {
-    if (!identifier || !password) {
-      Alert.alert(
-        "Validation Error",
-        "Please enter username/email and password."
-      );
-      return;
-    }
+    if (!validateForm()) return;
 
     setLoading(true);
     try {
@@ -49,8 +64,9 @@ export default function LoginScreen() {
       await SecureStore.setItemAsync("roles", JSON.stringify(response.roles));
       await SecureStore.setItemAsync("gender", response.gender);
       await SecureStore.setItemAsync("dob", response.dob);
+      
       setIsAuthenticated(true);
-      Alert.alert("Login Successful", `Welcome, ${response.username}`);
+      Alert.alert("Login Successful", `Welcome back, ${response.username}!`);
       router.push("/(tabs)");
     } catch (error: any) {
       let message = "An unexpected error occurred.";
@@ -63,59 +79,75 @@ export default function LoginScreen() {
     }
   };
 
+  const clearError = (field: string) => {
+    setErrors(prev => ({ ...prev, [field]: undefined }));
+  };
+
   return (
     <AppLayout hideHeader={true}>
-      <View style={styles.container}>
-        <Text style={styles.title}>Login to LifeLink</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Username or Email"
-          autoCapitalize="none"
-          value={identifier}
-          onChangeText={setIdentifier}
-        />
-        <View style={{ position: "relative" }}>
+      <ScrollView 
+        style={styles.container}
+        contentContainerStyle={styles.scrollContainer}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.headerContainer}>
+          <Text style={styles.title}>Welcome Back</Text>
+          <Text style={styles.subtitle}>Sign in to your LifeLink account</Text>
+        </View>
+
+        <View style={styles.inputContainer}>
           <TextInput
-            style={styles.input}
-            placeholder="Password"
-            secureTextEntry={!showPassword}
-            value={password}
-            onChangeText={setPassword}
-          />
-          <TouchableOpacity
-            style={{
-              position: "absolute",
-              right: 15,
-              top: 8,
-              height: 40,
-              justifyContent: "center",
-              alignItems: "center",
-              zIndex: 1,
+            style={[
+              styles.input,
+              focusedInput === 'identifier' && styles.inputFocused,
+              errors.identifier && styles.inputError
+            ]}
+            placeholder="Username or Email"
+            placeholderTextColor={theme.textSecondary}
+            autoCapitalize="none"
+            autoCorrect={false}
+            value={identifier}
+            onChangeText={(text) => {
+              setIdentifier(text);
+              clearError('identifier');
             }}
-            onPress={() => setShowPassword((prev) => !prev)}
-          >
-            <Feather
-              name={showPassword ? "eye" : "eye-off"}
-              size={22}
-              color="#636e72"
-            />
+            onFocus={() => setFocusedInput('identifier')}
+            onBlur={() => setFocusedInput(null)}
+          />
+          <ValidationMessage error={errors.identifier} />
+        </View>
+
+        <View style={styles.inputContainer}>
+          <PasswordInput
+            placeholder="Password"
+            value={password}
+            onChangeText={(text) => {
+              setPassword(text);
+              clearError('password');
+            }}
+            hasError={!!errors.password}
+            onFocus={() => setFocusedInput('password')}
+            onBlur={() => setFocusedInput(null)}
+          />
+          <ValidationMessage error={errors.password} />
+        </View>
+
+        <LoadingButton 
+          title="Sign In" 
+          onPress={handleLogin} 
+          loading={loading}
+          variant="primary"
+        />
+
+        <View style={styles.linkContainer}>
+          <TouchableOpacity onPress={() => router.push("./registerScreen")}>
+            <Text style={styles.linkText}>
+              Don't have an account? Sign up
+            </Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity
-          style={styles.button}
-          onPress={handleLogin}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Login</Text>
-          )}
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.push("./registerScreen")}>
-          <Text style={styles.linkText}>Don't have an account? Register</Text>
-        </TouchableOpacity>
-      </View>
+      </ScrollView>
     </AppLayout>
   );
 }

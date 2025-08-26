@@ -1,6 +1,6 @@
 import React from 'react';
-import { TouchableOpacity, Text, ActivityIndicator, TouchableOpacityProps } from 'react-native';
-import { styles } from './styles';
+import { ActivityIndicator, Text, TouchableOpacity, TouchableOpacityProps } from 'react-native';
+import authStyles from '../../../constants/styles/authStyles';
 
 interface LoadingButtonProps extends TouchableOpacityProps {
   title: string;
@@ -21,17 +21,23 @@ export function LoadingButton({
     <TouchableOpacity
       {...props}
       style={[
-        styles.button,
-        styles[variant],
-        isDisabled && styles.disabled,
+        authStyles.button,
+        authStyles[variant],
+        isDisabled && authStyles.disabled,
         props.style,
       ]}
       disabled={isDisabled}
+      activeOpacity={0.8}
     >
       {loading ? (
-        <ActivityIndicator color="#fff" />
+        <ActivityIndicator 
+          color={variant === 'primary' ? "#fff" : "#3b82f6"} 
+          size="small"
+        />
       ) : (
-        <Text style={[styles.buttonText, styles[`${variant}Text`]]}>{title}</Text>
+        <Text style={[authStyles.buttonText, authStyles[`${variant}Text`]]}>
+          {title}
+        </Text>
       )}
     </TouchableOpacity>
   );

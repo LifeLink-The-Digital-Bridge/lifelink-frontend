@@ -16,7 +16,7 @@ import { updateUserProfile, fetchUserProfile, UserDTO } from "../api/profile";
 import { Feather } from "@expo/vector-icons";
 import AppLayout from "@/components/AppLayout";
 import { Picker } from "@react-native-picker/picker";
-import styles from "../../constants/styles/loginStyles";
+import styles from "../../constants/styles/authStyles";
 
 const genderOptions = [
   { label: "Select Gender", value: "" },
@@ -148,7 +148,7 @@ const EditProfile: React.FC = () => {
   if (profileLoading) {
     return (
       <AppLayout hideHeader={true}>
-        <View style={styles.loadingContainer}>
+        <View style={styles.linkContainer}>
           <ActivityIndicator size="large" color="#0984e3" />
           <Text style={styles.errorText}>Loading profile...</Text>
         </View>

@@ -47,6 +47,7 @@ export interface RecipientDTO {
 }
 
 export interface ReceiveRequestDTO {
+  bloodType: string;
   id?: number;
   recipientId: string;
   requestedBloodType: string;
