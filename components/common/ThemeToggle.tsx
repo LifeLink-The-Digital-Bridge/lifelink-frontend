@@ -1,7 +1,7 @@
 import React from 'react';
 import { TouchableOpacity } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { useTheme } from '../../utils/theme-context'; // Fixed path
+import { useTheme } from '../../utils/theme-context';
 import { lightTheme, darkTheme, createAuthStyles } from '../../constants/styles/authStyles';
 
 export function ThemeToggle() {
@@ -10,7 +10,6 @@ export function ThemeToggle() {
   const styles = createAuthStyles(currentTheme);
 
   const toggleTheme = () => {
-    // Simple toggle between light and dark (ignore system for toggle button)
     setTheme(isDark ? 'light' : 'dark');
   };
 

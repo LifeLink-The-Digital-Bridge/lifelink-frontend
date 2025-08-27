@@ -2,20 +2,24 @@ import { Tabs } from "expo-router/tabs";
 import { useAuth } from '../../utils/auth-context';
 import { MaterialIcons, Feather, Ionicons } from "@expo/vector-icons";
 import { Redirect } from "expo-router";
+import { useTheme } from "../../utils/theme-context";
+import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
 
 export default function TabsLayout() {
+  const { isDark } = useTheme();
+  const theme = isDark ? darkTheme : lightTheme;
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) return null;
   if (!isAuthenticated) return <Redirect href="/(auth)/loginScreen" />;
   return (
-    <Tabs
+        <Tabs
       screenOptions={{
-        tabBarActiveTintColor: "#0984e3",
+        tabBarActiveTintColor: theme.primary,
         tabBarStyle: {
-          backgroundColor: "#f6f8fa",
+          backgroundColor: theme.card,
           borderTopWidth: 0.5,
-          borderTopColor: "#dfe4ea",
+          borderTopColor: theme.border,
         },
         tabBarLabelStyle: { fontWeight: "bold", fontSize: 13 },
         headerShown: false,

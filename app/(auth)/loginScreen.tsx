@@ -10,14 +10,23 @@ import {
 import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import AppLayout from "../../components/AppLayout";
-import { LoadingButton } from '../../components/common/Button/LoadingButton';
-import { PasswordInput } from '../../components/common/Input/PasswordInput';
-import { ValidationMessage } from '../../components/common/validationMessage';
+import { LoadingButton } from "../../components/common/Button/LoadingButton";
+import { PasswordInput } from "../../components/common/Input/PasswordInput";
+import { ValidationMessage } from "../../components/common/validationMessage";
 import { useAuth } from "../../utils/auth-context";
 import { useTheme } from "../../utils/theme-context";
-import { validateField, validationRules, getLoginType } from "../../utils/validation";
+import {
+  validateField,
+  validationRules,
+  getLoginType,
+} from "../../utils/validation";
 import { loginUser } from "../api/loginApi";
-import { lightTheme, darkTheme, createAuthStyles } from "../../constants/styles/authStyles";
+import {
+  lightTheme,
+  darkTheme,
+  createAuthStyles,
+} from "../../constants/styles/authStyles";
+import { CustomAlert } from "@/components/common/CustomAlert";
 
 export default function LoginScreen() {
   const { isDark } = useTheme();
@@ -27,19 +36,36 @@ export default function LoginScreen() {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<{identifier?: string; password?: string}>({});
+  const [errors, setErrors] = useState<{
+    identifier?: string;
+    password?: string;
+  }>({});
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
   const { setIsAuthenticated } = useAuth();
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertData, setAlertData] = useState({ title: "", message: "" });
 
+  const showAlert = (title: string, message: string) => {
+    setAlertData({ title, message });
+    setAlertVisible(true);
+  };
   const validateForm = (): boolean => {
-    const newErrors: {identifier?: string; password?: string} = {};
+    const newErrors: { identifier?: string; password?: string } = {};
 
-    const identifierError = validateField(identifier, validationRules.identifier, 'Username/Email');
+    const identifierError = validateField(
+      identifier,
+      validationRules.identifier,
+      "Username/Email"
+    );
     if (identifierError) {
       newErrors.identifier = identifierError;
     }
 
-    const passwordError = validateField(password, validationRules.password, 'Password');
+    const passwordError = validateField(
+      password,
+      validationRules.password,
+      "Password"
+    );
     if (passwordError) {
       newErrors.password = passwordError;
     }
@@ -64,28 +90,28 @@ export default function LoginScreen() {
       await SecureStore.setItemAsync("roles", JSON.stringify(response.roles));
       await SecureStore.setItemAsync("gender", response.gender);
       await SecureStore.setItemAsync("dob", response.dob);
-      
+
       setIsAuthenticated(true);
-      Alert.alert("Login Successful", `Welcome back, ${response.username}!`);
+      showAlert("Login Successful", `Welcome back, ${response.username}!`);
       router.push("/(tabs)");
     } catch (error: any) {
       let message = "An unexpected error occurred.";
       if (error instanceof Error) {
         message = error.message;
       }
-      Alert.alert("Login Failed", message);
+      showAlert("Login Failed", message);
     } finally {
       setLoading(false);
     }
   };
 
   const clearError = (field: string) => {
-    setErrors(prev => ({ ...prev, [field]: undefined }));
+    setErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
   return (
     <AppLayout hideHeader={true}>
-      <ScrollView 
+      <ScrollView
         style={styles.container}
         contentContainerStyle={styles.scrollContainer}
         keyboardShouldPersistTaps="handled"
@@ -100,8 +126,8 @@ export default function LoginScreen() {
           <TextInput
             style={[
               styles.input,
-              focusedInput === 'identifier' && styles.inputFocused,
-              errors.identifier && styles.inputError
+              focusedInput === "identifier" && styles.inputFocused,
+              errors.identifier && styles.inputError,
             ]}
             placeholder="Username or Email"
             placeholderTextColor={theme.textSecondary}
@@ -110,9 +136,9 @@ export default function LoginScreen() {
             value={identifier}
             onChangeText={(text) => {
               setIdentifier(text);
-              clearError('identifier');
+              clearError("identifier");
             }}
-            onFocus={() => setFocusedInput('identifier')}
+            onFocus={() => setFocusedInput("identifier")}
             onBlur={() => setFocusedInput(null)}
           />
           <ValidationMessage error={errors.identifier} />
@@ -124,30 +150,34 @@ export default function LoginScreen() {
             value={password}
             onChangeText={(text) => {
               setPassword(text);
-              clearError('password');
+              clearError("password");
             }}
             hasError={!!errors.password}
-            onFocus={() => setFocusedInput('password')}
+            onFocus={() => setFocusedInput("password")}
             onBlur={() => setFocusedInput(null)}
           />
           <ValidationMessage error={errors.password} />
         </View>
 
-        <LoadingButton 
-          title="Sign In" 
-          onPress={handleLogin} 
+        <LoadingButton
+          title="Sign In"
+          onPress={handleLogin}
           loading={loading}
           variant="primary"
         />
 
         <View style={styles.linkContainer}>
           <TouchableOpacity onPress={() => router.push("./registerScreen")}>
-            <Text style={styles.linkText}>
-              Don't have an account? Sign up
-            </Text>
+            <Text style={styles.linkText}>Don't have an account? Sign up</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
+      <CustomAlert
+        visible={alertVisible}
+        title={alertData.title}
+        message={alertData.message}
+        onClose={() => setAlertVisible(false)}
+      />
     </AppLayout>
   );
 }

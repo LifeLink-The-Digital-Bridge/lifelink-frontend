@@ -85,7 +85,7 @@ export default function HomeScreenContent() {
       paddingBottom: 100,
     },
     heroSection: {
-      height: screenHeight * 0.75,
+      height: screenHeight * 0.85,
       paddingHorizontal: 24,
       justifyContent: "center" as const,
       alignItems: "center" as const,
@@ -323,76 +323,76 @@ export default function HomeScreenContent() {
           </Animatable.View>
         </Animated.View>
 
-        {showFeatures && (
-          <View style={homeStyles.featuresContainer}>
-            <Animatable.Text
-              style={homeStyles.sectionTitle}
-              animation="fadeInDown"
-              duration={600}
-            >
-              How LifeLink Helps
-            </Animatable.Text>
-
-            {features.map((feature, index) => (
-              <Animatable.View
-                key={index}
-                style={homeStyles.featureItem}
-                animation="fadeInRight"
-                delay={feature.delay}
+        <View style={homeStyles.featuresContainer}>
+          {showFeatures && (
+            <>
+              <Animatable.Text
+                style={homeStyles.sectionTitle}
+                animation="fadeInDown"
                 duration={600}
               >
-                <View style={homeStyles.featureIcon}>
-                  <Feather
-                    name={feature.icon as any}
-                    size={24}
-                    color={currentTheme.primary}
-                  />
-                </View>
-                <Text style={homeStyles.featureText}>{feature.title}</Text>
-              </Animatable.View>
-            ))}
+                How LifeLink Helps
+              </Animatable.Text>
 
-            <Animatable.View
-              style={{
-                alignItems: "center",
-                paddingTop: 40,
-                paddingBottom: 60,
-              }}
-              animation="fadeIn"
-              delay={800}
-            >
-              <Text style={[homeStyles.scrollText, { textAlign: "center" }]}>
-                Join thousands of people making a difference
-              </Text>
-            </Animatable.View>
-          </View>
-        )}
+              {features.map((feature, index) => (
+                <Animatable.View
+                  key={index}
+                  style={homeStyles.featureItem}
+                  animation="fadeInRight"
+                  delay={feature.delay}
+                  duration={600}
+                >
+                  <View style={homeStyles.featureIcon}>
+                    <Feather
+                      name={feature.icon as any}
+                      size={24}
+                      color={currentTheme.primary}
+                    />
+                  </View>
+                  <Text style={homeStyles.featureText}>{feature.title}</Text>
+                </Animatable.View>
+              ))}
+
+              <Animatable.View
+                style={{ alignItems: "center", paddingTop: 40, paddingBottom: 60 }}
+                animation="fadeIn"
+                delay={800}
+              >
+                <Text style={[homeStyles.scrollText, { textAlign: "center" }]}>
+                  Join thousands of people making a difference
+                </Text>
+              </Animatable.View>
+            </>
+          )}
+        </View>
       </ScrollView>
 
-      <TouchableOpacity
-        style={homeStyles.scrollIndicator}
-        onPress={scrollDownToFeatures}
-        activeOpacity={0.7}
-      >
-        <Animatable.Text
-          style={homeStyles.scrollText}
-          animation="fadeIn"
-          delay={1200}
+      {!showFeatures && (
+        <TouchableOpacity
+          style={homeStyles.scrollIndicator}
+          onPress={scrollDownToFeatures}
+          activeOpacity={0.7}
         >
-          Learn more about LifeLink
-        </Animatable.Text>
-        <Animatable.View
-          animation="bounceIn"
-          iterationCount="infinite"
-          duration={1000}
-        >
-          <Feather
-            name="chevron-down"
-            size={28}
-            color={currentTheme.primary}
-          />
-        </Animatable.View>
-      </TouchableOpacity>
+          <Animatable.Text
+            style={homeStyles.scrollText}
+            animation="fadeIn"
+            delay={1200}
+          >
+            Learn more about LifeLink
+          </Animatable.Text>
+          <Animatable.View
+            animation="bounceIn"
+            iterationCount="infinite"
+            duration={1000}
+          >
+            <Feather
+              name="chevron-down"
+              size={28}
+              color={currentTheme.primary}
+            />
+          </Animatable.View>
+        </TouchableOpacity>
+      )}
 
       <TouchableOpacity
         style={homeStyles.themeToggle}
@@ -400,7 +400,7 @@ export default function HomeScreenContent() {
         activeOpacity={0.8}
       >
         <Feather
-          name={colorScheme === 'dark' ? 'sun' : 'moon'}
+          name={colorScheme === "dark" ? "sun" : "moon"}
           size={24}
           color={currentTheme.text}
         />
