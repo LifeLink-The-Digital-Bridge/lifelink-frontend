@@ -8,19 +8,79 @@ export interface MedicalDetailsDTO {
   bloodPressure: string;
   hasDiseases: boolean;
   takingMedication: boolean;
-  diseaseDescription: string;
+  diseaseDescription: string | null;
+  currentMedications: string | null;
+  lastMedicalCheckup: string;
+  medicalHistory: string;
+  hasInfectiousDiseases: boolean;
+  infectiousDiseaseDetails: string | null;
+  creatinineLevel: number;
+  liverFunctionTests: string;
+  cardiacStatus: string;
+  pulmonaryFunction: number;
+  overallHealthStatus: string;
 }
 
 export interface EligibilityCriteriaDTO {
   ageEligible: boolean;
+  age: number;
+  dob: string;
   weightEligible: boolean;
+  weight: number;
   medicalClearance: boolean;
   recentTattooOrPiercing: boolean;
   recentTravel: boolean;
+  recentTravelDetails: string;
+  recentVaccination: boolean;
+  recentSurgery: boolean;
+  chronicDiseases: string;
+  allergies: string;
+  lastDonationDate: string | null;
+  height: number;
+  bodyMassIndex: number;
+  bodySize: string;
+  isLivingDonor: boolean;
 }
 
 export interface ConsentFormDTO {
+  userId: string;
   isConsented: boolean;
+  consentedAt: string;
+  consentType: string;
+}
+
+export interface AddressDTO {
+  addressLine: string;
+  landmark: string;
+  area: string;
+  city: string;
+  district: string;
+  state: string;
+  country: string;
+  pincode: string;
+  latitude: number;
+  longitude: number;
+}
+
+export interface HlaProfileDTO {
+  hlaA1: string;
+  hlaA2: string;
+  hlaB1: string;
+  hlaB2: string;
+  hlaC1: string;
+  hlaC2: string;
+  hlaDR1: string;
+  hlaDR2: string;
+  hlaDQ1: string;
+  hlaDQ2: string;
+  hlaDP1: string;
+  hlaDP2: string;
+  testingDate: string;
+  testingMethod: string;
+  laboratoryName: string;
+  certificationNumber: string;
+  hlaString: string;
+  isHighResolution: boolean;
 }
 
 export interface RegisterDonorRequest {
@@ -29,6 +89,8 @@ export interface RegisterDonorRequest {
   medicalDetails: MedicalDetailsDTO;
   eligibilityCriteria: EligibilityCriteriaDTO;
   consentForm: ConsentFormDTO;
+  addresses: AddressDTO[];
+  hlaProfile: HlaProfileDTO;
 }
 
 export const registerDonor = async (payload: RegisterDonorRequest) => {
@@ -94,6 +156,26 @@ export const fetchDonorByUserId = async (): Promise<any> => {
       return null; 
     }
     throw new Error("Failed to fetch donor by userId");
+  }
+  return await response.json();
+};
+
+export const fetchDonationsByDonorId = async (donorId: string): Promise<any> => {
+  const token = await SecureStore.getItemAsync("jwt");
+  if (!token) return null;
+
+  const response = await fetch(`${BASE_URL}/donors/${donorId}/donations`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      return [];
+    }
+    throw new Error("Failed to fetch donations");
   }
   return await response.json();
 };

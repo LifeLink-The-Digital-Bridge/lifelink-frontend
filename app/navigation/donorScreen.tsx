@@ -1,46 +1,49 @@
 import React, { useEffect, useState } from "react";
-import {
-  Alert,
-  Text,
-  Button,
-  View,
-  ScrollView,
-  TextInput,
-  Switch,
-  TouchableOpacity,
-  ActivityIndicator,
-} from "react-native";
-import { useLocalSearchParams } from "expo-router";
-import { AuthProvider, useAuth } from "../../utils/auth-context";
-import { router, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
+import { useAuth } from "../../utils/auth-context";
+import AppLayout from "@/components/AppLayout";
 import * as SecureStore from "expo-secure-store";
-import styles from "../../constants/styles/dashboardStyles";
 import { registerDonor } from "../api/donorApi";
 import { addDonorRole, refreshAuthTokens } from "../api/roleApi";
-import MapView, { Marker } from "react-native-maps";
-import * as Location from "expo-location";
-import AppLayout from "@/components/AppLayout";
 
-const calculateAge = (dobString: string): number => {
-  const today = new Date();
-  const dob = new Date(dobString);
-  let age = today.getFullYear() - dob.getFullYear();
-  const m = today.getMonth() - dob.getMonth();
-  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
-    age--;
-  }
-  return age;
-};
+import { DonorForm } from "../../components/donor/DonorForm";
+import { SubmitButton } from "../../components/donor/SubmitButton";
+import { LoadingScreen } from "../../components/donor/LoadingScreen";
+import { ValidationAlert } from "../../components/common/ValidationAlert";
+
+import { useDonorFormState } from "../../hooks/useDonorFormState";
 
 const DonorScreen: React.FC = () => {
   const { isAuthenticated } = useAuth();
+  const router = useRouter();
+  
+  const formState = useDonorFormState();
+
+  const [roleLoading, setRoleLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertType, setAlertType] = useState<'success' | 'error' | 'warning' | 'info'>('info');
+
+  const showAlert = (
+    title: string,
+    message: string,
+    type: 'success' | 'error' | 'warning' | 'info' = 'info'
+  ) => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertType(type);
+    setAlertVisible(true);
+  };
 
   useEffect(() => {
     if (!isAuthenticated) {
       router.replace("../(auth)/loginScreen");
     }
   }, [isAuthenticated]);
-  const [roleLoading, setRoleLoading] = useState(true);
+
   useEffect(() => {
     const ensureDonorRole = async () => {
       setRoleLoading(true);
@@ -52,11 +55,9 @@ const DonorScreen: React.FC = () => {
         } catch {
           roles = [];
         }
-
         if (!roles.includes("DONOR")) {
           await addDonorRole();
           const newTokens = await refreshAuthTokens();
-
           await Promise.all([
             SecureStore.setItemAsync("jwt", newTokens.accessToken),
             SecureStore.setItemAsync("refreshToken", newTokens.refreshToken),
@@ -69,9 +70,10 @@ const DonorScreen: React.FC = () => {
           ]);
         }
       } catch (error: any) {
-        Alert.alert(
+        showAlert(
           "Role Error",
-          error.message || "Failed to assign donor role"
+          error.message || "Failed to assign donor role. Please try logging in again.",
+          "error"
         );
         router.replace("/(auth)/loginScreen");
         return;
@@ -79,336 +81,99 @@ const DonorScreen: React.FC = () => {
         setRoleLoading(false);
       }
     };
-
     ensureDonorRole();
   }, []);
 
-  const [loading, setLoading] = useState<boolean>(false);
-
-  const [donorData, setDonorData] = useState<any>(null);
-
-  const [hemoglobinLevel, setHemoglobinLevel] = useState<string>("");
-  const [bloodPressure, setBloodPressure] = useState<string>("");
-  const [hasDiseases, setHasDiseases] = useState<boolean>(false);
-  const [takingMedication, setTakingMedication] = useState<boolean>(false);
-  const [diseaseDescription, setDiseaseDescription] = useState<string>("");
-  const [recentlyIll, setRecentlyIll] = useState<boolean>(false);
-  const [isPregnant, setIsPregnant] = useState<boolean>(false);
-
-  const [dob, setDob] = useState<string>("");
-  const [age, setAge] = useState<number | null>(null);
-  const [weight, setWeight] = useState<string>("");
-  const [weightEligible, setWeightEligible] = useState<boolean>(false);
-  const [medicalClearance, setMedicalClearance] = useState<boolean>(false);
-  const [recentTattooOrPiercing, setRecentTattooOrPiercing] =
-    useState<boolean>(false);
-  const [recentTravel, setRecentTravel] = useState<boolean>(false);
-  const [recentTravelDetails, setRecentTravelDetails] = useState<string>("");
-  const [recentVaccination, setRecentVaccination] = useState<boolean>(false);
-  const [recentSurgery, setRecentSurgery] = useState<boolean>(false);
-  const [chronicDiseases, setChronicDiseases] = useState<string>("");
-  const [allergies, setAllergies] = useState<string>("");
-  const [lastDonationDate, setLastDonationDate] = useState<string>("");
-
-  const [isConsented, setIsConsented] = useState<boolean>(false);
-
-  const [city, setCity] = useState<string>("");
-  const [stateVal, setStateVal] = useState<string>("");
-  const [country, setCountry] = useState<string>("");
-  const [pincode, setPincode] = useState<string>("");
-
-  const [addressLine, setAddressLine] = useState<string>("");
-  const [landmark, setLandmark] = useState<string>("");
-  const [area, setArea] = useState<string>("");
-  const [district, setDistrict] = useState<string>("");
-
-  const [gender, setGender] = useState<string>("");
-  const [userId, setUserId] = useState<string>("");
-  const [mapRegion, setMapRegion] = useState<{
-    latitude: number;
-    longitude: number;
-    latitudeDelta: number;
-    longitudeDelta: number;
-  } | null>(null);
-
-  const [marker, setMarker] = useState<{
-    latitude: number;
-    longitude: number;
-  } | null>(null);
-  const [locationLoading, setLocationLoading] = useState(true);
-  const [locationError, setLocationError] = useState<string | null>(null);
-  useEffect(() => {
-    (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        setLocationError("Permission to access location was denied");
-        setLocationLoading(false);
-        return;
-      }
-      let loc = await Location.getCurrentPositionAsync({});
-      const region = {
-        latitude: loc.coords.latitude,
-        longitude: loc.coords.longitude,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
-      };
-      setMapRegion(region);
-      setMarker({
-        latitude: loc.coords.latitude,
-        longitude: loc.coords.longitude,
-      });
-      setLocationLoading(false);
-    })();
-  }, []);
-  useEffect(() => {
-    if (marker) {
-      (async () => {
-        let [place] = await Location.reverseGeocodeAsync(marker);
-        setCity(place.city || "");
-        setStateVal(place.region || "");
-        setCountry(place.country || "");
-        setPincode(place.postalCode || "");
-      })();
-    }
-  }, [marker]);
-
-  useEffect(() => {
-    const loadDonorData = async () => {
-      const data = await SecureStore.getItemAsync("donorData");
-      if (data) {
-        const donor = JSON.parse(data);
-        setDonorData(donor);
-
-        setHemoglobinLevel(
-          donor.medicalDetails?.hemoglobinLevel?.toString() ?? ""
-        );
-        setBloodPressure(donor.medicalDetails?.bloodPressure ?? "");
-        setHasDiseases(donor.medicalDetails?.hasDiseases ?? false);
-        setTakingMedication(donor.medicalDetails?.takingMedication ?? false);
-        setDiseaseDescription(donor.medicalDetails?.diseaseDescription ?? "");
-        setRecentlyIll(donor.medicalDetails?.recentlyIll ?? false);
-        setIsPregnant(donor.medicalDetails?.isPregnant ?? false);
-
-        setDob(donor.eligibilityCriteria?.dob ?? "");
-        setAge(donor.eligibilityCriteria?.age ?? null);
-        setWeight(
-          donor.eligibilityCriteria && donor.eligibilityCriteria.weight != null
-            ? donor.eligibilityCriteria.weight.toString()
-            : ""
-        );
-        setWeightEligible(donor.eligibilityCriteria?.weightEligible ?? false);
-        setMedicalClearance(
-          donor.eligibilityCriteria?.medicalClearance ?? false
-        );
-        setRecentTattooOrPiercing(
-          donor.eligibilityCriteria?.recentTattooOrPiercing ?? false
-        );
-        setRecentTravel(donor.eligibilityCriteria?.recentTravel ?? false);
-        setRecentTravelDetails(
-          donor.eligibilityCriteria?.recentTravelDetails ?? ""
-        );
-        setRecentVaccination(
-          donor.eligibilityCriteria?.recentVaccination ?? false
-        );
-        setRecentSurgery(donor.eligibilityCriteria?.recentSurgery ?? false);
-        setChronicDiseases(donor.eligibilityCriteria?.chronicDiseases ?? "");
-        setAllergies(donor.eligibilityCriteria?.allergies ?? "");
-        setLastDonationDate(donor.eligibilityCriteria?.lastDonationDate ?? "");
-
-        setIsConsented(donor.consentForm?.isConsented ?? false);
-
-        setCity(donor.location?.city ?? "");
-        setStateVal(donor.location?.state ?? "");
-        setCountry(donor.location?.country ?? "");
-        setPincode(donor.location?.pincode ?? "");
-      }
-    };
-    loadDonorData();
-  }, []);
-
-  useEffect(() => {
-    const w = parseFloat(weight);
-    setWeightEligible(!isNaN(w) && w >= 50);
-  }, [weight]);
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      const storedGender = await SecureStore.getItemAsync("gender");
-      if (storedGender) setGender(storedGender);
-      const storedUserId = await SecureStore.getItemAsync("userId");
-      if (storedUserId) setUserId(storedUserId);
-    };
-    fetchUserData();
-  }, []);
-
-  useEffect(() => {
-    const fetchDob = async () => {
-      const storedDob = await SecureStore.getItemAsync("dob");
-      if (storedDob) {
-        setDob(storedDob);
-        setAge(calculateAge(storedDob));
-      }
-    };
-    fetchDob();
-  }, []);
-  const [location, setLocation] = useState<{
-    latitude: number;
-    longitude: number;
-  } | null>(null);
-  const router = useRouter();
-  const params = useLocalSearchParams();
-  useEffect(() => {
-    if (params.latitude && params.longitude) {
-      setLocation({
-        latitude: Number(params.latitude),
-        longitude: Number(params.longitude),
-      });
-    }
-  }, [params.latitude, params.longitude]);
-
-  const isFormValid = (): boolean => {
-    if (
-      !hemoglobinLevel ||
-      isNaN(Number(hemoglobinLevel)) ||
-      !bloodPressure ||
-      !weight ||
-      isNaN(Number(weight)) ||
-      (hasDiseases && !diseaseDescription) ||
-      !isConsented ||
-      !dob ||
-      !age ||
-      !addressLine ||
-      !landmark ||
-      !area ||
-      !district ||
-      !city ||
-      !stateVal ||
-      !country ||
-      !pincode
-    ) {
-      return false;
-    }
-    return true;
-  };
-
-  const isFormChanged = () => {
-    if (!donorData) return true;
-
-    const current = {
-      medicalDetails: {
-        hemoglobinLevel: Number(hemoglobinLevel),
-        bloodPressure,
-        hasDiseases,
-        takingMedication,
-        diseaseDescription,
-        recentlyIll,
-        ...(gender && gender.toUpperCase() === "FEMALE" && { isPregnant }),
-      },
-      eligibilityCriteria: {
-        ageEligible: age !== null ? age >= 18 : false,
-        age,
-        dob,
-        weightEligible,
-        weight: Number(weight),
-        medicalClearance,
-        recentTattooOrPiercing,
-        recentTravel,
-        recentTravelDetails,
-        recentVaccination,
-        recentSurgery,
-        chronicDiseases,
-        allergies,
-        lastDonationDate: lastDonationDate || null,
-      },
-      consentForm: {
-        userId,
-        isConsented,
-        consentType: "BLOOD_DONATION",
-      },
-      location: {
-        city,
-        state: stateVal,
-        country,
-        pincode,
-      },
-    };
-
-    return (
-      JSON.stringify(current) !==
-      JSON.stringify({
-        medicalDetails: donorData.medicalDetails,
-        eligibilityCriteria: donorData.eligibilityCriteria,
-        consentForm: {
-          userId: donorData.consentForm.userId,
-          isConsented: donorData.consentForm.isConsented,
-          consentType: donorData.consentForm.consentType,
-        },
-        location: donorData.location,
-      })
-    );
-  };
-
   const handleSubmit = async () => {
-    if (!isFormValid()) {
-      Alert.alert("Incomplete Form", "Please fill all required fields.");
+    if (!formState.isFormValid()) {
+      showAlert("Incomplete Form", "Please fill all required fields to continue.", "warning");
       return;
     }
+
     setLoading(true);
     try {
-      if (!isFormChanged()) {
-        Alert.alert(
-          "No changes detected",
-          "Using previously saved donor details."
-        );
-        router.replace("/navigation/donateScreen");
-        return;
-      }
-
       const payload = {
         registrationDate: new Date().toISOString().slice(0, 10),
         status: "ACTIVE",
         medicalDetails: {
-          hemoglobinLevel: Number(hemoglobinLevel),
-          bloodPressure,
-          hasDiseases,
-          takingMedication,
-          diseaseDescription,
-          recentlyIll,
-          ...(gender && gender.toUpperCase() === "FEMALE" && { isPregnant }),
+          hemoglobinLevel: Number(formState.hemoglobinLevel),
+          bloodPressure: formState.bloodPressure,
+          hasDiseases: formState.hasDiseases,
+          takingMedication: formState.takingMedication,
+          diseaseDescription: formState.hasDiseases ? formState.diseaseDescription : null,
+          currentMedications: formState.takingMedication ? formState.currentMedications : null,
+          lastMedicalCheckup: formState.lastMedicalCheckup,
+          medicalHistory: formState.medicalHistory,
+          hasInfectiousDiseases: formState.hasInfectiousDiseases,
+          infectiousDiseaseDetails: formState.hasInfectiousDiseases ? formState.infectiousDiseaseDetails : null,
+          creatinineLevel: Number(formState.creatinineLevel),
+          liverFunctionTests: formState.liverFunctionTests,
+          cardiacStatus: formState.cardiacStatus,
+          pulmonaryFunction: Number(formState.pulmonaryFunction),
+          overallHealthStatus: formState.overallHealthStatus,
         },
         eligibilityCriteria: {
-          ageEligible: age !== null ? age >= 18 : false,
-          age,
-          dob,
-          weightEligible,
-          weight: Number(weight),
-          medicalClearance,
-          recentTattooOrPiercing,
-          recentTravel,
-          recentTravelDetails,
-          recentVaccination,
-          recentSurgery,
-          chronicDiseases,
-          allergies,
-          lastDonationDate: lastDonationDate || null,
+          ageEligible: formState.age !== null ? formState.age >= 18 : false,
+          age: formState.age !== null ? formState.age : 0,
+          dob: formState.dob,
+          weightEligible: formState.weightEligible,
+          weight: Number(formState.weight),
+          medicalClearance: formState.medicalClearance,
+          recentTattooOrPiercing: formState.recentTattooOrPiercing,
+          recentTravel: !!formState.recentTravelDetails && formState.recentTravelDetails !== "No recent travel",
+          recentTravelDetails: formState.recentTravelDetails,
+          recentVaccination: formState.recentVaccination,
+          recentSurgery: formState.recentSurgery,
+          chronicDiseases: formState.chronicDiseases,
+          allergies: formState.allergies,
+          lastDonationDate: formState.lastDonationDate || null,
+          height: Number(formState.height),
+          bodyMassIndex: Number(formState.bodyMassIndex),
+          bodySize: formState.bodySize,
+          isLivingDonor: formState.isLivingDonor,
         },
         consentForm: {
-          userId,
-          isConsented,
+          userId: formState.userId,
+          isConsented: formState.isConsented,
           consentedAt: new Date().toISOString(),
           consentType: "BLOOD_DONATION",
         },
-        location: {
-          addressLine: addressLine || "",
-          landmark: landmark || "",
-          area: area || "",
-          district: district || "",
-          city: city || "",
-          state: stateVal || "",
-          country: country || "",
-          pincode: pincode || "",
-          latitude: location?.latitude || 0,
-          longitude: location?.longitude || 0,
+        addresses: [
+          {
+            addressLine: formState.addressLine,
+            landmark: formState.landmark,
+            area: formState.area,
+            city: formState.city,
+            district: formState.district,
+            state: formState.stateVal,
+            country: formState.country,
+            pincode: formState.pincode,
+            latitude: formState.location?.latitude || 0,
+            longitude: formState.location?.longitude || 0,
+          },
+        ],
+        hlaProfile: {
+          hlaA1: "A*02:01",
+          hlaA2: "A*24:02",
+          hlaB1: "B*15:01",
+          hlaB2: "B*44:03",
+          hlaC1: "C*03:04",
+          hlaC2: "C*16:01",
+          hlaDR1: "DRB1*07:01",
+          hlaDR2: "DRB1*15:01",
+          hlaDQ1: "DQB1*02:02",
+          hlaDQ2: "DQB1*06:02",
+          hlaDP1: "DPB1*04:01",
+          hlaDP2: "DPB1*14:01",
+          testingDate: new Date().toISOString().slice(0, 10),
+          testingMethod: "NGS_SEQUENCING",
+          laboratoryName: "GeneTech Labs",
+          certificationNumber: `CERT-${new Date().getFullYear()}-HLA-${Math.random()
+            .toString(36)
+            .substr(2, 6)
+            .toUpperCase()}`,
+          hlaString: "A*02:01,A*24:02,B*15:01,B*44:03,C*03:04,C*16:01,DRB1*07:01,DRB1*15:01,DQB1*02:02,DQB1*06:02,DPB1*04:01,DPB1*14:01",
+          isHighResolution: true,
         },
       };
 
@@ -416,251 +181,54 @@ const DonorScreen: React.FC = () => {
       if (response && response.id) {
         await SecureStore.setItemAsync("donorId", response.id);
         await SecureStore.setItemAsync("donorData", JSON.stringify(response));
-        Alert.alert("Success", "Your donor details have been saved!");
-        router.replace("/navigation/donateScreen");
-      } else {
-        throw new Error(
-          "Registration succeeded but donorId missing in response."
+        showAlert(
+          "Registration Successful!", 
+          "Your donor registration has been completed successfully. Thank you for joining our community of life-savers!", 
+          "success"
         );
+        
+        setTimeout(() => {
+          router.replace("/(tabs)/donate");
+        }, 2000);
+      } else {
+        throw new Error("Registration succeeded but donorId missing in response.");
       }
     } catch (error: any) {
-      Alert.alert(
+      showAlert(
         "Registration Failed",
-        error.message || "Something went wrong!"
+        error.message || "Something went wrong during registration. Please try again.",
+        "error"
       );
     } finally {
       setLoading(false);
     }
   };
 
+  if (roleLoading) {
+    return <LoadingScreen />;
+  }
+
   return (
-    <AuthProvider>
-      <AppLayout title="Become a Donor">
-        <ScrollView
-          style={styles.bg}
-          contentContainerStyle={styles.scrollContent}
-        >
-          <Text style={styles.sectionTitle}>Medical Details</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Hemoglobin Level (g/dL)"
-            keyboardType="numeric"
-            value={hemoglobinLevel}
-            onChangeText={setHemoglobinLevel}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Blood Pressure (e.g., 120/80)"
-            value={bloodPressure}
-            onChangeText={setBloodPressure}
-          />
-          <View style={styles.switchRow}>
-            <Text style={styles.label}>Any diseases?</Text>
-            <Switch value={hasDiseases} onValueChange={setHasDiseases} />
-          </View>
-          {hasDiseases && (
-            <TextInput
-              style={styles.input}
-              placeholder="Describe diseases"
-              value={diseaseDescription}
-              onChangeText={setDiseaseDescription}
-            />
-          )}
-          <View style={styles.switchRow}>
-            <Text style={styles.label}>Taking Medication?</Text>
-            <Switch
-              value={takingMedication}
-              onValueChange={setTakingMedication}
-            />
-          </View>
-          <View style={styles.switchRow}>
-            <Text style={styles.label}>Recently Ill?</Text>
-            <Switch value={recentlyIll} onValueChange={setRecentlyIll} />
-          </View>
-          {gender && gender.toUpperCase() === "FEMALE" && (
-            <View style={styles.switchRow}>
-              <Text style={styles.label}>Currently Pregnant?</Text>
-              <Switch value={isPregnant} onValueChange={setIsPregnant} />
-            </View>
-          )}
+    <AppLayout title="Become a Donor">
+      <DonorForm
+        {...formState}
+        onLocationPress={() => router.push("/navigation/mapScreen")}
+      />
 
-          <Text style={styles.sectionTitle}>Eligibility Criteria</Text>
-          <TextInput
-            value={dob}
-            editable={false}
-            style={{
-              backgroundColor: "#f1f2f6",
-              color: "#636e72",
-              marginBottom: 8,
-            }}
-          />
-          {age !== null && (
-            <Text style={{ color: age >= 18 ? "green" : "red" }}>
-              Age: {age} ({age >= 18 ? "Eligible" : "Not eligible"})
-            </Text>
-          )}
-          <TextInput
-            style={styles.input}
-            placeholder="Weight (kg)"
-            keyboardType="numeric"
-            value={weight}
-            onChangeText={setWeight}
-          />
-          <Text
-            style={{
-              color: weight ? (weightEligible ? "green" : "red") : "#636e72",
-              marginBottom: 8,
-            }}
-          >
-            {weight
-              ? weightEligible
-                ? "Eligible for donation (weight ≥ 50kg)"
-                : "Not eligible (weight < 50kg)"
-              : ""}
-          </Text>
-          <View style={styles.switchRow}>
-            <Text style={styles.label}>Medical Clearance?</Text>
-            <Switch
-              value={medicalClearance}
-              onValueChange={setMedicalClearance}
-            />
-          </View>
-          <View style={styles.switchRow}>
-            <Text style={styles.label}>Recent Tattoo or Piercing?</Text>
-            <Switch
-              value={recentTattooOrPiercing}
-              onValueChange={setRecentTattooOrPiercing}
-            />
-          </View>
-          <View style={styles.switchRow}>
-            <Text style={styles.label}>Recent Travel?</Text>
-            <Switch value={recentTravel} onValueChange={setRecentTravel} />
-          </View>
-          <TextInput
-            style={styles.input}
-            placeholder="Recent Travel Details"
-            value={recentTravelDetails}
-            onChangeText={setRecentTravelDetails}
-          />
-          <View style={styles.switchRow}>
-            <Text style={styles.label}>Recent Vaccination?</Text>
-            <Switch
-              value={recentVaccination}
-              onValueChange={setRecentVaccination}
-            />
-          </View>
-          <View style={styles.switchRow}>
-            <Text style={styles.label}>Recent Surgery?</Text>
-            <Switch value={recentSurgery} onValueChange={setRecentSurgery} />
-          </View>
-          <TextInput
-            style={styles.input}
-            placeholder="Chronic Diseases (if any)"
-            value={chronicDiseases}
-            onChangeText={setChronicDiseases}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Allergies (if any)"
-            value={allergies}
-            onChangeText={setAllergies}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Last Donation Date (YYYY-MM-DD, optional)"
-            value={lastDonationDate}
-            onChangeText={setLastDonationDate}
-          />
+      <SubmitButton
+        isFormValid={formState.isFormValid()}
+        loading={loading}
+        onSubmit={handleSubmit}
+      />
 
-          <Text style={styles.sectionTitle}>Consent</Text>
-          <View style={styles.switchRow}>
-            <Text style={styles.label}>I consent to donate blood</Text>
-            <Switch value={isConsented} onValueChange={setIsConsented} />
-          </View>
-
-          <Text style={styles.sectionTitle}>Location</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Address Line"
-            value={addressLine}
-            onChangeText={setAddressLine}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Landmark"
-            value={landmark}
-            onChangeText={setLandmark}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Area"
-            value={area}
-            onChangeText={setArea}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="District"
-            value={district}
-            onChangeText={setDistrict}
-          />
-
-          <TextInput
-            style={styles.input}
-            placeholder="City"
-            value={city}
-            onChangeText={setCity}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="State"
-            value={stateVal}
-            onChangeText={setStateVal}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Country"
-            value={country}
-            onChangeText={setCountry}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Pincode"
-            value={pincode}
-            onChangeText={setPincode}
-          />
-          <View>
-            <Button
-              title={location ? "Change Location" : "Pick Location on Map"}
-              onPress={() => router.push("/navigation/mapScreen")}
-            />
-            {location && (
-              <Text>
-                Selected: {location.latitude}, {location.longitude}
-              </Text>
-            )}
-          </View>
-
-          <TouchableOpacity
-            style={[
-              styles.button,
-              {
-                backgroundColor:
-                  isFormValid() && !loading ? "#00b894" : "#b2bec3",
-              },
-            ]}
-            onPress={handleSubmit}
-            disabled={!isFormValid() || loading}
-            activeOpacity={0.8}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.buttonText}>Save Donor Details</Text>
-            )}
-          </TouchableOpacity>
-        </ScrollView>
-      </AppLayout>
-    </AuthProvider>
+      <ValidationAlert
+        visible={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        type={alertType}
+        onClose={() => setAlertVisible(false)}
+      />
+    </AppLayout>
   );
 };
 
