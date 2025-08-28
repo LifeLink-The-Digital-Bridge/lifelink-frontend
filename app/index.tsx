@@ -7,7 +7,7 @@ import {
   Animated,
   Dimensions,
 } from "react-native";
-import { router } from "expo-router";
+import { Redirect, router } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import * as Animatable from "react-native-animatable";
 import { useTheme } from "../utils/theme-context";
@@ -17,6 +17,8 @@ import {
   createAuthStyles,
 } from "../constants/styles/authStyles";
 import { VideoLogo } from "../components/VideoLogo";
+import AppLayout from "@/components/AppLayout";
+import { useAuth } from "../utils/auth-context";
 
 const { height: screenHeight } = Dimensions.get("window");
 
@@ -31,6 +33,8 @@ export default function HomeScreenContent() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
+
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     Animated.parallel([
@@ -75,6 +79,10 @@ export default function HomeScreenContent() {
   const toggleTheme = () => {
     setTheme(colorScheme === 'dark' ? 'light' : 'dark');
   };
+
+  if (isAuthenticated) {
+    return <Redirect href="/(tabs)" />;
+  }
 
   const homeStyles = {
     container: {
@@ -247,6 +255,8 @@ export default function HomeScreenContent() {
   ];
 
   return (
+    <AppLayout hideHeader={true}>
+
     <View style={homeStyles.container}>
       <ScrollView
         ref={scrollViewRef}
@@ -406,5 +416,7 @@ export default function HomeScreenContent() {
         />
       </TouchableOpacity>
     </View>
+        </AppLayout>
+
   );
 }
