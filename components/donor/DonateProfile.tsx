@@ -1,185 +1,207 @@
 import React from 'react';
-import { View, Text, ScrollView } from 'react-native';
+import { View, Text } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../utils/theme-context';
 import { lightTheme, darkTheme } from '../../constants/styles/authStyles';
 import { createDonateHubStyles } from '../../constants/styles/donateHubStyles';
 
-interface DonateProfileProps {
+interface ModernDonateProfileProps {
   donorData: any;
 }
 
-export function DonateProfile({ donorData }: DonateProfileProps) {
+export function DonateProfile({ donorData }: ModernDonateProfileProps) {
   const { colorScheme } = useTheme();
   const isDark = colorScheme === 'dark';
   const theme = isDark ? darkTheme : lightTheme;
   const styles = createDonateHubStyles(theme);
 
+  const InfoRow = ({ label, value, isLast = false }: { label: string; value: string; isLast?: boolean }) => (
+    <View style={[styles.infoRow, isLast && styles.lastInfoRow]}>
+      <Text style={styles.labelText}>{label}</Text>
+      <Text style={styles.valueText}>{value}</Text>
+    </View>
+  );
+
+  const SectionCard = ({ icon, title, children }: { icon: string; title: string; children: React.ReactNode }) => (
+    <View style={styles.sectionCard}>
+      <View style={styles.sectionHeader}>
+        <View style={styles.sectionIconContainer}>
+          <Feather name={icon as any} size={16} color={theme.primary} />
+        </View>
+        <Text style={styles.sectionTitle}>{title}</Text>
+      </View>
+      {children}
+    </View>
+  );
+
   return (
     <View style={styles.card}>
-      <Text style={styles.labelText}>
-        Registration Date:{" "}
-        <Text style={styles.valueText}>
-          {donorData.registrationDate || "N/A"}
-        </Text>
-      </Text>
-      <Text style={styles.labelText}>
-        Status:{" "}
-        <Text style={[styles.valueText, { 
-          color: donorData.status === 'ACTIVE' ? theme.success : theme.textSecondary 
-        }]}>
-          {donorData.status || "N/A"}
-        </Text>
-      </Text>
-
-      {(donorData.location || donorData.addresses?.length > 0) && (
-        <>
-          <Text style={styles.sectionTitle}>Location Details:</Text>
-          {donorData.addresses?.length > 0 ? (
-            donorData.addresses.map((address: any, index: number) => (
-              <View key={index} style={{ marginBottom: 12 }}>
-                {address.addressLine && (
-                  <Text style={styles.detailText}>
-                    Address: {address.addressLine}
-                  </Text>
-                )}
-                {address.landmark && (
-                  <Text style={styles.detailText}>
-                    Landmark: {address.landmark}
-                  </Text>
-                )}
-                {address.area && (
-                  <Text style={styles.detailText}>Area: {address.area}</Text>
-                )}
-                {address.district && (
-                  <Text style={styles.detailText}>
-                    District: {address.district}
-                  </Text>
-                )}
-                <Text style={styles.detailText}>
-                  City: {address.city || "N/A"}, State: {address.state || "N/A"}
-                </Text>
-                <Text style={styles.detailText}>
-                  Country: {address.country || "N/A"}
-                </Text>
-                <Text style={styles.detailText}>
-                  Pincode: {address.pincode || "N/A"}
-                </Text>
-                {address.latitude && address.longitude && (
-                  <Text style={styles.detailText}>
-                    Coordinates: {address.latitude.toFixed(4)}, {address.longitude.toFixed(4)}
-                  </Text>
-                )}
-              </View>
-            ))
-          ) : donorData.location && (
-            <View>
-              <Text style={styles.detailText}>
-                Address: {donorData.location.addressLine || 
-                         donorData.location.landmark || 
-                         donorData.location.area || "N/A"}
-              </Text>
-              {donorData.location.addressLine && (
-                <Text style={styles.detailText}>
-                  Address Line: {donorData.location.addressLine}
-                </Text>
-              )}
-              {donorData.location.landmark && (
-                <Text style={styles.detailText}>
-                  Landmark: {donorData.location.landmark}
-                </Text>
-              )}
-              {donorData.location.area && (
-                <Text style={styles.detailText}>Area: {donorData.location.area}</Text>
-              )}
-              {donorData.location.district && (
-                <Text style={styles.detailText}>
-                  District: {donorData.location.district}
-                </Text>
-              )}
-              <Text style={styles.detailText}>
-                City: {donorData.location.city || "N/A"}, State: {donorData.location.state || "N/A"}, Country: {donorData.location.country || "N/A"}
-              </Text>
-              <Text style={styles.detailText}>
-                Pincode: {donorData.location.pincode || "N/A"}
-              </Text>
-              {donorData.location.latitude && donorData.location.longitude && (
-                <Text style={styles.detailText}>
-                  Coordinates: {donorData.location.latitude.toFixed(4)}, {donorData.location.longitude.toFixed(4)}
-                </Text>
-              )}
-            </View>
-          )}
-        </>
-      )}
+      <SectionCard icon="user" title="Registration Details">
+        <InfoRow 
+          label="Registration Date" 
+          value={donorData.registrationDate ? new Date(donorData.registrationDate).toLocaleDateString() : "N/A"} 
+        />
+        <InfoRow 
+          label="Status" 
+          value={donorData.status || "N/A"} 
+          isLast 
+        />
+      </SectionCard>
 
       {donorData.medicalDetails && (
-        <>
-          <Text style={styles.sectionTitle}>Medical Details:</Text>
-          <Text style={styles.detailText}>
-            Hemoglobin: {donorData.medicalDetails.hemoglobinLevel || "N/A"} g/dL
-          </Text>
-          <Text style={styles.detailText}>
-            Blood Pressure: {donorData.medicalDetails.bloodPressure || "N/A"}
-          </Text>
-          <Text style={styles.detailText}>
-            Has Diseases: {donorData.medicalDetails.hasDiseases ? "Yes" : "No"}
-          </Text>
-          <Text style={styles.detailText}>
-            Taking Medication: {donorData.medicalDetails.takingMedication ? "Yes" : "No"}
-          </Text>
-          {donorData.medicalDetails.overallHealthStatus && (
-            <Text style={styles.detailText}>
-              Health Status: {donorData.medicalDetails.overallHealthStatus}
-            </Text>
-          )}
-        </>
+        <SectionCard icon="heart" title="Medical Information">
+          <InfoRow 
+            label="Hemoglobin" 
+            value={`${donorData.medicalDetails.hemoglobinLevel || "N/A"} g/dL`} 
+          />
+          <InfoRow 
+            label="Blood Pressure" 
+            value={donorData.medicalDetails.bloodPressure || "N/A"} 
+          />
+          <InfoRow 
+            label="Creatinine" 
+            value={`${donorData.medicalDetails.creatinineLevel || "N/A"} mg/dL`} 
+          />
+          <InfoRow 
+            label="Cardiac Status" 
+            value={donorData.medicalDetails.cardiacStatus || "N/A"} 
+          />
+          <InfoRow 
+            label="Health Status" 
+            value={donorData.medicalDetails.overallHealthStatus || "N/A"} 
+          />
+          <InfoRow 
+            label="Taking Medication" 
+            value={donorData.medicalDetails.takingMedication ? "Yes" : "No"} 
+            isLast 
+          />
+        </SectionCard>
       )}
 
       {donorData.eligibilityCriteria && (
-        <>
-          <Text style={styles.sectionTitle}>Eligibility:</Text>
-          <Text style={styles.detailText}>
-            Age: {donorData.eligibilityCriteria.age || "N/A"}
-          </Text>
-          <Text style={styles.detailText}>
-            Weight: {donorData.eligibilityCriteria.weight || "N/A"} kg
-          </Text>
-          {donorData.eligibilityCriteria.height && (
-            <Text style={styles.detailText}>
-              Height: {donorData.eligibilityCriteria.height} cm
-            </Text>
-          )}
+        <SectionCard icon="check-circle" title="Eligibility Status">
+          <InfoRow 
+            label="Age" 
+            value={`${donorData.eligibilityCriteria.age || "N/A"} years`} 
+          />
+          <InfoRow 
+            label="Weight" 
+            value={`${donorData.eligibilityCriteria.weight || "N/A"} kg`} 
+          />
+          <InfoRow 
+            label="Height" 
+            value={`${donorData.eligibilityCriteria.height || "N/A"} cm`} 
+          />
           {donorData.eligibilityCriteria.bodyMassIndex && (
-            <Text style={styles.detailText}>
-              BMI: {donorData.eligibilityCriteria.bodyMassIndex}
-            </Text>
+            <InfoRow 
+              label="BMI" 
+              value={donorData.eligibilityCriteria.bodyMassIndex.toString()} 
+            />
           )}
-          <Text style={styles.detailText}>
-            Medical Clearance: {donorData.eligibilityCriteria.medicalClearance ? "Yes" : "No"}
-          </Text>
-          <Text style={styles.detailText}>
-            Recent Tattoo/Piercing: {donorData.eligibilityCriteria.recentTattooOrPiercing ? "Yes" : "No"}
-          </Text>
-          <Text style={styles.detailText}>
-            Recent Travel: {donorData.eligibilityCriteria.recentTravelDetails || "N/A"}
-          </Text>
-          <Text style={styles.detailText}>
-            Last Donation: {donorData.eligibilityCriteria.lastDonationDate || "Never"}
-          </Text>
-        </>
+          <InfoRow 
+            label="Medical Clearance" 
+            value={donorData.eligibilityCriteria.medicalClearance ? "✓ Approved" : "Pending"} 
+          />
+          <InfoRow 
+            label="Last Donation" 
+            value={donorData.eligibilityCriteria.lastDonationDate ? new Date(donorData.eligibilityCriteria.lastDonationDate).toLocaleDateString() : "Never"} 
+            isLast 
+          />
+        </SectionCard>
+      )}
+
+      {donorData.hlaProfile && (
+        <SectionCard icon="shield" title="HLA Profile">
+          <InfoRow 
+            label="HLA-A" 
+            value={`${donorData.hlaProfile.hlaA1 || "N/A"}, ${donorData.hlaProfile.hlaA2 || "N/A"}`} 
+          />
+          <InfoRow 
+            label="HLA-B" 
+            value={`${donorData.hlaProfile.hlaB1 || "N/A"}, ${donorData.hlaProfile.hlaB2 || "N/A"}`} 
+          />
+          <InfoRow 
+            label="HLA-C" 
+            value={`${donorData.hlaProfile.hlaC1 || "N/A"}, ${donorData.hlaProfile.hlaC2 || "N/A"}`} 
+          />
+          <InfoRow 
+            label="HLA-DR" 
+            value={`${donorData.hlaProfile.hlaDR1 || "N/A"}, ${donorData.hlaProfile.hlaDR2 || "N/A"}`} 
+          />
+          <InfoRow 
+            label="Testing Date" 
+            value={donorData.hlaProfile.testingDate ? new Date(donorData.hlaProfile.testingDate).toLocaleDateString() : "N/A"} 
+          />
+          <InfoRow 
+            label="Laboratory" 
+            value={donorData.hlaProfile.laboratoryName || "N/A"} 
+          />
+          <InfoRow 
+            label="Method" 
+            value={donorData.hlaProfile.testingMethod || "N/A"} 
+          />
+          <InfoRow 
+            label="Certification" 
+            value={donorData.hlaProfile.certificationNumber || "N/A"} 
+            isLast 
+          />
+        </SectionCard>
+      )}
+
+      {(donorData.location || donorData.addresses?.length > 0) && (
+        <SectionCard icon="map-pin" title="Primary Address">
+          {donorData.addresses?.length > 0 ? (
+            <View>
+              <InfoRow 
+                label="Address" 
+                value={donorData.addresses[0].addressLine || "N/A"} 
+              />
+              <InfoRow 
+                label="Area" 
+                value={donorData.addresses[0].area || "N/A"} 
+              />
+              <InfoRow 
+                label="City, State" 
+                value={`${donorData.addresses[0].city || "N/A"}, ${donorData.addresses[0].state || "N/A"}`} 
+              />
+              <InfoRow 
+                label="Pincode" 
+                value={donorData.addresses[0].pincode || "N/A"} 
+                isLast 
+              />
+            </View>
+          ) : donorData.location && (
+            <>
+              <InfoRow 
+                label="Address" 
+                value={donorData.location.addressLine || "N/A"} 
+              />
+              <InfoRow 
+                label="City, State" 
+                value={`${donorData.location.city || "N/A"}, ${donorData.location.state || "N/A"}`} 
+              />
+              <InfoRow 
+                label="Pincode" 
+                value={donorData.location.pincode || "N/A"} 
+                isLast 
+              />
+            </>
+          )}
+        </SectionCard>
       )}
 
       {donorData.consentForm && (
-        <>
-          <Text style={styles.sectionTitle}>Consent:</Text>
-          <Text style={styles.detailText}>
-            Consented: {donorData.consentForm.isConsented ? "Yes" : "No"}
-          </Text>
-          <Text style={styles.detailText}>
-            Consented At: {donorData.consentForm.consentedAt ? 
-              new Date(donorData.consentForm.consentedAt).toLocaleDateString() : "N/A"}
-          </Text>
-        </>
+        <SectionCard icon="file-text" title="Consent Details">
+          <InfoRow 
+            label="Consent Status" 
+            value={donorData.consentForm.isConsented ? "✓ Consented" : "Not Consented"} 
+          />
+          <InfoRow 
+            label="Consent Date" 
+            value={donorData.consentForm.consentedAt ? new Date(donorData.consentForm.consentedAt).toLocaleDateString() : "N/A"} 
+            isLast 
+          />
+        </SectionCard>
       )}
     </View>
   );

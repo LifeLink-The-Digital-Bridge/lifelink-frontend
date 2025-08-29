@@ -1,3 +1,4 @@
+// app/navigation/hubs/donateHubScreen.tsx
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import React, { useCallback, useEffect, useState } from "react";
@@ -8,6 +9,7 @@ import {
   View,
   RefreshControl,
 } from "react-native";
+import { Feather } from '@expo/vector-icons';
 import { useTheme } from "../../../utils/theme-context";
 import { lightTheme, darkTheme } from "../../../constants/styles/authStyles";
 import { createDonateHubStyles } from "../../../constants/styles/donateHubStyles";
@@ -115,7 +117,21 @@ export default function DonateHubScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
-        {/* Removed the header text - cleaner look */}
+        {/* Modern Header Section */}
+        <View style={styles.headerContainer}>
+          <View style={styles.headerIconContainer}>
+            <Feather name="heart" size={28} color={theme.primary} />
+          </View>
+          <View style={styles.headerTextContainer}>
+            <Text style={styles.headerTitle}>Donor Dashboard</Text>
+            <Text style={styles.headerSubtitle}>Ready to make a difference</Text>
+          </View>
+          <View style={styles.statusBadge}>
+            <Text style={styles.statusText}>
+              {donorData.status === 'ACTIVE' ? '✓ Active' : donorData.status}
+            </Text>
+          </View>
+        </View>
         
         <DonateProfile donorData={donorData} />
         

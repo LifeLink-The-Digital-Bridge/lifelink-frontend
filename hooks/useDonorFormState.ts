@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import * as SecureStore from 'expo-secure-store';
-import { useLocalSearchParams } from 'expo-router';
+import { useState, useEffect } from "react";
+import * as SecureStore from "expo-secure-store";
+import { useLocalSearchParams } from "expo-router";
 
 const calculateAge = (dobString: string): number => {
   const today = new Date();
@@ -34,14 +34,20 @@ export function useDonorFormState() {
   const [takingMedication, setTakingMedication] = useState<boolean>(false);
   const [currentMedications, setCurrentMedications] = useState<string>("");
   const [lastMedicalCheckup, setLastMedicalCheckup] = useState<string>("");
-  const [medicalHistory, setMedicalHistory] = useState<string>("No significant medical history");
-  const [hasInfectiousDiseases, setHasInfectiousDiseases] = useState<boolean>(false);
-  const [infectiousDiseaseDetails, setInfectiousDiseaseDetails] = useState<string>("");
+  const [medicalHistory, setMedicalHistory] = useState<string>(
+    "No significant medical history"
+  );
+  const [hasInfectiousDiseases, setHasInfectiousDiseases] =
+    useState<boolean>(false);
+  const [infectiousDiseaseDetails, setInfectiousDiseaseDetails] =
+    useState<string>("");
   const [creatinineLevel, setCreatinineLevel] = useState<string>("");
-  const [liverFunctionTests, setLiverFunctionTests] = useState<string>("Normal");
+  const [liverFunctionTests, setLiverFunctionTests] =
+    useState<string>("Normal");
   const [cardiacStatus, setCardiacStatus] = useState<string>("Normal");
   const [pulmonaryFunction, setPulmonaryFunction] = useState<string>("");
-  const [overallHealthStatus, setOverallHealthStatus] = useState<string>("Excellent");
+  const [overallHealthStatus, setOverallHealthStatus] =
+    useState<string>("Excellent");
 
   const [dob, setDob] = useState<string>("");
   const [age, setAge] = useState<number | null>(null);
@@ -52,8 +58,10 @@ export function useDonorFormState() {
   const [isLivingDonor, setIsLivingDonor] = useState<boolean>(true);
   const [weightEligible, setWeightEligible] = useState<boolean>(false);
   const [medicalClearance, setMedicalClearance] = useState<boolean>(false);
-  const [recentTattooOrPiercing, setRecentTattooOrPiercing] = useState<boolean>(false);
-  const [recentTravelDetails, setRecentTravelDetails] = useState<string>("No recent travel");
+  const [recentTattooOrPiercing, setRecentTattooOrPiercing] =
+    useState<boolean>(false);
+  const [recentTravelDetails, setRecentTravelDetails] =
+    useState<string>("No recent travel");
   const [recentVaccination, setRecentVaccination] = useState<boolean>(false);
   const [recentSurgery, setRecentSurgery] = useState<boolean>(false);
   const [chronicDiseases, setChronicDiseases] = useState<string>("");
@@ -70,10 +78,29 @@ export function useDonorFormState() {
   const [stateVal, setStateVal] = useState<string>("");
   const [country, setCountry] = useState<string>("");
   const [pincode, setPincode] = useState<string>("");
-  const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [location, setLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
 
   const [gender, setGender] = useState<string>("");
   const [userId, setUserId] = useState<string>("");
+  const [hlaA1, setHlaA1] = useState<string>("");
+  const [hlaA2, setHlaA2] = useState<string>("");
+  const [hlaB1, setHlaB1] = useState<string>("");
+  const [hlaB2, setHlaB2] = useState<string>("");
+  const [hlaC1, setHlaC1] = useState<string>("");
+  const [hlaC2, setHlaC2] = useState<string>("");
+  const [hlaDR1, setHlaDR1] = useState<string>("");
+  const [hlaDR2, setHlaDR2] = useState<string>("");
+  const [hlaDQ1, setHlaDQ1] = useState<string>("");
+  const [hlaDQ2, setHlaDQ2] = useState<string>("");
+  const [hlaDP1, setHlaDP1] = useState<string>("");
+  const [hlaDP2, setHlaDP2] = useState<string>("");
+  const [testingDate, setTestingDate] = useState<string>("");
+  const [testingMethod, setTestingMethod] = useState<string>("NGS_SEQUENCING");
+  const [laboratoryName, setLaboratoryName] = useState<string>("");
+  const [certificationNumber, setCertificationNumber] = useState<string>("");
 
   useEffect(() => {
     const loadDonorData = async () => {
@@ -82,36 +109,72 @@ export function useDonorFormState() {
         if (storedData) {
           const donor = JSON.parse(storedData);
           if (donor.medicalDetails) {
-            setHemoglobinLevel(donor.medicalDetails.hemoglobinLevel?.toString() || "");
+            setHemoglobinLevel(
+              donor.medicalDetails.hemoglobinLevel?.toString() || ""
+            );
             setBloodPressure(donor.medicalDetails.bloodPressure || "");
             setHasDiseases(donor.medicalDetails.hasDiseases || false);
-            setDiseaseDescription(donor.medicalDetails.diseaseDescription || "");
+            setDiseaseDescription(
+              donor.medicalDetails.diseaseDescription || ""
+            );
             setTakingMedication(donor.medicalDetails.takingMedication || false);
-            setCurrentMedications(donor.medicalDetails.currentMedications || "");
-            setLastMedicalCheckup(donor.medicalDetails.lastMedicalCheckup || "");
-            setMedicalHistory(donor.medicalDetails.medicalHistory || "No significant medical history");
-            setHasInfectiousDiseases(donor.medicalDetails.hasInfectiousDiseases || false);
-            setInfectiousDiseaseDetails(donor.medicalDetails.infectiousDiseaseDetails || "");
-            setCreatinineLevel(donor.medicalDetails.creatinineLevel?.toString() || "");
-            setLiverFunctionTests(donor.medicalDetails.liverFunctionTests || "Normal");
+            setCurrentMedications(
+              donor.medicalDetails.currentMedications || ""
+            );
+            setLastMedicalCheckup(
+              donor.medicalDetails.lastMedicalCheckup || ""
+            );
+            setMedicalHistory(
+              donor.medicalDetails.medicalHistory ||
+                "No significant medical history"
+            );
+            setHasInfectiousDiseases(
+              donor.medicalDetails.hasInfectiousDiseases || false
+            );
+            setInfectiousDiseaseDetails(
+              donor.medicalDetails.infectiousDiseaseDetails || ""
+            );
+            setCreatinineLevel(
+              donor.medicalDetails.creatinineLevel?.toString() || ""
+            );
+            setLiverFunctionTests(
+              donor.medicalDetails.liverFunctionTests || "Normal"
+            );
             setCardiacStatus(donor.medicalDetails.cardiacStatus || "Normal");
-            setPulmonaryFunction(donor.medicalDetails.pulmonaryFunction?.toString() || "");
-            setOverallHealthStatus(donor.medicalDetails.overallHealthStatus || "Excellent");
+            setPulmonaryFunction(
+              donor.medicalDetails.pulmonaryFunction?.toString() || ""
+            );
+            setOverallHealthStatus(
+              donor.medicalDetails.overallHealthStatus || "Excellent"
+            );
           }
           if (donor.eligibilityCriteria) {
             setWeight(donor.eligibilityCriteria.weight?.toString() || "");
             setHeight(donor.eligibilityCriteria.height?.toString() || "");
-            setBodyMassIndex(donor.eligibilityCriteria.bodyMassIndex?.toString() || "");
+            setBodyMassIndex(
+              donor.eligibilityCriteria.bodyMassIndex?.toString() || ""
+            );
             setBodySize(donor.eligibilityCriteria.bodySize || "MEDIUM");
             setIsLivingDonor(donor.eligibilityCriteria.isLivingDonor ?? true);
-            setMedicalClearance(donor.eligibilityCriteria.medicalClearance || false);
-            setRecentTattooOrPiercing(donor.eligibilityCriteria.recentTattooOrPiercing || false);
-            setRecentTravelDetails(donor.eligibilityCriteria.recentTravelDetails || "No recent travel");
-            setRecentVaccination(donor.eligibilityCriteria.recentVaccination || false);
+            setMedicalClearance(
+              donor.eligibilityCriteria.medicalClearance || false
+            );
+            setRecentTattooOrPiercing(
+              donor.eligibilityCriteria.recentTattooOrPiercing || false
+            );
+            setRecentTravelDetails(
+              donor.eligibilityCriteria.recentTravelDetails ||
+                "No recent travel"
+            );
+            setRecentVaccination(
+              donor.eligibilityCriteria.recentVaccination || false
+            );
             setRecentSurgery(donor.eligibilityCriteria.recentSurgery || false);
             setChronicDiseases(donor.eligibilityCriteria.chronicDiseases || "");
             setAllergies(donor.eligibilityCriteria.allergies || "");
-            setLastDonationDate(donor.eligibilityCriteria.lastDonationDate || "");
+            setLastDonationDate(
+              donor.eligibilityCriteria.lastDonationDate || ""
+            );
           }
           if (donor.consentForm) {
             setIsConsented(donor.consentForm.isConsented || false);
@@ -129,7 +192,7 @@ export function useDonorFormState() {
             if (address.latitude && address.longitude) {
               setLocation({
                 latitude: address.latitude,
-                longitude: address.longitude
+                longitude: address.longitude,
               });
             }
           } else if (donor.location) {
@@ -144,9 +207,29 @@ export function useDonorFormState() {
             if (donor.location.latitude && donor.location.longitude) {
               setLocation({
                 latitude: donor.location.latitude,
-                longitude: donor.location.longitude
+                longitude: donor.location.longitude,
               });
             }
+          }
+          if (donor.hlaProfile) {
+            setHlaA1(donor.hlaProfile.hlaA1 || "");
+            setHlaA2(donor.hlaProfile.hlaA2 || "");
+            setHlaB1(donor.hlaProfile.hlaB1 || "");
+            setHlaB2(donor.hlaProfile.hlaB2 || "");
+            setHlaC1(donor.hlaProfile.hlaC1 || "");
+            setHlaC2(donor.hlaProfile.hlaC2 || "");
+            setHlaDR1(donor.hlaProfile.hlaDR1 || "");
+            setHlaDR2(donor.hlaProfile.hlaDR2 || "");
+            setHlaDQ1(donor.hlaProfile.hlaDQ1 || "");
+            setHlaDQ2(donor.hlaProfile.hlaDQ2 || "");
+            setHlaDP1(donor.hlaProfile.hlaDP1 || "");
+            setHlaDP2(donor.hlaProfile.hlaDP2 || "");
+            setTestingDate(donor.hlaProfile.testingDate || "");
+            setTestingMethod(
+              donor.hlaProfile.testingMethod || "NGS_SEQUENCING"
+            );
+            setLaboratoryName(donor.hlaProfile.laboratoryName || "");
+            setCertificationNumber(donor.hlaProfile.certificationNumber || "");
           }
         }
       } catch (error) {
@@ -233,48 +316,122 @@ export function useDonorFormState() {
   };
 
   return {
-    hemoglobinLevel, setHemoglobinLevel,
-    bloodPressure, setBloodPressure,
-    hasDiseases, setHasDiseases,
-    diseaseDescription, setDiseaseDescription,
-    takingMedication, setTakingMedication,
-    currentMedications, setCurrentMedications,
-    lastMedicalCheckup, setLastMedicalCheckup,
-    medicalHistory, setMedicalHistory,
-    hasInfectiousDiseases, setHasInfectiousDiseases,
-    infectiousDiseaseDetails, setInfectiousDiseaseDetails,
-    creatinineLevel, setCreatinineLevel,
-    liverFunctionTests, setLiverFunctionTests,
-    cardiacStatus, setCardiacStatus,
-    pulmonaryFunction, setPulmonaryFunction,
-    overallHealthStatus, setOverallHealthStatus,
+    hemoglobinLevel,
+    setHemoglobinLevel,
+    bloodPressure,
+    setBloodPressure,
+    hasDiseases,
+    setHasDiseases,
+    diseaseDescription,
+    setDiseaseDescription,
+    takingMedication,
+    setTakingMedication,
+    currentMedications,
+    setCurrentMedications,
+    lastMedicalCheckup,
+    setLastMedicalCheckup,
+    medicalHistory,
+    setMedicalHistory,
+    hasInfectiousDiseases,
+    setHasInfectiousDiseases,
+    infectiousDiseaseDetails,
+    setInfectiousDiseaseDetails,
+    creatinineLevel,
+    setCreatinineLevel,
+    liverFunctionTests,
+    setLiverFunctionTests,
+    cardiacStatus,
+    setCardiacStatus,
+    pulmonaryFunction,
+    setPulmonaryFunction,
+    overallHealthStatus,
+    setOverallHealthStatus,
 
-    dob, age, weight, setWeight, weightEligible,
-    height, setHeight, bodyMassIndex, bodySize, setBodySize,
-    isLivingDonor, setIsLivingDonor,
-    medicalClearance, setMedicalClearance,
-    recentTattooOrPiercing, setRecentTattooOrPiercing,
-    recentTravelDetails, setRecentTravelDetails,
-    recentVaccination, setRecentVaccination,
-    recentSurgery, setRecentSurgery,
-    chronicDiseases, setChronicDiseases,
-    allergies, setAllergies,
-    lastDonationDate, setLastDonationDate,
+    dob,
+    age,
+    weight,
+    setWeight,
+    weightEligible,
+    height,
+    setHeight,
+    bodyMassIndex,
+    bodySize,
+    setBodySize,
+    isLivingDonor,
+    setIsLivingDonor,
+    medicalClearance,
+    setMedicalClearance,
+    recentTattooOrPiercing,
+    setRecentTattooOrPiercing,
+    recentTravelDetails,
+    setRecentTravelDetails,
+    recentVaccination,
+    setRecentVaccination,
+    recentSurgery,
+    setRecentSurgery,
+    chronicDiseases,
+    setChronicDiseases,
+    allergies,
+    setAllergies,
+    lastDonationDate,
+    setLastDonationDate,
 
-    isConsented, setIsConsented,
+    isConsented,
+    setIsConsented,
 
-    addressLine, setAddressLine,
-    landmark, setLandmark,
-    area, setArea,
-    district, setDistrict,
-    city, setCity,
-    stateVal, setStateVal,
-    country, setCountry,
-    pincode, setPincode,
-    location, setLocation,
+    addressLine,
+    setAddressLine,
+    landmark,
+    setLandmark,
+    area,
+    setArea,
+    district,
+    setDistrict,
+    city,
+    setCity,
+    stateVal,
+    setStateVal,
+    country,
+    setCountry,
+    pincode,
+    setPincode,
+    location,
+    setLocation,
 
-    gender, userId,
-
+    gender,
+    userId,
+hlaA1,
+    setHlaA1,
+    hlaA2,
+    setHlaA2,
+    hlaB1,
+    setHlaB1,
+    hlaB2,
+    setHlaB2,
+    hlaC1,
+    setHlaC1,
+    hlaC2,
+    setHlaC2,
+    hlaDR1,
+    setHlaDR1,
+    hlaDR2,
+    setHlaDR2,
+    hlaDQ1,
+    setHlaDQ1,
+    hlaDQ2,
+    setHlaDQ2,
+    hlaDP1,
+    setHlaDP1,
+    hlaDP2,
+    setHlaDP2,
+    testingDate,
+    setTestingDate,
+    testingMethod,
+    setTestingMethod,
+    laboratoryName,
+    setLaboratoryName,
+    certificationNumber,
+    setCertificationNumber,
     isFormValid,
   };
 }

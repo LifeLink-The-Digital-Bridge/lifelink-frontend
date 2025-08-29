@@ -20,7 +20,7 @@ export function LoadingScreen({
   const styles = createDonorStyles(theme);
 
   return (
-    <AppLayout title={title}>
+    <AppLayout hideHeader>
       <View style={[styles.container, { justifyContent: "center", alignItems: "center" }]}>
         <ActivityIndicator size="large" color={theme.primary} />
         <Text style={{ 

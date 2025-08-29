@@ -8,8 +8,45 @@ import { MedicalDetails } from './MedicalDetails';
 import { EligibilityCriteria } from './EligibilityCriteria';
 import { ConsentForm } from './ConsentForm';
 import { LocationDetails } from './LocationDetails';
+import { HlaProfile } from "./HlaProfile";
 
-interface DonorFormProps {
+// Define the interface for DonorFormProps
+export interface DonorFormProps {
+  // HLA Profile props
+  hlaA1: string;
+  setHlaA1: (value: string) => void;
+  hlaA2: string;
+  setHlaA2: (value: string) => void;
+  hlaB1: string;
+  setHlaB1: (value: string) => void;
+  hlaB2: string;
+  setHlaB2: (value: string) => void;
+  hlaC1: string;
+  setHlaC1: (value: string) => void;
+  hlaC2: string;
+  setHlaC2: (value: string) => void;
+  hlaDR1: string;
+  setHlaDR1: (value: string) => void;
+  hlaDR2: string;
+  setHlaDR2: (value: string) => void;
+  hlaDQ1: string;
+  setHlaDQ1: (value: string) => void;
+  hlaDQ2: string;
+  setHlaDQ2: (value: string) => void;
+  hlaDP1: string;
+  setHlaDP1: (value: string) => void;
+  hlaDP2: string;
+  setHlaDP2: (value: string) => void;
+  testingDate: string;
+  setTestingDate: (value: string) => void;
+  testingMethod: string;
+  setTestingMethod: (value: string) => void;
+  laboratoryName: string;
+  setLaboratoryName: (value: string) => void;
+  certificationNumber: string;
+  setCertificationNumber: (value: string) => void;
+  
+  // Medical Details props
   hemoglobinLevel: string;
   setHemoglobinLevel: (value: string) => void;
   bloodPressure: string;
@@ -71,9 +108,11 @@ interface DonorFormProps {
   lastDonationDate: string;
   setLastDonationDate: (value: string) => void;
 
+  // Consent props
   isConsented: boolean;
   setIsConsented: (value: boolean) => void;
 
+  // Location props
   addressLine: string;
   setAddressLine: (value: string) => void;
   landmark: string;
@@ -92,9 +131,13 @@ interface DonorFormProps {
   setPincode: (value: string) => void;
   location: { latitude: number; longitude: number } | null;
   onLocationPress: () => void;
+
+  // Additional props
+  userId?: string;
+  isFormValid: () => boolean;
 }
 
-export function DonorForm(props: DonorFormProps) {
+export const DonorForm: React.FC<DonorFormProps> = (props) => {
   const { colorScheme } = useTheme();
   const isDark = colorScheme === 'dark';
   const theme = isDark ? darkTheme : lightTheme;
@@ -171,11 +214,6 @@ export function DonorForm(props: DonorFormProps) {
         setLastDonationDate={props.setLastDonationDate}
       />
 
-      <ConsentForm
-        isConsented={props.isConsented}
-        setIsConsented={props.setIsConsented}
-      />
-
       <LocationDetails
         addressLine={props.addressLine}
         setAddressLine={props.setAddressLine}
@@ -196,6 +234,45 @@ export function DonorForm(props: DonorFormProps) {
         location={props.location}
         onLocationPress={props.onLocationPress}
       />
+      
+      <HlaProfile
+        hlaA1={props.hlaA1}
+        setHlaA1={props.setHlaA1}
+        hlaA2={props.hlaA2}
+        setHlaA2={props.setHlaA2}
+        hlaB1={props.hlaB1}
+        setHlaB1={props.setHlaB1}
+        hlaB2={props.hlaB2}
+        setHlaB2={props.setHlaB2}
+        hlaC1={props.hlaC1}
+        setHlaC1={props.setHlaC1}
+        hlaC2={props.hlaC2}
+        setHlaC2={props.setHlaC2}
+        hlaDR1={props.hlaDR1}
+        setHlaDR1={props.setHlaDR1}
+        hlaDR2={props.hlaDR2}
+        setHlaDR2={props.setHlaDR2}
+        hlaDQ1={props.hlaDQ1}
+        setHlaDQ1={props.setHlaDQ1}
+        hlaDQ2={props.hlaDQ2}
+        setHlaDQ2={props.setHlaDQ2}
+        hlaDP1={props.hlaDP1}
+        setHlaDP1={props.setHlaDP1}
+        hlaDP2={props.hlaDP2}
+        setHlaDP2={props.setHlaDP2}
+        testingDate={props.testingDate}
+        setTestingDate={props.setTestingDate}
+        testingMethod={props.testingMethod}
+        setTestingMethod={props.setTestingMethod}
+        laboratoryName={props.laboratoryName}
+        setLaboratoryName={props.setLaboratoryName}
+        certificationNumber={props.certificationNumber}
+        setCertificationNumber={props.setCertificationNumber}
+      />
+      <ConsentForm
+        isConsented={props.isConsented}
+        setIsConsented={props.setIsConsented}
+      />
     </ScrollView>
   );
-}
+};

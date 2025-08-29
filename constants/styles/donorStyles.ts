@@ -1,4 +1,3 @@
-// constants/styles/donorStyles.ts
 import { StyleSheet } from 'react-native';
 
 export const createDonorStyles = (theme: any) => StyleSheet.create({
@@ -13,21 +12,21 @@ export const createDonorStyles = (theme: any) => StyleSheet.create({
   },
   
   scrollContent: {
-    paddingBottom: 120, // Extra space for the fixed button
+    paddingBottom: 120, 
   },
   
   sectionContainer: {
     backgroundColor: theme.card,
-    borderRadius: 20, // More rounded for modern look
-    padding: 24, // Increased padding
-    marginBottom: 24, // Increased margin
+    borderRadius: 20,
+    padding: 24,
+    marginBottom: 24,
     shadowColor: theme.shadow,
-    shadowOffset: { width: 0, height: 4 }, // Enhanced shadow
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,
     shadowRadius: 8,
     elevation: 6,
     borderWidth: 1,
-    borderColor: theme.border + '40', // More subtle border
+    borderColor: theme.border + '40',
   },
   
   sectionTitle: {
@@ -91,7 +90,6 @@ export const createDonorStyles = (theme: any) => StyleSheet.create({
     backgroundColor: theme.error + '20',
   },
   
-  // OLD BUTTON STYLES (keep for other buttons like location)
   button: {
     marginTop: 24,
     paddingVertical: 18,
@@ -119,7 +117,6 @@ export const createDonorStyles = (theme: any) => StyleSheet.create({
     letterSpacing: 0.5,
   },
   
-  // NEW SUBMIT BUTTON STYLES - FIXED AT BOTTOM
   submitButtonContainer: {
     position: 'absolute',
     bottom: 0,
@@ -128,7 +125,7 @@ export const createDonorStyles = (theme: any) => StyleSheet.create({
     backgroundColor: theme.background,
     paddingHorizontal: 20,
     paddingVertical: 16,
-    paddingBottom: 34, // Safe area for modern phones
+    paddingBottom: 34,
     borderTopWidth: 1,
     borderTopColor: theme.border + '50',
     shadowColor: theme.shadow,
@@ -186,5 +183,101 @@ export const createDonorStyles = (theme: any) => StyleSheet.create({
     color: theme.textSecondary,
     textAlign: 'center',
     marginBottom: 12,
+  },
+  agreementCard: {
+    backgroundColor: theme.background,
+    padding: 20,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: theme.border + '40',
+    marginBottom: 20,
+  },
+
+  agreementHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+
+  agreementIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+
+  agreementTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: theme.text,
+    marginBottom: 4,
+  },
+
+  agreementSubtitle: {
+    fontSize: 14,
+    color: theme.textSecondary,
+  },
+
+  termsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.primary + '15',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+
+  termsButtonText: {
+    marginLeft: 12,
+    color: theme.primary,
+    fontWeight: '600',
+    fontSize: 15,
+    flex: 1,
+  },
+
+  termsSubText: {
+    color: theme.textSecondary,
+    fontSize: 13,
+    fontStyle: 'italic',
+  },
+
+  consentToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+  },
+
+  consentText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.text,
+    flex: 1,
+    marginRight: 12,
+  },
+
+  successMessage: {
+    backgroundColor: theme.success + '15',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: theme.success + '30',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  successTitle: {
+    color: theme.success,
+    fontWeight: '700',
+    fontSize: 16,
+    marginBottom: 4,
+  },
+
+  successSubtitle: {
+    color: theme.success,
+    fontSize: 14,
+    opacity: 0.8,
   },
 });

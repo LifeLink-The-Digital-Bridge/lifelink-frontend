@@ -1,37 +1,48 @@
+// app/navigation/donorScreen.tsx
 import React, { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../utils/auth-context";
-import AppLayout from "@/components/AppLayout";
+import { View, ScrollView, TouchableOpacity, Text } from "react-native";
+import { Feather } from "@expo/vector-icons";
 import * as SecureStore from "expo-secure-store";
 import { registerDonor } from "../api/donorApi";
 import { addDonorRole, refreshAuthTokens } from "../api/roleApi";
+import { useTheme } from "../../utils/theme-context";
+import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
+import { createDonateHubStyles } from "../../constants/styles/donateHubStyles";
 
 import { DonorForm } from "../../components/donor/DonorForm";
 import { SubmitButton } from "../../components/donor/SubmitButton";
 import { LoadingScreen } from "../../components/donor/LoadingScreen";
 import { ValidationAlert } from "../../components/common/ValidationAlert";
-
 import { useDonorFormState } from "../../hooks/useDonorFormState";
+import AppLayout from "@/components/AppLayout";
 
 const DonorScreen: React.FC = () => {
+  const { colorScheme } = useTheme();
   const { isAuthenticated } = useAuth();
   const router = useRouter();
-  
+  const isDark = colorScheme === "dark";
+  const theme = isDark ? darkTheme : lightTheme;
+  const styles = createDonateHubStyles(theme);
+
   const formState = useDonorFormState();
 
-  const [roleLoading, setRoleLoading] = useState(true);
+  const [roleLoading, setRoleLoading] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(false);
 
-  const [alertVisible, setAlertVisible] = useState(false);
-  const [alertTitle, setAlertTitle] = useState("");
-  const [alertMessage, setAlertMessage] = useState("");
-  const [alertType, setAlertType] = useState<'success' | 'error' | 'warning' | 'info'>('info');
+  const [alertVisible, setAlertVisible] = useState<boolean>(false);
+  const [alertTitle, setAlertTitle] = useState<string>("");
+  const [alertMessage, setAlertMessage] = useState<string>("");
+  const [alertType, setAlertType] = useState<
+    "success" | "error" | "warning" | "info"
+  >("info");
 
   const showAlert = (
     title: string,
     message: string,
-    type: 'success' | 'error' | 'warning' | 'info' = 'info'
-  ) => {
+    type: "success" | "error" | "warning" | "info" = "info"
+  ): void => {
     setAlertTitle(title);
     setAlertMessage(message);
     setAlertType(type);
@@ -42,10 +53,10 @@ const DonorScreen: React.FC = () => {
     if (!isAuthenticated) {
       router.replace("../(auth)/loginScreen");
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, router]);
 
   useEffect(() => {
-    const ensureDonorRole = async () => {
+    const ensureDonorRole = async (): Promise<void> => {
       setRoleLoading(true);
       try {
         let rolesString = await SecureStore.getItemAsync("roles");
@@ -72,7 +83,8 @@ const DonorScreen: React.FC = () => {
       } catch (error: any) {
         showAlert(
           "Role Error",
-          error.message || "Failed to assign donor role. Please try logging in again.",
+          error.message ||
+            "Failed to assign donor role. Please try logging in again.",
           "error"
         );
         router.replace("/(auth)/loginScreen");
@@ -82,11 +94,15 @@ const DonorScreen: React.FC = () => {
       }
     };
     ensureDonorRole();
-  }, []);
+  }, [router]);
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (): Promise<void> => {
     if (!formState.isFormValid()) {
-      showAlert("Incomplete Form", "Please fill all required fields to continue.", "warning");
+      showAlert(
+        "Incomplete Form",
+        "Please fill all required fields to continue.",
+        "warning"
+      );
       return;
     }
 
@@ -100,12 +116,18 @@ const DonorScreen: React.FC = () => {
           bloodPressure: formState.bloodPressure,
           hasDiseases: formState.hasDiseases,
           takingMedication: formState.takingMedication,
-          diseaseDescription: formState.hasDiseases ? formState.diseaseDescription : null,
-          currentMedications: formState.takingMedication ? formState.currentMedications : null,
+          diseaseDescription: formState.hasDiseases
+            ? formState.diseaseDescription
+            : null,
+          currentMedications: formState.takingMedication
+            ? formState.currentMedications
+            : null,
           lastMedicalCheckup: formState.lastMedicalCheckup,
           medicalHistory: formState.medicalHistory,
           hasInfectiousDiseases: formState.hasInfectiousDiseases,
-          infectiousDiseaseDetails: formState.hasInfectiousDiseases ? formState.infectiousDiseaseDetails : null,
+          infectiousDiseaseDetails: formState.hasInfectiousDiseases
+            ? formState.infectiousDiseaseDetails
+            : null,
           creatinineLevel: Number(formState.creatinineLevel),
           liverFunctionTests: formState.liverFunctionTests,
           cardiacStatus: formState.cardiacStatus,
@@ -120,7 +142,9 @@ const DonorScreen: React.FC = () => {
           weight: Number(formState.weight),
           medicalClearance: formState.medicalClearance,
           recentTattooOrPiercing: formState.recentTattooOrPiercing,
-          recentTravel: !!formState.recentTravelDetails && formState.recentTravelDetails !== "No recent travel",
+          recentTravel:
+            !!formState.recentTravelDetails &&
+            formState.recentTravelDetails !== "No recent travel",
           recentTravelDetails: formState.recentTravelDetails,
           recentVaccination: formState.recentVaccination,
           recentSurgery: formState.recentSurgery,
@@ -153,50 +177,50 @@ const DonorScreen: React.FC = () => {
           },
         ],
         hlaProfile: {
-          hlaA1: "A*02:01",
-          hlaA2: "A*24:02",
-          hlaB1: "B*15:01",
-          hlaB2: "B*44:03",
-          hlaC1: "C*03:04",
-          hlaC2: "C*16:01",
-          hlaDR1: "DRB1*07:01",
-          hlaDR2: "DRB1*15:01",
-          hlaDQ1: "DQB1*02:02",
-          hlaDQ2: "DQB1*06:02",
-          hlaDP1: "DPB1*04:01",
-          hlaDP2: "DPB1*14:01",
-          testingDate: new Date().toISOString().slice(0, 10),
-          testingMethod: "NGS_SEQUENCING",
-          laboratoryName: "GeneTech Labs",
-          certificationNumber: `CERT-${new Date().getFullYear()}-HLA-${Math.random()
-            .toString(36)
-            .substr(2, 6)
-            .toUpperCase()}`,
-          hlaString: "A*02:01,A*24:02,B*15:01,B*44:03,C*03:04,C*16:01,DRB1*07:01,DRB1*15:01,DQB1*02:02,DQB1*06:02,DPB1*04:01,DPB1*14:01",
+          hlaA1: formState.hlaA1,
+          hlaA2: formState.hlaA2,
+          hlaB1: formState.hlaB1,
+          hlaB2: formState.hlaB2,
+          hlaC1: formState.hlaC1,
+          hlaC2: formState.hlaC2,
+          hlaDR1: formState.hlaDR1,
+          hlaDR2: formState.hlaDR2,
+          hlaDQ1: formState.hlaDQ1,
+          hlaDQ2: formState.hlaDQ2,
+          hlaDP1: formState.hlaDP1,
+          hlaDP2: formState.hlaDP2,
+          testingDate: formState.testingDate,
+          testingMethod: formState.testingMethod,
+          laboratoryName: formState.laboratoryName,
+          certificationNumber: formState.certificationNumber,
+          hlaString: `${formState.hlaA1},${formState.hlaA2},${formState.hlaB1},${formState.hlaB2},${formState.hlaC1},${formState.hlaC2},${formState.hlaDR1},${formState.hlaDR2},${formState.hlaDQ1},${formState.hlaDQ2},${formState.hlaDP1},${formState.hlaDP2}`,
           isHighResolution: true,
         },
       };
 
       const response = await registerDonor(payload);
-      if (response && response.id) {
+      if (response?.id) {
         await SecureStore.setItemAsync("donorId", response.id);
         await SecureStore.setItemAsync("donorData", JSON.stringify(response));
         showAlert(
-          "Registration Successful!", 
-          "Your donor registration has been completed successfully. Thank you for joining our community of life-savers!", 
+          "Registration Successful!",
+          "Your donor registration has been completed successfully. HLA typing will be conducted during your first medical screening.",
           "success"
         );
-        
+
         setTimeout(() => {
           router.replace("/(tabs)/donate");
         }, 2000);
       } else {
-        throw new Error("Registration succeeded but donorId missing in response.");
+        throw new Error(
+          "Registration succeeded but donorId missing in response."
+        );
       }
     } catch (error: any) {
       showAlert(
         "Registration Failed",
-        error.message || "Something went wrong during registration. Please try again.",
+        error.message ||
+          "Something went wrong during registration. Please try again.",
         "error"
       );
     } finally {
@@ -209,25 +233,66 @@ const DonorScreen: React.FC = () => {
   }
 
   return (
-    <AppLayout title="Become a Donor">
-      <DonorForm
-        {...formState}
-        onLocationPress={() => router.push("/navigation/mapScreen")}
-      />
+    <AppLayout hideHeader>
+      <View style={styles.container}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Modern Header Section - Same as Hub */}
+          <View style={styles.headerContainer}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                backgroundColor: theme.background,
+                justifyContent: "center",
+                alignItems: "center",
+                marginRight: 16,
+              }}
+            >
+              <Feather name="arrow-left" size={20} color={theme.text} />
+            </TouchableOpacity>
 
-      <SubmitButton
-        isFormValid={formState.isFormValid()}
-        loading={loading}
-        onSubmit={handleSubmit}
-      />
+            <View style={styles.headerIconContainer}>
+              <Feather name="user-plus" size={28} color={theme.primary} />
+            </View>
+            <View style={styles.headerTextContainer}>
+              <Text style={styles.headerTitle}>Donor Registration</Text>
+              <Text style={styles.headerSubtitle}>
+                Complete your profile to help save lives
+              </Text>
+            </View>
+            <View style={styles.statusBadge}>
+              <Text style={styles.statusText}>
+                {formState.isFormValid() ? "✓ Ready" : "In Progress"}
+              </Text>
+            </View>
+          </View>
 
-      <ValidationAlert
-        visible={alertVisible}
-        title={alertTitle}
-        message={alertMessage}
-        type={alertType}
-        onClose={() => setAlertVisible(false)}
-      />
+          <DonorForm
+            {...formState}
+            onLocationPress={() => router.push("/navigation/mapScreen")}
+          />
+        </ScrollView>
+
+        <SubmitButton
+          isFormValid={formState.isFormValid()}
+          loading={loading}
+          onSubmit={handleSubmit}
+          buttonText={loading ? "Registering..." : "Complete Registration"}
+        />
+
+        <ValidationAlert
+          visible={alertVisible}
+          title={alertTitle}
+          message={alertMessage}
+          type={alertType}
+          onClose={() => setAlertVisible(false)}
+        />
+      </View>
     </AppLayout>
   );
 };
