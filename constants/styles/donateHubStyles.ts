@@ -1,4 +1,3 @@
-// constants/styles/donateHubStyles.ts
 import { StyleSheet, ViewStyle, TextStyle } from "react-native";
 
 export const createDonateHubStyles = (theme: any) =>
@@ -26,7 +25,6 @@ export const createDonateHubStyles = (theme: any) =>
       fontSize: 16,
     } as TextStyle,
 
-    // Modern Header Styles
     headerContainer: {
       flexDirection: "row",
       alignItems: "center",
@@ -87,7 +85,6 @@ export const createDonateHubStyles = (theme: any) =>
       letterSpacing: 0.5,
     } as TextStyle,
 
-    // Enhanced Card Styles
     card: {
       backgroundColor: theme.card,
       borderRadius: 20,

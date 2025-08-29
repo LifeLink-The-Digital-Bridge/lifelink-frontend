@@ -1,4 +1,3 @@
-// app/navigation/donorScreen.tsx
 import React, { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../utils/auth-context";
@@ -239,7 +238,6 @@ const DonorScreen: React.FC = () => {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Modern Header Section - Same as Hub */}
           <View style={styles.headerContainer}>
             <TouchableOpacity
               onPress={() => router.back()}

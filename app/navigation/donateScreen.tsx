@@ -1,133 +1,98 @@
 import React, { useEffect, useState } from "react";
-import { Picker } from "@react-native-picker/picker";
-import { DonationRequest } from "../api/donationApi";
-import {
-  BloodType,
-  OrganType,
-  TissueType,
-  StemCellType,
-} from "../api/donationApi";
-import { AuthProvider } from "../../utils/auth-context";
+import { useRouter } from "expo-router";
 import { useAuth } from "../../utils/auth-context";
-import { router } from "expo-router";
-
 import {
-  Alert,
   Text,
   View,
   ScrollView,
-  TextInput,
   TouchableOpacity,
   ActivityIndicator,
+  TextInput,
 } from "react-native";
+import { Feather } from "@expo/vector-icons";
 import * as SecureStore from "expo-secure-store";
-import styles from "../../constants/styles/dashboardStyles";
+import { useTheme } from "../../utils/theme-context";
+import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
+import { createDonationStyles } from "../../constants/styles/donationStyles";
 import { registerDonation } from "../api/donationApi";
-import AppLayout from "@/components/AppLayout";
-import { BackHandler } from "react-native";
 
-const BLOOD_TYPES = [
-  "A_POSITIVE",
-  "A_NEGATIVE",
-  "B_POSITIVE",
-  "B_NEGATIVE",
-  "O_POSITIVE",
-  "O_NEGATIVE",
-  "AB_POSITIVE",
-  "AB_NEGATIVE",
-];
-const ORGAN_TYPES = [
-  "HEART",
-  "LIVER",
-  "KIDNEY",
-  "LUNG",
-  "PANCREAS",
-  "INTESTINE",
-];
-const TISSUE_TYPES = ["BONE", "SKIN", "CORNEA", "VEIN", "TENDON", "LIGAMENT"];
-const STEM_CELL_TYPES = ["PERIPHERAL_BLOOD", "BONE_MARROW", "CORD_BLOOD"];
+import { CustomAlert } from "../../components/common/CustomAlert";
+import { ValidationMessage } from "../../components/common/validationMessage";
+import { DonationTypeSelector } from "../../components/donation/DonationTypeSelector";
+import { BloodTypeSelector } from "../../components/donation/BloodTypeSelector";
+import { OrganDetailsForm } from "../../components/donation/OrganDetailsForm";
+import { TissueDetailsForm } from "../../components/donation/TissueDetailsForm";
+import { StemCellDetailsForm } from "../../components/donation/StemCellDetailsForm";
+import AppLayout from "@/components/AppLayout";
 
 const DonationScreen = () => {
+  const { colorScheme } = useTheme();
+  const { isAuthenticated } = useAuth();
+  const router = useRouter();
+  const isDark = colorScheme === "dark";
+  const theme = isDark ? darkTheme : lightTheme;
+  const styles = createDonationStyles(theme);
+
   const [loading, setLoading] = useState(false);
   const [donorId, setDonorId] = useState("");
-  const [locationId, setLocationId] = useState<number | null>(null);
-
-  const [donationType, setDonationType] = useState<
-    "BLOOD" | "ORGAN" | "TISSUE" | "STEM_CELL"
-  >("BLOOD");
+  const [locationId, setLocationId] = useState("");
+  const [donationType, setDonationType] = useState("BLOOD");
   const [donationDate, setDonationDate] = useState("");
+  const [bloodType, setBloodType] = useState("");
   const [quantity, setQuantity] = useState("");
-  const [status, setStatus] = useState("PENDING");
+
+  const [organType, setOrganType] = useState("");
   const [isCompatible, setIsCompatible] = useState(false);
-  const [bloodType, setBloodType] = useState<BloodType | "">("");
-  const [organType, setOrganType] = useState<OrganType | "">("");
-  const [tissueType, setTissueType] = useState<TissueType | "">("");
-  const [stemCellType, setStemCellType] = useState<StemCellType | "">("");
-  const { isAuthenticated } = useAuth();
-  const [roleLoading, setRoleLoading] = useState(true);
+  const [organQuality, setOrganQuality] = useState("");
+  const [organViabilityExpiry, setOrganViabilityExpiry] = useState("");
+  const [coldIschemiaTime, setColdIschemiaTime] = useState("");
+  const [organPerfused, setOrganPerfused] = useState(false);
+  const [organWeight, setOrganWeight] = useState("");
+  const [organSize, setOrganSize] = useState("");
+  const [functionalAssessment, setFunctionalAssessment] = useState("");
+  const [hasAbnormalities, setHasAbnormalities] = useState(false);
+  const [abnormalityDescription, setAbnormalityDescription] = useState("");
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.replace("../(auth)/loginScreen");
-    }
-  }, [isAuthenticated]);
+  const [tissueType, setTissueType] = useState("");
+  const [stemCellType, setStemCellType] = useState("");
 
-  useEffect(() => {
-    const backHandler = BackHandler.addEventListener(
-      "hardwareBackPress",
-      () => {
-        router.replace("/");
-        return true;
-      }
-    );
-    return () => backHandler.remove();
-  }, []);
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertType, setAlertType] = useState<"success" | "error">("success");
 
-  useEffect(() => {
-    const backHandler = BackHandler.addEventListener(
-      "hardwareBackPress",
-      () => {
-        router.replace("/(tabs)");
-        return true;
-      }
-    );
-    return () => backHandler.remove();
-  }, []);
+  const [validationError, setValidationError] = useState("");
+  const [validationSuccess, setValidationSuccess] = useState("");
 
-  useEffect(() => {
-    const checkDonorRole = async () => {
-      setRoleLoading(true);
-      try {
-        const rolesString = await SecureStore.getItemAsync("roles");
-        let roles: string[] = [];
-        try {
-          roles = rolesString ? JSON.parse(rolesString) : [];
-        } catch {
-          roles = [];
-        }
+  const showAlert = (
+    title: string,
+    message: string,
+    type: "success" | "error" = "success"
+  ) => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertType(type);
+    setAlertVisible(true);
+  };
 
-        if (!roles.includes("DONOR")) {
-          Alert.alert(
-            "Not a Donor",
-            "You must register as a donor before making a donation."
-          );
-          router.replace("/navigation/donorScreen");
-          return;
-        }
-      } catch (error: any) {
-        Alert.alert(
-          "Role Error",
-          error.message || "Failed to check donor role"
-        );
-        router.replace("../(auth)/loginScreen");
-        return;
-      } finally {
-        setRoleLoading(false);
-      }
-    };
-
-    checkDonorRole();
-  }, []);
+  const handleTypeChange = () => {
+    setQuantity("");
+    setOrganType("");
+    setTissueType("");
+    setStemCellType("");
+    setOrganQuality("");
+    setOrganViabilityExpiry("");
+    setColdIschemiaTime("");
+    setOrganWeight("");
+    setOrganSize("");
+    setFunctionalAssessment("");
+    setAbnormalityDescription("");
+    setIsCompatible(false);
+    setOrganPerfused(false);
+    setHasAbnormalities(false);
+    setValidationError("");
+    setValidationSuccess("");
+  };
 
   useEffect(() => {
     const today = new Date();
@@ -141,9 +106,12 @@ const DonationScreen = () => {
       if (donorDataStr) {
         try {
           const donorData = JSON.parse(donorDataStr);
-          if (donorData?.location?.id)
-            setLocationId(Number(donorData.location.id));
-        } catch (e) {}
+          if (donorData?.addresses?.[0]?.id) {
+            setLocationId(donorData.addresses[0].id);
+          }
+        } catch (e) {
+          console.error("Error parsing donor data:", e);
+        }
       }
     };
     fetchData();
@@ -154,39 +122,51 @@ const DonationScreen = () => {
       !donorId ||
       !donationType ||
       !donationDate ||
-      !status ||
       !locationId ||
       !bloodType
-    )
+    ) {
       return false;
+    }
+
     switch (donationType) {
       case "BLOOD":
         return !!quantity;
       case "ORGAN":
-        return !!organType;
+        return !!(
+          organType &&
+          organQuality &&
+          organWeight &&
+          organSize &&
+          functionalAssessment
+        );
       case "TISSUE":
-        return !!tissueType && !!quantity;
+        return !!(tissueType && quantity);
       case "STEM_CELL":
-        return !!stemCellType && !!quantity;
+        return !!(stemCellType && quantity);
       default:
         return false;
     }
   };
 
   const handleSubmit = async () => {
+    setValidationError("");
+    setValidationSuccess("");
+
     if (!isFormValid()) {
-      Alert.alert("Incomplete Form", "Please fill all required fields.");
+      setValidationError(
+        "Please fill all required fields to submit your donation."
+      );
       return;
     }
+
     setLoading(true);
     try {
-      let payload: DonationRequest = {
+      const payload: any = {
         donorId,
         donationType,
         donationDate,
-        status,
-        locationId: Number(locationId),
-        bloodType: bloodType as BloodType,
+        locationId,
+        bloodType,
       };
 
       switch (donationType) {
@@ -194,212 +174,198 @@ const DonationScreen = () => {
           payload.quantity = Number(quantity);
           break;
         case "ORGAN":
-          payload.organType = organType || undefined;
+          payload.organType = organType;
           payload.isCompatible = isCompatible;
+          payload.organQuality = organQuality;
+          payload.organViabilityExpiry = organViabilityExpiry;
+          payload.coldIschemiaTime = Number(coldIschemiaTime);
+          payload.organPerfused = organPerfused;
+          payload.organWeight = Number(organWeight);
+          payload.organSize = organSize;
+          payload.functionalAssessment = functionalAssessment;
+          payload.hasAbnormalities = hasAbnormalities;
+          if (hasAbnormalities) {
+            payload.abnormalityDescription = abnormalityDescription;
+          }
           break;
         case "TISSUE":
-          payload.tissueType = tissueType || undefined;
+          payload.tissueType = tissueType;
           payload.quantity = Number(quantity);
           break;
         case "STEM_CELL":
-          payload.stemCellType = stemCellType || undefined;
+          payload.stemCellType = stemCellType;
           payload.quantity = Number(quantity);
           break;
       }
 
       const response = await registerDonation(payload);
-      Alert.alert("Success", "Donation recorded!");
-      router.replace("/(tabs)");
+      setValidationSuccess(
+        "Donation submitted successfully! Thank you for your generous contribution."
+      );
+
+      setTimeout(() => {
+        showAlert(
+          "Donation Successful!",
+          "Your donation has been recorded successfully. You will receive confirmation details shortly.",
+          "success"
+        );
+      }, 1000);
+
+      setTimeout(() => {
+        router.replace("/(tabs)/donate");
+      }, 3000);
     } catch (error: any) {
-      Alert.alert("Donation Failed", error.message || "Something went wrong!");
+      setValidationError(
+        error.message ||
+          "Something went wrong while submitting your donation. Please try again."
+      );
+      showAlert(
+        "Donation Failed",
+        error.message ||
+          "Unable to process your donation at this time. Please check your connection and try again.",
+        "error"
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <AuthProvider>
-      <AppLayout title="Make a Donation">
-        <ScrollView
-          style={styles.bg}
-          contentContainerStyle={styles.scrollContent}
-        >
-          <Text style={styles.sectionTitle}>Make a Donation</Text>
-
-          <Text style={styles.label}>Donation Type</Text>
-          <View style={styles.input}>
-            <Picker
-              selectedValue={donationType}
-              onValueChange={(
-                value: "BLOOD" | "ORGAN" | "TISSUE" | "STEM_CELL"
-              ) => {
-                setDonationType(value);
-                setQuantity("");
-                setOrganType("");
-                setTissueType("");
-                setStemCellType("");
-              }}
+    <AppLayout hideHeader>
+      <View style={styles.container}>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <View style={styles.headerContainer}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={styles.backButton}
             >
-              <Picker.Item label="Blood" value="BLOOD" />
-              <Picker.Item label="Organ" value="ORGAN" />
-              <Picker.Item label="Tissue" value="TISSUE" />
-              <Picker.Item label="Stem Cell" value="STEM_CELL" />
-            </Picker>
+              <Feather name="arrow-left" size={20} color={theme.text} />
+            </TouchableOpacity>
+
+            <View style={styles.headerIconContainer}>
+              <Feather name="gift" size={28} color={theme.primary} />
+            </View>
+            <View style={styles.headerTextContainer}>
+              <Text style={styles.headerTitle}>Make Donation</Text>
+              <Text style={styles.headerSubtitle}>
+                Help save lives with your contribution
+              </Text>
+            </View>
+            <View style={styles.statusBadge}>
+              <Text style={styles.statusText}>
+                {isFormValid() ? "✓ Ready" : "In Progress"}
+              </Text>
+            </View>
           </View>
 
-          <Text style={styles.label}>Blood Type</Text>
-          <View style={styles.input}>
-            <Picker selectedValue={bloodType} onValueChange={setBloodType}>
-              <Picker.Item label="Select Blood Type" value="" />
-              {BLOOD_TYPES.map((bt) => (
-                <Picker.Item
-                  label={bt
-                    .replace("_POSITIVE", "+")
-                    .replace("_NEGATIVE", "-")
-                    .replace("_", " ")}
-                  value={bt}
-                  key={bt}
-                />
-              ))}
-            </Picker>
-          </View>
+          <ValidationMessage error={validationError} />
+          <ValidationMessage success={validationSuccess} />
 
-          <Text style={styles.label}>Donation Date</Text>
-          <TextInput
-            style={[
-              styles.input,
-              { backgroundColor: "#f1f2f6", color: "#636e72" },
-            ]}
-            value={donationDate}
-            editable={false}
+          <DonationTypeSelector
+            donationType={donationType}
+            setDonationType={setDonationType}
+            onTypeChange={handleTypeChange}
+          />
+
+          <BloodTypeSelector
+            bloodType={bloodType}
+            setBloodType={setBloodType}
           />
 
           {donationType === "BLOOD" && (
-            <>
-              <Text style={styles.label}>Quantity (in liters, e.g., 0.5)</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Quantity"
-                keyboardType="numeric"
-                value={quantity}
-                onChangeText={setQuantity}
-              />
-            </>
+            <View style={styles.formSection}>
+              <View style={styles.sectionHeader}>
+                <Feather name="droplet" size={20} color={theme.primary} />
+                <Text style={styles.sectionTitle}>Blood Details</Text>
+              </View>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Quantity (liters, e.g., 0.5)</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="0.5"
+                  placeholderTextColor={theme.textSecondary}
+                  keyboardType="numeric"
+                  value={quantity}
+                  onChangeText={setQuantity}
+                />
+              </View>
+            </View>
           )}
 
           {donationType === "ORGAN" && (
-            <>
-              <Text style={styles.label}>Organ Type</Text>
-              <View style={styles.input}>
-                <Picker selectedValue={organType} onValueChange={setOrganType}>
-                  <Picker.Item label="Select Organ" value="" />
-                  {ORGAN_TYPES.map((ot) => (
-                    <Picker.Item
-                      label={ot.charAt(0) + ot.slice(1).toLowerCase()}
-                      value={ot}
-                      key={ot}
-                    />
-                  ))}
-                </Picker>
-              </View>
-              <View style={styles.switchRow}>
-                <Text style={styles.label}>Is Compatible?</Text>
-                <TouchableOpacity
-                  style={{
-                    backgroundColor: isCompatible ? "#00b894" : "#dfe6e9",
-                    borderRadius: 16,
-                    padding: 8,
-                    marginLeft: 8,
-                  }}
-                  onPress={() => setIsCompatible(!isCompatible)}
-                >
-                  <Text style={{ color: isCompatible ? "#fff" : "#636e72" }}>
-                    {isCompatible ? "Yes" : "No"}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </>
+            <OrganDetailsForm
+              organType={organType}
+              setOrganType={setOrganType}
+              isCompatible={isCompatible}
+              setIsCompatible={setIsCompatible}
+              organQuality={organQuality}
+              setOrganQuality={setOrganQuality}
+              organViabilityExpiry={organViabilityExpiry}
+              setOrganViabilityExpiry={setOrganViabilityExpiry}
+              coldIschemiaTime={coldIschemiaTime}
+              setColdIschemiaTime={setColdIschemiaTime}
+              organPerfused={organPerfused}
+              setOrganPerfused={setOrganPerfused}
+              organWeight={organWeight}
+              setOrganWeight={setOrganWeight}
+              organSize={organSize}
+              setOrganSize={setOrganSize}
+              functionalAssessment={functionalAssessment}
+              setFunctionalAssessment={setFunctionalAssessment}
+              hasAbnormalities={hasAbnormalities}
+              setHasAbnormalities={setHasAbnormalities}
+              abnormalityDescription={abnormalityDescription}
+              setAbnormalityDescription={setAbnormalityDescription}
+            />
           )}
 
           {donationType === "TISSUE" && (
-            <>
-              <Text style={styles.label}>Tissue Type</Text>
-              <View style={styles.input}>
-                <Picker
-                  selectedValue={tissueType}
-                  onValueChange={setTissueType}
-                >
-                  <Picker.Item label="Select Tissue" value="" />
-                  {TISSUE_TYPES.map((tt) => (
-                    <Picker.Item
-                      label={tt.charAt(0) + tt.slice(1).toLowerCase()}
-                      value={tt}
-                      key={tt}
-                    />
-                  ))}
-                </Picker>
-              </View>
-              <Text style={styles.label}>Quantity (in grams or units)</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Quantity"
-                keyboardType="numeric"
-                value={quantity}
-                onChangeText={setQuantity}
-              />
-            </>
+            <TissueDetailsForm
+              tissueType={tissueType}
+              setTissueType={setTissueType}
+              quantity={quantity}
+              setQuantity={setQuantity}
+            />
           )}
 
           {donationType === "STEM_CELL" && (
-            <>
-              <Text style={styles.label}>Stem Cell Type</Text>
-              <View style={styles.input}>
-                <Picker
-                  selectedValue={stemCellType}
-                  onValueChange={setStemCellType}
-                >
-                  <Picker.Item label="Select Stem Cell Type" value="" />
-                  {STEM_CELL_TYPES.map((st) => (
-                    <Picker.Item
-                      label={st.replace("_", " ").toLowerCase()}
-                      value={st}
-                      key={st}
-                    />
-                  ))}
-                </Picker>
-              </View>
-              <Text style={styles.label}>Quantity (in millions)</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Quantity"
-                keyboardType="numeric"
-                value={quantity}
-                onChangeText={setQuantity}
-              />
-            </>
+            <StemCellDetailsForm
+              stemCellType={stemCellType}
+              setStemCellType={setStemCellType}
+              quantity={quantity}
+              setQuantity={setQuantity}
+            />
           )}
 
           <TouchableOpacity
             style={[
-              styles.button,
-              {
-                backgroundColor:
-                  isFormValid() && !loading ? "#0984e3" : "#b2bec3",
-              },
+              styles.submitButton,
+              !isFormValid() || loading ? styles.submitButtonDisabled : {},
             ]}
             onPress={handleSubmit}
             disabled={!isFormValid() || loading}
-            activeOpacity={0.8}
           >
             {loading ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color="#fff" size="small" />
             ) : (
-              <Text style={styles.buttonText}>Donate</Text>
+              <Text style={styles.submitButtonText}>
+                {alertType === "success"
+                  ? "Donation Submitted!"
+                  : "Submit Donation"}
+              </Text>
             )}
           </TouchableOpacity>
         </ScrollView>
-      </AppLayout>
-    </AuthProvider>
+
+        <CustomAlert
+          visible={alertVisible}
+          title={alertTitle}
+          message={alertMessage}
+          onClose={() => setAlertVisible(false)}
+          confirmText="OK"
+        />
+      </View>
+    </AppLayout>
   );
 };
 

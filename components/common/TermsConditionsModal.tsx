@@ -1,4 +1,3 @@
-// components/common/TermsConditionsModal.tsx (Alternative approach)
 import React from 'react';
 import { View, Text, Modal, ScrollView, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import { Feather } from '@expo/vector-icons';
@@ -143,7 +142,6 @@ export function TermsConditionsModal({ visible, onClose, onAccept }: TermsCondit
     >
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
-          {/* Header */}
           <View style={styles.header}>
             <Text style={styles.headerTitle}>Terms & Conditions</Text>
             <TouchableOpacity style={styles.closeButton} onPress={onClose}>
@@ -151,7 +149,6 @@ export function TermsConditionsModal({ visible, onClose, onAccept }: TermsCondit
             </TouchableOpacity>
           </View>
 
-          {/* Content */}
           <ScrollView contentContainerStyle={styles.scrollContent}>
             <Text style={styles.sectionTitle}>Donor Consent Agreement</Text>
             <Text style={styles.paragraph}>
@@ -208,7 +205,6 @@ export function TermsConditionsModal({ visible, onClose, onAccept }: TermsCondit
             </Text>
           </ScrollView>
 
-          {/* Action Buttons */}
           <View style={styles.buttonContainer}>
             <TouchableOpacity style={[styles.button, styles.declineButton]} onPress={onClose}>
               <Text style={[styles.buttonText, styles.declineButtonText]}>Decline</Text>

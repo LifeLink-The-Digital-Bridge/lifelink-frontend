@@ -10,9 +10,7 @@ import { ConsentForm } from './ConsentForm';
 import { LocationDetails } from './LocationDetails';
 import { HlaProfile } from "./HlaProfile";
 
-// Define the interface for DonorFormProps
 export interface DonorFormProps {
-  // HLA Profile props
   hlaA1: string;
   setHlaA1: (value: string) => void;
   hlaA2: string;
@@ -46,7 +44,6 @@ export interface DonorFormProps {
   certificationNumber: string;
   setCertificationNumber: (value: string) => void;
   
-  // Medical Details props
   hemoglobinLevel: string;
   setHemoglobinLevel: (value: string) => void;
   bloodPressure: string;
@@ -108,11 +105,9 @@ export interface DonorFormProps {
   lastDonationDate: string;
   setLastDonationDate: (value: string) => void;
 
-  // Consent props
   isConsented: boolean;
   setIsConsented: (value: boolean) => void;
 
-  // Location props
   addressLine: string;
   setAddressLine: (value: string) => void;
   landmark: string;
@@ -132,7 +127,6 @@ export interface DonorFormProps {
   location: { latitude: number; longitude: number } | null;
   onLocationPress: () => void;
 
-  // Additional props
   userId?: string;
   isFormValid: () => boolean;
 }

@@ -1,4 +1,3 @@
-// app/navigation/hubs/donateHubScreen.tsx
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import React, { useCallback, useEffect, useState } from "react";
@@ -117,7 +116,6 @@ export default function DonateHubScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
-        {/* Modern Header Section */}
         <View style={styles.headerContainer}>
           <View style={styles.headerIconContainer}>
             <Feather name="heart" size={28} color={theme.primary} />
