@@ -3,10 +3,63 @@ import Constants from "expo-constants";
 
 const BASE_URL = Constants.expoConfig?.extra?.API_URL;
 
-export interface Location {
+// api/recipientApi.ts (Updated)
+export interface MedicalDetails {
+  hemoglobinLevel?: number;
+  bloodPressure?: string;
+  diagnosis: string;
+  allergies?: string;
+  currentMedications?: string;
+  additionalNotes?: string;
+  hasInfectiousDiseases?: boolean;
+  infectiousDiseaseDetails?: string;
+  creatinineLevel?: number;
+  liverFunctionTests?: string;
+  cardiacStatus?: string;
+  pulmonaryFunction?: number;
+  overallHealthStatus?: string;
+}
+
+export interface EligibilityCriteria {
+  ageEligible?: boolean;
+  age?: number;
+  dob?: string;
+  weightEligible?: boolean;
+  weight?: number;
+  medicallyEligible: boolean;
+  legalClearance: boolean;
+  notes?: string;
+  lastReviewed: string;
+  height?: number;
+  bodyMassIndex?: number;
+  bodySize?: string;
+  isLivingDonor?: boolean;
+}
+
+export interface HlaProfile {
+  hlaA1?: string;
+  hlaA2?: string;
+  hlaB1?: string;
+  hlaB2?: string;
+  hlaC1?: string;
+  hlaC2?: string;
+  hlaDR1?: string;
+  hlaDR2?: string;
+  hlaDQ1?: string;
+  hlaDQ2?: string;
+  hlaDP1?: string;
+  hlaDP2?: string;
+  testingDate?: string;
+  testingMethod?: string;
+  laboratoryName?: string;
+  certificationNumber?: string;
+  hlaString?: string;
+  isHighResolution?: boolean;
+}
+export interface Address {
   addressLine: string;
   landmark?: string;
-  area?: string;
+  area?: string; 
   city: string;
   district?: string;
   state: string;
@@ -16,19 +69,24 @@ export interface Location {
   longitude: number;
 }
 
-export interface MedicalDetails {
-  diagnosis: string;
-  allergies?: string;
-  currentMedications?: string;
-  additionalNotes?: string;
+export interface RecipientDTO {
+  id: string;
+  userId: string;
+  availability: string;
+  addresses: Address[];
+  eligibilityCriteria: EligibilityCriteria;
+  consentForm: ConsentForm;
+  hlaProfile?: HlaProfile;
 }
 
-export interface EligibilityCriteria {
-  medicallyEligible: boolean;
-  legalClearance: boolean;
-  notes?: string;
-  lastReviewed: string;
+export interface RegisterRecipientDTO {
+  availability: string;
+  addresses: Address[];
+  eligibilityCriteria: EligibilityCriteria;
+  consentForm: ConsentForm;
+  hlaProfile?: HlaProfile;
 }
+
 
 export interface ConsentForm {
   userId: string;
@@ -36,15 +94,6 @@ export interface ConsentForm {
   consentedAt: string;
 }
 
-export interface RecipientDTO {
-  id: string;
-  userId: string;
-  availability: string;
-  location: Location;
-  medicalDetails: MedicalDetails;
-  eligibilityCriteria: EligibilityCriteria;
-  consentForm: ConsentForm;
-}
 
 export interface ReceiveRequestDTO {
   bloodType: string;
@@ -57,14 +106,6 @@ export interface ReceiveRequestDTO {
   requestDate: string;
   status: string;
   notes?: string;
-}
-
-export interface RegisterRecipientDTO {
-  availability: string;
-  location: Location;
-  medicalDetails: MedicalDetails;
-  eligibilityCriteria: EligibilityCriteria;
-  consentForm: ConsentForm;
 }
 
 export const addRecipientRole = async (): Promise<string> => {

@@ -8,11 +8,81 @@ export const createDonorStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.background,
-    paddingHorizontal: 20,
   },
   
   scrollContent: {
+    padding: 16,
     paddingBottom: 120, 
+  },
+
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.card,
+    padding: 20,
+    borderRadius: 20,
+    marginBottom: 24,
+    shadowColor: theme.shadow,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: theme.border + '40',
+  },
+
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: theme.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+
+  headerIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: theme.primary + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+
+  headerTextContainer: {
+    flex: 1,
+  },
+
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: theme.text,
+    letterSpacing: 0.3,
+  },
+
+  headerSubtitle: {
+    fontSize: 14,
+    color: theme.textSecondary,
+    marginTop: 2,
+    fontWeight: '500',
+  },
+
+  statusBadge: {
+    backgroundColor: theme.success + '15',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: theme.success + '30',
+  },
+
+  statusText: {
+    color: theme.success,
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 0.5,
   },
   
   sectionContainer: {
@@ -28,22 +98,38 @@ export const createDonorStyles = (theme: any) => StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.border + '40',
   },
+
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
   
   sectionTitle: {
     fontSize: 20,
     color: theme.text,
     fontWeight: '700',
-    marginBottom: 16,
+    marginLeft: 12,
     paddingBottom: 8,
     borderBottomWidth: 2,
     borderBottomColor: theme.primary + '30',
+  },
+
+  inputContainer: {
+    marginBottom: 16,
+  },
+
+  label: {
+    fontSize: 16,
+    color: theme.text,
+    fontWeight: '600',
+    marginBottom: 8,
   },
   
   input: {
     backgroundColor: theme.inputBackground,
     borderRadius: 12,
     padding: 16,
-    marginBottom: 16,
     fontSize: 16,
     borderWidth: 2,
     borderColor: theme.border,
@@ -54,20 +140,33 @@ export const createDonorStyles = (theme: any) => StyleSheet.create({
     backgroundColor: theme.textSecondary + '20',
     color: theme.textSecondary,
   },
+
+  textArea: {
+    backgroundColor: theme.inputBackground,
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    borderWidth: 2,
+    borderColor: theme.border,
+    color: theme.text,
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
   
   switchRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
     justifyContent: 'space-between',
     paddingVertical: 8,
+    marginBottom: 16,
   },
-  
-  label: {
+
+  switchLabel: {
     fontSize: 16,
     color: theme.text,
     fontWeight: '500',
     flex: 1,
+    marginRight: 16,
   },
   
   eligibilityText: {
@@ -136,15 +235,17 @@ export const createDonorStyles = (theme: any) => StyleSheet.create({
   },
   
   submitButton: {
-    paddingVertical: 15,
-    borderRadius: 10,
+    backgroundColor: theme.primary,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: theme.shadow,
+    shadowColor: theme.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 8,
+    shadowRadius: 8,
+    elevation: 6,
     minHeight: 46,
   },
   
@@ -153,7 +254,7 @@ export const createDonorStyles = (theme: any) => StyleSheet.create({
   },
   
   submitButtonDisabled: {
-    backgroundColor: theme.textSecondary + '60',
+    backgroundColor: theme.textSecondary,
   },
   
   submitButtonText: {
@@ -184,6 +285,7 @@ export const createDonorStyles = (theme: any) => StyleSheet.create({
     textAlign: 'center',
     marginBottom: 12,
   },
+
   agreementCard: {
     backgroundColor: theme.background,
     padding: 20,
@@ -279,5 +381,16 @@ export const createDonorStyles = (theme: any) => StyleSheet.create({
     color: theme.success,
     fontSize: 14,
     opacity: 0.8,
+  },
+    loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: theme.background,
+  },
+    loadingText: {
+    fontSize: 16,
+    color: theme.textSecondary,
+    marginTop: 16,
   },
 });

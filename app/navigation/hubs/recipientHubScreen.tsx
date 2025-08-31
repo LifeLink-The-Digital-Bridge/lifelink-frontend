@@ -5,22 +5,50 @@ import {
   ActivityIndicator,
   ScrollView,
   Text,
-  TouchableOpacity,
   View,
   RefreshControl,
-  Alert,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import styles from "../../../constants/styles/dashboardStyles";
+import { useTheme } from "../../../utils/theme-context";
+import { lightTheme, darkTheme } from "../../../constants/styles/authStyles";
+import { createRecipientStyles } from "../../../constants/styles/recipientStyles";
 import { getRecipientByUserId } from "../../api/recipientApi";
 import { useAuth } from "../../../utils/auth-context";
+import { ValidationAlert } from "../../../components/common/ValidationAlert";
+
+import { RecipientProfile } from "../../../components/recipient/RecipientProfile";
+import { RecipientActions } from "../../../components/recipient/RecipientActions";
+import { RecipientRegistrationPrompt } from "../../../components/recipient/RecipientRegistrationPrompt";
 
 const RecipientHubScreen = () => {
+  const { colorScheme } = useTheme();
+  const isDark = colorScheme === "dark";
+  const theme = isDark ? darkTheme : lightTheme;
+  const styles = createRecipientStyles(theme);
+
   const [loading, setLoading] = useState(true);
   const [recipient, setRecipient] = useState<any>(null);
   const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
   const { isAuthenticated } = useAuth();
+
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertType, setAlertType] = useState<
+    "success" | "error" | "warning" | "info"
+  >("info");
+
+  const showAlert = (
+    title: string,
+    message: string,
+    type: "success" | "error" | "warning" | "info" = "info"
+  ) => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertType(type);
+    setAlertVisible(true);
+  };
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -35,12 +63,21 @@ const RecipientHubScreen = () => {
       const recipientData = await getRecipientByUserId();
       if (recipientData) {
         setRecipient(recipientData);
-        await SecureStore.setItemAsync("recipientData", JSON.stringify(recipientData));
+        await SecureStore.setItemAsync(
+          "recipientData",
+          JSON.stringify(recipientData)
+        );
       } else {
         await SecureStore.deleteItemAsync("recipientData");
+        setRecipient(null);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch recipient data:", error);
+      showAlert(
+        "Sync Error",
+        "Failed to sync your recipient information. Please check your internet connection.",
+        "warning"
+      );
     }
     setLoading(false);
     setRefreshing(false);
@@ -59,171 +96,76 @@ const RecipientHubScreen = () => {
     loadInitialData();
   }, [loadRecipientData]);
 
-  if (loading) {
-    return <ActivityIndicator />;
-  }
+  const handleUpdatePress = () => {
+    router.push("/navigation/RecipientScreen");
+  };
 
-  if (!recipient) {
+  const handleCreateRequestPress = () => {
+    router.push("/navigation/RecipientRequestScreen");
+  };
+
+  if (loading) {
     return (
-      <ScrollView
-        contentContainerStyle={{ padding: 16 }}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={loadRecipientData} />
-        }
-      >
-        <Text style={{ fontSize: 18, marginBottom: 16 }}>
-          You are not registered as a recipient.
-        </Text>
-        <TouchableOpacity
-          style={[styles.button, { backgroundColor: "#0984e3" }]}
-          onPress={() => router.push("/navigation/RecipientScreen")}
-        >
-          <Text style={styles.buttonText}>Register as Recipient</Text>
-        </TouchableOpacity>
-      </ScrollView>
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={theme.primary} />
+        <Text style={styles.loadingText}>Loading recipient information...</Text>
+      </View>
     );
   }
 
+  if (!recipient) {
+    return <RecipientRegistrationPrompt />;
+  }
+
   return (
-    <ScrollView
-      contentContainerStyle={{ padding: 16 }}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={loadRecipientData} />
-      }
-    >
-      <Text style={{ fontWeight: "bold", fontSize: 18, marginBottom: 8 }}>
-        Your Recipient Details
-      </Text>
-      <View style={[styles.card, { marginBottom: 16 }]}>
-        <Text style={{ fontWeight: "bold", marginBottom: 4 }}>
-          Status:{" "}
-          <Text style={{ fontWeight: "normal" }}>
-            {recipient.availability || "N/A"}
-          </Text>
-        </Text>
-        {recipient.location && (
-          <>
-            <Text style={{ fontWeight: "bold", marginTop: 12, marginBottom: 4 }}>
-              Location Details:
-            </Text>
-            <Text>
-              Address:{" "}
-              {recipient.location.addressLine ||
-                recipient.location.landmark ||
-                recipient.location.area ||
-                "N/A"}
-            </Text>
-            {recipient.location.addressLine && (
-              <Text>Address Line: {recipient.location.addressLine}</Text>
-            )}
-            {recipient.location.landmark && (
-              <Text>Landmark: {recipient.location.landmark}</Text>
-            )}
-            {recipient.location.area && (
-              <Text>Area: {recipient.location.area}</Text>
-            )}
-            {recipient.location.district && (
-              <Text>District: {recipient.location.district}</Text>
-            )}
-            <Text>
-              City: {recipient.location.city || "N/A"}, State:{" "}
-              {recipient.location.state || "N/A"}, Country:{" "}
-              {recipient.location.country || "N/A"}
-            </Text>
-            <Text>Pincode: {recipient.location.pincode || "N/A"}</Text>
-            {recipient.location.latitude && recipient.location.longitude && (
-              <Text>
-                Coordinates: {recipient.location.latitude.toFixed(4)},{" "}
-                {recipient.location.longitude.toFixed(4)}
-              </Text>
-            )}
-          </>
-        )}
-        {recipient.medicalDetails && (
-          <>
-            <Text
-              style={{
-                fontWeight: "bold",
-                marginTop: 12,
-                marginBottom: 4,
-              }}
-            >
-              Medical Details:
-            </Text>
-            <Text>
-              Diagnosis: {recipient.medicalDetails.diagnosis || "N/A"}
-            </Text>
-            <Text>
-              Allergies: {recipient.medicalDetails.allergies || "None"}
-            </Text>
-            <Text>
-              Medications: {recipient.medicalDetails.currentMedications || "N/A"}
-            </Text>
-            <Text>
-              Notes: {recipient.medicalDetails.additionalNotes || "N/A"}
-            </Text>
-          </>
-        )}
-        {recipient.eligibilityCriteria && (
-          <>
-            <Text
-              style={{
-                fontWeight: "bold",
-                marginTop: 12,
-                marginBottom: 4,
-              }}
-            >
-              Eligibility:
-            </Text>
-            <Text>
-              Medically Eligible:{" "}
-              {recipient.eligibilityCriteria.medicallyEligible ? "Yes" : "No"}
-            </Text>
-            <Text>
-              Legal Clearance:{" "}
-              {recipient.eligibilityCriteria.legalClearance ? "Yes" : "No"}
-            </Text>
-            <Text>
-              Notes: {recipient.eligibilityCriteria.notes || "N/A"}
-            </Text>
-            <Text>
-              Last Reviewed: {recipient.eligibilityCriteria.lastReviewed || "N/A"}
-            </Text>
-          </>
-        )}
-        {recipient.consentForm && (
-          <>
-            <Text
-              style={{
-                fontWeight: "bold",
-                marginTop: 12,
-                marginBottom: 4,
-              }}
-            >
-              Consent:
-            </Text>
-            <Text>
-              Consented: {recipient.consentForm.isConsented ? "Yes" : "No"}
-            </Text>
-            <Text>
-              Consented At: {recipient.consentForm.consentedAt || "N/A"}
-            </Text>
-          </>
-        )}
-      </View>
-      <TouchableOpacity
-        style={[styles.button, { backgroundColor: "#00b894" }]}
-        onPress={() => router.push("/navigation/RecipientScreen")}
+    <View style={styles.container}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={loadRecipientData}
+            tintColor={theme.primary}
+            colors={[theme.primary]}
+          />
+        }
+        showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.buttonText}>Update Recipient Details</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.button, { backgroundColor: "#0984e3", marginTop: 12 }]}
-        onPress={() => router.push("/navigation/RecipientRequestScreen")}
-      >
-        <Text style={styles.buttonText}>Create New Request</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        <View style={styles.headerContainer}>
+          <View style={styles.headerIconContainer}>
+            <Feather name="heart" size={28} color={theme.primary} />
+          </View>
+          <View style={styles.headerTextContainer}>
+            <Text style={styles.headerTitle}>Recipient Dashboard</Text>
+            <Text style={styles.headerSubtitle}>
+              Managing your healthcare needs
+            </Text>
+          </View>
+          <View style={styles.statusBadge}>
+            <Text style={styles.statusText}>
+              {recipient.availability === "AVAILABLE"
+                ? "✓ Available"
+                : recipient.availability}
+            </Text>
+          </View>
+        </View>
+
+        <RecipientProfile recipient={recipient} />
+
+        <RecipientActions
+          onUpdatePress={handleUpdatePress}
+          onCreateRequestPress={handleCreateRequestPress}
+        />
+      </ScrollView>
+
+      <ValidationAlert
+        visible={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        type={alertType}
+        onClose={() => setAlertVisible(false)}
+      />
+    </View>
   );
 };
 

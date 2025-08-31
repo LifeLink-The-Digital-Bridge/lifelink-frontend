@@ -8,11 +8,12 @@ import {
   View,
   RefreshControl,
 } from "react-native";
-import { Feather } from '@expo/vector-icons';
+import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../../utils/theme-context";
 import { lightTheme, darkTheme } from "../../../constants/styles/authStyles";
-import { createDonateHubStyles } from "../../../constants/styles/donateHubStyles";
+import { createDonorStyles } from "../../../constants/styles/donorStyles";
 import { fetchDonorData } from "../../api/donorApi";
+import { useAuth } from "../../../utils/auth-context";
 import { DonorRegistrationPrompt } from "../../../components/donor/DonorRegistrationPrompt";
 import { DonateProfile } from "../../../components/donor/DonateProfile";
 import { DonateActions } from "../../../components/donor/DonateActions";
@@ -20,10 +21,10 @@ import { ValidationAlert } from "../../../components/common/ValidationAlert";
 
 export default function DonateHubScreen() {
   const { colorScheme } = useTheme();
-  const isDark = colorScheme === 'dark';
+  const isDark = colorScheme === "dark";
   const theme = isDark ? darkTheme : lightTheme;
-  const styles = createDonateHubStyles(theme);
-  
+  const styles = createDonorStyles(theme);
+
   const [loading, setLoading] = useState(true);
   const [donorData, setDonorData] = useState<any>(null);
   const router = useRouter();
@@ -31,18 +32,27 @@ export default function DonateHubScreen() {
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
-  const [alertType, setAlertType] = useState<'success' | 'error' | 'warning' | 'info'>('info');
+  const [alertType, setAlertType] = useState<
+    "success" | "error" | "warning" | "info"
+  >("info");
+  const { isAuthenticated } = useAuth();
 
   const showAlert = (
     title: string,
     message: string,
-    type: 'success' | 'error' | 'warning' | 'info' = 'info'
+    type: "success" | "error" | "warning" | "info" = "info"
   ) => {
     setAlertTitle(title);
     setAlertMessage(message);
     setAlertType(type);
     setAlertVisible(true);
   };
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.replace("../(auth)/loginScreen");
+    }
+  }, [isAuthenticated]);
 
   const loadDonorData = useCallback(async () => {
     setLoading(true);
@@ -59,8 +69,8 @@ export default function DonateHubScreen() {
     } catch (error: any) {
       console.error("Failed to fetch donor data:", error);
       showAlert(
-        "Sync Error", 
-        "Failed to sync your donor information. Please check your internet connection.", 
+        "Sync Error",
+        "Failed to sync your donor information. Please check your internet connection.",
         "warning"
       );
     }
@@ -122,18 +132,20 @@ export default function DonateHubScreen() {
           </View>
           <View style={styles.headerTextContainer}>
             <Text style={styles.headerTitle}>Donor Dashboard</Text>
-            <Text style={styles.headerSubtitle}>Ready to make a difference</Text>
+            <Text style={styles.headerSubtitle}>
+              Ready to make a difference
+            </Text>
           </View>
           <View style={styles.statusBadge}>
             <Text style={styles.statusText}>
-              {donorData.status === 'ACTIVE' ? '✓ Active' : donorData.status}
+              {donorData.status === "ACTIVE" ? "✓ Active" : donorData.status}
             </Text>
           </View>
         </View>
-        
+
         <DonateProfile donorData={donorData} />
-        
-        <DonateActions 
+
+        <DonateActions
           onUpdatePress={handleUpdatePress}
           onContinuePress={handleContinuePress}
         />

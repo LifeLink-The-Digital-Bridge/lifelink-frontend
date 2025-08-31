@@ -3,7 +3,7 @@ import AppLayout from "../../components/AppLayout";
 import RecipientHubScreen from "../navigation/hubs/recipientHubScreen";
 export default function receiveScreen() {
   return (
-    <AppLayout title="Receive">
+    <AppLayout hideHeader={true}>
       <RecipientHubScreen />
     </AppLayout>
   );
