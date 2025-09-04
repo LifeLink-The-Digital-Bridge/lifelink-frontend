@@ -49,7 +49,9 @@ export function HlaProfile(props: HlaProfileProps) {
   return (
     <View style={styles.sectionContainer}>
       <View style={styles.sectionHeader}>
-        <Feather name="shield" size={24} color={theme.primary} />
+        <View style={styles.sectionIconContainer}>
+          <Feather name="shield" size={18} color={theme.primary} />
+        </View>
         <Text style={styles.sectionTitle}>HLA Profile</Text>
       </View>
 

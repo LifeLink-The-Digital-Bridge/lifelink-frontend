@@ -44,7 +44,9 @@ export function EligibilityCriteria(props: EligibilityCriteriaProps) {
   return (
     <View style={styles.sectionContainer}>
       <View style={styles.sectionHeader}>
-        <Feather name="check-circle" size={24} color={theme.primary} />
+        <View style={styles.sectionIconContainer}>
+          <Feather name="check-circle" size={18} color={theme.primary} />
+        </View>
         <Text style={styles.sectionTitle}>Eligibility Criteria</Text>
       </View>
 

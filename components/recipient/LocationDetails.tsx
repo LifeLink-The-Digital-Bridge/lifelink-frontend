@@ -36,7 +36,9 @@ export function LocationDetails(props: LocationDetailsProps) {
   return (
     <View style={styles.sectionContainer}>
       <View style={styles.sectionHeader}>
-        <Feather name="map-pin" size={24} color={theme.primary} />
+        <View style={styles.sectionIconContainer}>
+          <Feather name="map-pin" size={18} color={theme.primary} />
+        </View>
         <Text style={styles.sectionTitle}>Location Details</Text>
       </View>
 

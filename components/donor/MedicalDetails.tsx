@@ -2,7 +2,8 @@ import React from 'react';
 import { View, Text, TextInput, Switch } from 'react-native';
 import { useTheme } from '../../utils/theme-context';
 import { lightTheme, darkTheme } from '../../constants/styles/authStyles';
-import { createDonorStyles } from '../../constants/styles/donorStyles';
+import { createUnifiedStyles } from '../../constants/styles/unifiedStyles';
+import { Feather } from '@expo/vector-icons';
 
 interface MedicalDetailsProps {
   hemoglobinLevel: string;
@@ -74,92 +75,124 @@ export function MedicalDetails({
   const { colorScheme } = useTheme();
   const isDark = colorScheme === 'dark';
   const theme = isDark ? darkTheme : lightTheme;
-  const styles = createDonorStyles(theme);
+  const styles = createUnifiedStyles(theme);
 
   return (
     
     <View style={styles.sectionContainer}>
-      <Text style={styles.sectionTitle}>Medical Details</Text>
+      <View style={styles.sectionHeader}>
+        <View style={styles.sectionIconContainer}>
+          <Feather name="heart" size={18} color={theme.primary} />
+        </View>
+        <Text style={styles.sectionTitle}>Medical Details</Text>
+      </View>
       
-      <TextInput
-        style={styles.input}
-        placeholder="Hemoglobin Level (g/dL)"
-        placeholderTextColor={theme.textSecondary}
-        keyboardType="numeric"
-        value={hemoglobinLevel}
-        onChangeText={setHemoglobinLevel}
-      />
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Hemoglobin Level (g/dL)</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter hemoglobin level"
+          placeholderTextColor={theme.textSecondary}
+          keyboardType="numeric"
+          value={hemoglobinLevel}
+          onChangeText={setHemoglobinLevel}
+        />
+      </View>
       
-      <TextInput
-        style={styles.input}
-        placeholder="Blood Pressure (e.g., 120/80)"
-        placeholderTextColor={theme.textSecondary}
-        value={bloodPressure}
-        onChangeText={setBloodPressure}
-      />
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Blood Pressure</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="e.g., 120/80"
+          placeholderTextColor={theme.textSecondary}
+          value={bloodPressure}
+          onChangeText={setBloodPressure}
+        />
+      </View>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Creatinine Level (mg/dL)"
-        placeholderTextColor={theme.textSecondary}
-        keyboardType="numeric"
-        value={creatinineLevel}
-        onChangeText={setCreatinineLevel}
-      />
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Creatinine Level (mg/dL)</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter creatinine level"
+          placeholderTextColor={theme.textSecondary}
+          keyboardType="numeric"
+          value={creatinineLevel}
+          onChangeText={setCreatinineLevel}
+        />
+      </View>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Liver Function Tests Result"
-        placeholderTextColor={theme.textSecondary}
-        value={liverFunctionTests}
-        onChangeText={setLiverFunctionTests}
-      />
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Liver Function Tests</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter test results"
+          placeholderTextColor={theme.textSecondary}
+          value={liverFunctionTests}
+          onChangeText={setLiverFunctionTests}
+        />
+      </View>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Cardiac Status"
-        placeholderTextColor={theme.textSecondary}
-        value={cardiacStatus}
-        onChangeText={setCardiacStatus}
-      />
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Cardiac Status</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter cardiac status"
+          placeholderTextColor={theme.textSecondary}
+          value={cardiacStatus}
+          onChangeText={setCardiacStatus}
+        />
+      </View>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Pulmonary Function (%)"
-        placeholderTextColor={theme.textSecondary}
-        keyboardType="numeric"
-        value={pulmonaryFunction}
-        onChangeText={setPulmonaryFunction}
-      />
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Pulmonary Function (%)</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter percentage"
+          placeholderTextColor={theme.textSecondary}
+          keyboardType="numeric"
+          value={pulmonaryFunction}
+          onChangeText={setPulmonaryFunction}
+        />
+      </View>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Overall Health Status"
-        placeholderTextColor={theme.textSecondary}
-        value={overallHealthStatus}
-        onChangeText={setOverallHealthStatus}
-      />
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Overall Health Status</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Describe overall health"
+          placeholderTextColor={theme.textSecondary}
+          value={overallHealthStatus}
+          onChangeText={setOverallHealthStatus}
+        />
+      </View>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Last Medical Checkup (YYYY-MM-DD)"
-        placeholderTextColor={theme.textSecondary}
-        value={lastMedicalCheckup}
-        onChangeText={setLastMedicalCheckup}
-      />
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Last Medical Checkup</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="YYYY-MM-DD"
+          placeholderTextColor={theme.textSecondary}
+          value={lastMedicalCheckup}
+          onChangeText={setLastMedicalCheckup}
+        />
+      </View>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Medical History"
-        placeholderTextColor={theme.textSecondary}
-        value={medicalHistory}
-        onChangeText={setMedicalHistory}
-        multiline
-        numberOfLines={3}
-      />
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Medical History</Text>
+        <TextInput
+          style={styles.textArea}
+          placeholder="Describe your medical history"
+          placeholderTextColor={theme.textSecondary}
+          value={medicalHistory}
+          onChangeText={setMedicalHistory}
+          multiline
+          numberOfLines={3}
+        />
+      </View>
       
       <View style={styles.switchRow}>
-        <Text style={styles.label}>Any diseases?</Text>
+        <Text style={styles.switchLabel}>Any diseases?</Text>
         <Switch
           value={hasDiseases}
           onValueChange={setHasDiseases}
@@ -169,19 +202,22 @@ export function MedicalDetails({
       </View>
       
       {hasDiseases && (
-        <TextInput
-          style={styles.input}
-          placeholder="Describe diseases"
-          placeholderTextColor={theme.textSecondary}
-          value={diseaseDescription}
-          onChangeText={setDiseaseDescription}
-          multiline
-          numberOfLines={3}
-        />
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Disease Description</Text>
+          <TextInput
+            style={styles.textArea}
+            placeholder="Describe your diseases"
+            placeholderTextColor={theme.textSecondary}
+            value={diseaseDescription}
+            onChangeText={setDiseaseDescription}
+            multiline
+            numberOfLines={3}
+          />
+        </View>
       )}
 
       <View style={styles.switchRow}>
-        <Text style={styles.label}>Has Infectious Diseases?</Text>
+        <Text style={styles.switchLabel}>Has Infectious Diseases?</Text>
         <Switch
           value={hasInfectiousDiseases}
           onValueChange={setHasInfectiousDiseases}
@@ -191,19 +227,22 @@ export function MedicalDetails({
       </View>
 
       {hasInfectiousDiseases && (
-        <TextInput
-          style={styles.input}
-          placeholder="Infectious Disease Details"
-          placeholderTextColor={theme.textSecondary}
-          value={infectiousDiseaseDetails}
-          onChangeText={setInfectiousDiseaseDetails}
-          multiline
-          numberOfLines={3}
-        />
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Infectious Disease Details</Text>
+          <TextInput
+            style={styles.textArea}
+            placeholder="Describe infectious diseases"
+            placeholderTextColor={theme.textSecondary}
+            value={infectiousDiseaseDetails}
+            onChangeText={setInfectiousDiseaseDetails}
+            multiline
+            numberOfLines={3}
+          />
+        </View>
       )}
       
       <View style={styles.switchRow}>
-        <Text style={styles.label}>Taking Medication?</Text>
+        <Text style={styles.switchLabel}>Taking Medication?</Text>
         <Switch
           value={takingMedication}
           onValueChange={setTakingMedication}
@@ -213,15 +252,18 @@ export function MedicalDetails({
       </View>
 
       {takingMedication && (
-        <TextInput
-          style={styles.input}
-          placeholder="Current Medications"
-          placeholderTextColor={theme.textSecondary}
-          value={currentMedications}
-          onChangeText={setCurrentMedications}
-          multiline
-          numberOfLines={3}
-        />
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Current Medications</Text>
+          <TextInput
+            style={styles.textArea}
+            placeholder="List your current medications"
+            placeholderTextColor={theme.textSecondary}
+            value={currentMedications}
+            onChangeText={setCurrentMedications}
+            multiline
+            numberOfLines={3}
+          />
+        </View>
       )}
     </View>
   );

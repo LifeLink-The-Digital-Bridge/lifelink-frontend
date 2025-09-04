@@ -3,7 +3,7 @@ import { View, Text, Switch, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../utils/theme-context";
 import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
-import { createDonorStyles } from "../../constants/styles/donorStyles";
+import { createUnifiedStyles } from "../../constants/styles/unifiedStyles";
 import { TermsConditionsModal } from "../common/TermsConditionsModal";
 
 interface ConsentFormProps {
@@ -15,7 +15,7 @@ export function ConsentForm({ isConsented, setIsConsented }: ConsentFormProps) {
   const { colorScheme } = useTheme();
   const isDark = colorScheme === "dark";
   const theme = isDark ? darkTheme : lightTheme;
-  const styles = createDonorStyles(theme);
+  const styles = createUnifiedStyles(theme);
 
   const [termsModalVisible, setTermsModalVisible] = useState(false);
 
@@ -35,13 +35,11 @@ export function ConsentForm({ isConsented, setIsConsented }: ConsentFormProps) {
 
   return (
     <View style={styles.sectionContainer}>
-      <View
-        style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}
-      >
-        <Feather name="file-text" size={24} color={theme.primary} />
-        <Text style={[styles.sectionTitle, { marginTop: 0, marginLeft: 12 }]}>
-          Final Agreement
-        </Text>
+      <View style={styles.sectionHeader}>
+        <View style={styles.sectionIconContainer}>
+          <Feather name="file-text" size={18} color={theme.primary} />
+        </View>
+        <Text style={styles.sectionTitle}>Final Agreement</Text>
       </View>
 
       <View style={styles.agreementCard}>

@@ -2,7 +2,9 @@ import React from 'react';
 import { View, Text, TextInput, Switch } from 'react-native';
 import { useTheme } from '../../utils/theme-context';
 import { lightTheme, darkTheme } from '../../constants/styles/authStyles';
+import { createUnifiedStyles } from '../../constants/styles/unifiedStyles';
 import { createDonorStyles } from '../../constants/styles/donorStyles';
+import { Feather } from '@expo/vector-icons';
 
 interface EligibilityCriteriaProps {
   dob: string;
@@ -68,64 +70,82 @@ export function EligibilityCriteria({
   const { colorScheme } = useTheme();
   const isDark = colorScheme === 'dark';
   const theme = isDark ? darkTheme : lightTheme;
-  const styles = createDonorStyles(theme);
+  const styles = createUnifiedStyles(theme);
+  const donorStyles = createDonorStyles(theme);
 
   return (
     <View style={styles.sectionContainer}>
-      <Text style={styles.sectionTitle}>Eligibility Criteria</Text>
+      <View style={styles.sectionHeader}>
+        <View style={styles.sectionIconContainer}>
+          <Feather name="check-circle" size={18} color={theme.primary} />
+        </View>
+        <Text style={styles.sectionTitle}>Eligibility Criteria</Text>
+      </View>
       
-      <TextInput
-        value={dob}
-        editable={false}
-        style={[styles.input, styles.inputDisabled]}
-        placeholder="Date of Birth"
-      />
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Date of Birth</Text>
+        <TextInput
+          value={dob}
+          editable={false}
+          style={[styles.input, styles.inputDisabled]}
+          placeholder="Date of Birth"
+        />
+      </View>
       
       {age !== null && (
         <Text style={[
-          styles.eligibilityText,
-          age >= 18 ? styles.eligibleText : styles.ineligibleText
+          donorStyles.eligibilityText,
+          age >= 18 ? donorStyles.eligibleText : donorStyles.ineligibleText
         ]}>
           Age: {age} ({age >= 18 ? "Eligible" : "Not eligible"})
         </Text>
       )}
       
-      <TextInput
-        style={styles.input}
-        placeholder="Weight (kg)"
-        placeholderTextColor={theme.textSecondary}
-        keyboardType="numeric"
-        value={weight}
-        onChangeText={setWeight}
-      />
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Weight (kg)</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter weight in kg"
+          placeholderTextColor={theme.textSecondary}
+          keyboardType="numeric"
+          value={weight}
+          onChangeText={setWeight}
+        />
+      </View>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Height (cm)"
-        placeholderTextColor={theme.textSecondary}
-        keyboardType="numeric"
-        value={height}
-        onChangeText={setHeight}
-      />
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Height (cm)</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter height in cm"
+          placeholderTextColor={theme.textSecondary}
+          keyboardType="numeric"
+          value={height}
+          onChangeText={setHeight}
+        />
+      </View>
 
       {bodyMassIndex && (
-        <Text style={[styles.eligibilityText, styles.eligibleText]}>
+        <Text style={[donorStyles.eligibilityText, donorStyles.eligibleText]}>
           BMI: {bodyMassIndex}
         </Text>
       )}
 
-      <TextInput
-        style={styles.input}
-        placeholder="Body Size (SMALL/MEDIUM/LARGE)"
-        placeholderTextColor={theme.textSecondary}
-        value={bodySize}
-        onChangeText={setBodySize}
-      />
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Body Size</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="SMALL/MEDIUM/LARGE"
+          placeholderTextColor={theme.textSecondary}
+          value={bodySize}
+          onChangeText={setBodySize}
+        />
+      </View>
       
       {weight && (
         <Text style={[
-          styles.eligibilityText,
-          weightEligible ? styles.eligibleText : styles.ineligibleText
+          donorStyles.eligibilityText,
+          weightEligible ? donorStyles.eligibleText : donorStyles.ineligibleText
         ]}>
           {weightEligible
             ? "Eligible for donation (weight ≥ 50kg)"
@@ -134,7 +154,7 @@ export function EligibilityCriteria({
       )}
 
       <View style={styles.switchRow}>
-        <Text style={styles.label}>Living Donor?</Text>
+        <Text style={styles.switchLabel}>Living Donor?</Text>
         <Switch
           value={isLivingDonor}
           onValueChange={setIsLivingDonor}
@@ -144,7 +164,7 @@ export function EligibilityCriteria({
       </View>
       
       <View style={styles.switchRow}>
-        <Text style={styles.label}>Medical Clearance?</Text>
+        <Text style={styles.switchLabel}>Medical Clearance?</Text>
         <Switch
           value={medicalClearance}
           onValueChange={setMedicalClearance}
@@ -154,7 +174,7 @@ export function EligibilityCriteria({
       </View>
       
       <View style={styles.switchRow}>
-        <Text style={styles.label}>Recent Tattoo or Piercing?</Text>
+        <Text style={styles.switchLabel}>Recent Tattoo or Piercing?</Text>
         <Switch
           value={recentTattooOrPiercing}
           onValueChange={setRecentTattooOrPiercing}
@@ -163,17 +183,21 @@ export function EligibilityCriteria({
         />
       </View>
       
-      <TextInput
-        style={styles.input}
-        placeholder="Recent Travel Details"
-        placeholderTextColor={theme.textSecondary}
-        value={recentTravelDetails}
-        onChangeText={setRecentTravelDetails}
-        multiline
-      />
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Recent Travel Details</Text>
+        <TextInput
+          style={styles.textArea}
+          placeholder="Describe recent travel"
+          placeholderTextColor={theme.textSecondary}
+          value={recentTravelDetails}
+          onChangeText={setRecentTravelDetails}
+          multiline
+          numberOfLines={3}
+        />
+      </View>
       
       <View style={styles.switchRow}>
-        <Text style={styles.label}>Recent Vaccination?</Text>
+        <Text style={styles.switchLabel}>Recent Vaccination?</Text>
         <Switch
           value={recentVaccination}
           onValueChange={setRecentVaccination}
@@ -183,7 +207,7 @@ export function EligibilityCriteria({
       </View>
       
       <View style={styles.switchRow}>
-        <Text style={styles.label}>Recent Surgery?</Text>
+        <Text style={styles.switchLabel}>Recent Surgery?</Text>
         <Switch 
           value={recentSurgery} 
           onValueChange={setRecentSurgery}
@@ -192,31 +216,42 @@ export function EligibilityCriteria({
         />
       </View>
       
-      <TextInput
-        style={styles.input}
-        placeholder="Chronic Diseases (if any)"
-        placeholderTextColor={theme.textSecondary}
-        value={chronicDiseases}
-        onChangeText={setChronicDiseases}
-        multiline
-      />
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Chronic Diseases</Text>
+        <TextInput
+          style={styles.textArea}
+          placeholder="List any chronic diseases"
+          placeholderTextColor={theme.textSecondary}
+          value={chronicDiseases}
+          onChangeText={setChronicDiseases}
+          multiline
+          numberOfLines={3}
+        />
+      </View>
       
-      <TextInput
-        style={styles.input}
-        placeholder="Allergies (if any)"
-        placeholderTextColor={theme.textSecondary}
-        value={allergies}
-        onChangeText={setAllergies}
-        multiline
-      />
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Allergies</Text>
+        <TextInput
+          style={styles.textArea}
+          placeholder="List any allergies"
+          placeholderTextColor={theme.textSecondary}
+          value={allergies}
+          onChangeText={setAllergies}
+          multiline
+          numberOfLines={3}
+        />
+      </View>
       
-      <TextInput
-        style={styles.input}
-        placeholder="Last Donation Date (YYYY-MM-DD, optional)"
-        placeholderTextColor={theme.textSecondary}
-        value={lastDonationDate}
-        onChangeText={setLastDonationDate}
-      />
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Last Donation Date (Optional)</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="YYYY-MM-DD"
+          placeholderTextColor={theme.textSecondary}
+          value={lastDonationDate}
+          onChangeText={setLastDonationDate}
+        />
+      </View>
     </View>
   );
 }

@@ -4,51 +4,55 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
   ScrollView,
 } from "react-native";
 import { router } from "expo-router";
-import { createReceiveRequest } from "../api/recipientApi";
+import { Feather } from "@expo/vector-icons";
 import * as SecureStore from "expo-secure-store";
-import { Picker } from "@react-native-picker/picker";
 import { useAuth } from "../../utils/auth-context";
+import { useTheme } from "../../utils/theme-context";
+import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
+import { createUnifiedStyles } from "../../constants/styles/unifiedStyles";
+import { createReceiveRequest, RequestType, BloodType, OrganType, TissueType, StemCellType, UrgencyLevel } from "../api/recipientApi";
 import AppLayout from "../../components/AppLayout";
-import styles from "../../constants/styles/dashboardStyles";
-
-const BLOOD_TYPES = [
-  "A_POSITIVE",
-  "A_NEGATIVE",
-  "B_POSITIVE",
-  "B_NEGATIVE",
-  "O_POSITIVE",
-  "O_NEGATIVE",
-  "AB_POSITIVE",
-  "AB_NEGATIVE",
-];
-const ORGAN_TYPES = [
-  "HEART",
-  "LIVER",
-  "KIDNEY",
-  "LUNG",
-  "PANCREAS",
-  "INTESTINE",
-];
+import { ValidationAlert } from "../../components/common/ValidationAlert";
+import { RequestTypeSelector } from "../../components/request/RequestTypeSelector";
+import { RequestDetailsForm } from "../../components/request/RequestDetailsForm";
 
 const RecipientRequestScreen = () => {
+  const { colorScheme } = useTheme();
   const { isAuthenticated } = useAuth();
+  const isDark = colorScheme === "dark";
+  const theme = isDark ? darkTheme : lightTheme;
+  const styles = createUnifiedStyles(theme);
+
   const [loading, setLoading] = useState(false);
   const [roleLoading, setRoleLoading] = useState(true);
   const [recipientId, setRecipientId] = useState("");
-  const [form, setForm] = useState({
-    requestedBloodType: "",
-    requestedOrgan: "",
-    urgencyLevel: "HIGH",
-    quantity: "",
-    requestDate: "",
-    status: "PENDING",
-    notes: "",
-  });
+  const [locationId, setLocationId] = useState("");
+  
+  const [requestType, setRequestType] = useState<RequestType>('BLOOD');
+  const [requestedBloodType, setRequestedBloodType] = useState<BloodType | ''>('');
+  const [requestedOrgan, setRequestedOrgan] = useState<OrganType | ''>('');
+  const [requestedTissue, setRequestedTissue] = useState<TissueType | ''>('');
+  const [requestedStemCellType, setRequestedStemCellType] = useState<StemCellType | ''>('');
+  const [urgencyLevel, setUrgencyLevel] = useState<UrgencyLevel>('HIGH');
+  const [quantity, setQuantity] = useState('');
+  const [requestDate, setRequestDate] = useState('');
+  const [notes, setNotes] = useState('');
+
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertType, setAlertType] = useState<'success' | 'error' | 'warning' | 'info'>('info');
+
+  const showAlert = (title: string, message: string, type: 'success' | 'error' | 'warning' | 'info' = 'info') => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertType(type);
+    setAlertVisible(true);
+  };
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -69,20 +73,27 @@ const RecipientRequestScreen = () => {
         }
 
         if (!roles.includes("RECIPIENT")) {
-          Alert.alert(
-            "Not a Recipient",
-            "You must register as a recipient before making a request."
-          );
+          showAlert("Not a Recipient", "You must register as a recipient before making a request.", "warning");
           router.replace("/navigation/RecipientScreen");
           return;
         }
+        
         const id = await SecureStore.getItemAsync("recipientId");
         if (id) setRecipientId(id);
+        
+        const recipientDataStr = await SecureStore.getItemAsync("recipientData");
+        if (recipientDataStr) {
+          try {
+            const recipientData = JSON.parse(recipientDataStr);
+            if (recipientData?.addresses?.[0]?.id) {
+              setLocationId(recipientData.addresses[0].id);
+            }
+          } catch (e) {
+            console.error("Error parsing recipient data:", e);
+          }
+        }
       } catch (error: any) {
-        Alert.alert(
-          "Role Error",
-          error.message || "Failed to check recipient role"
-        );
+        showAlert("Role Error", error.message || "Failed to check recipient role", "error");
         router.replace("../(auth)/loginScreen");
         return;
       } finally {
@@ -94,45 +105,67 @@ const RecipientRequestScreen = () => {
 
   useEffect(() => {
     const today = new Date();
-    setForm((prev) => ({
-      ...prev,
-      requestDate: today.toISOString().slice(0, 10),
-    }));
+    setRequestDate(today.toISOString().slice(0, 10));
   }, []);
 
-  const handleChange = (key: string, value: string) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
-  };
-
   const isFormValid = () => {
-    return (
-      !!form.requestedBloodType &&
-      !!form.requestedOrgan &&
-      !!form.quantity &&
-      !!form.requestDate
-    );
+    if (!recipientId || !locationId || !quantity || !requestDate) return false;
+    
+    switch (requestType) {
+      case 'BLOOD':
+        return !!requestedBloodType;
+      case 'ORGAN':
+        return !!requestedOrgan;
+      case 'TISSUE':
+        return !!requestedTissue;
+      case 'STEM_CELL':
+        return !!requestedStemCellType;
+      default:
+        return false;
+    }
   };
 
   const handleSubmit = async () => {
     if (!isFormValid()) {
-      Alert.alert("Validation Error", "Please fill in all required fields.");
+      showAlert("Validation Error", "Please fill in all required fields.", "warning");
       return;
     }
+    
     setLoading(true);
     try {
-      await createReceiveRequest({
-        requestedBloodType: form.requestedBloodType,
-        requestedOrgan: form.requestedOrgan,
-        urgencyLevel: form.urgencyLevel,
-        quantity: parseFloat(form.quantity),
-        requestDate: form.requestDate,
-        status: form.status,
-        notes: form.notes,
-      });
-      Alert.alert("Success", "Request created successfully!");
-      router.back();
+      const payload: any = {
+        recipientId,
+        locationId,
+        requestType,
+        urgencyLevel,
+        quantity: parseFloat(quantity),
+        requestDate,
+        notes: notes || undefined,
+      };
+
+      switch (requestType) {
+        case 'BLOOD':
+          payload.requestedBloodType = requestedBloodType;
+          break;
+        case 'ORGAN':
+          payload.requestedOrgan = requestedOrgan;
+          break;
+        case 'TISSUE':
+          payload.requestedTissue = requestedTissue;
+          break;
+        case 'STEM_CELL':
+          payload.requestedStemCellType = requestedStemCellType;
+          break;
+      }
+
+      await createReceiveRequest(payload);
+      showAlert("Success", "Request created successfully!", "success");
+      
+      setTimeout(() => {
+        router.back();
+      }, 2000);
     } catch (error: any) {
-      Alert.alert("Error", error.message || "Failed to create request");
+      showAlert("Error", error.message || "Failed to create request", "error");
     } finally {
       setLoading(false);
     }
@@ -140,126 +173,104 @@ const RecipientRequestScreen = () => {
 
   if (roleLoading) {
     return (
-      <AppLayout title="Create Request">
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#0984e3" />
-          <Text>Loading...</Text>
-        </View>
-      </AppLayout>
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={theme.primary} />
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
     );
   }
 
   return (
-    <AppLayout title="Create Request">
-      <ScrollView
-        style={styles.bg}
-        contentContainerStyle={styles.scrollContent}
-      >
-        <Text style={styles.sectionTitle}>Create a Request</Text>
+    <AppLayout hideHeader>
+      <View style={styles.container}>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <View style={styles.headerContainer}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={styles.backButton}
+            >
+              <Feather name="arrow-left" size={20} color={theme.text} />
+            </TouchableOpacity>
 
-        <Text style={styles.label}>Blood Type</Text>
-        <View style={styles.input}>
-          <Picker
-            selectedValue={form.requestedBloodType}
-            onValueChange={(value) => handleChange("requestedBloodType", value)}
-          >
-            <Picker.Item label="Select Blood Type" value="" />
-            {BLOOD_TYPES.map((bt) => (
-              <Picker.Item
-                label={bt
-                  .replace("_POSITIVE", "+")
-                  .replace("_NEGATIVE", "-")
-                  .replace("_", " ")}
-                value={bt}
-                key={bt}
+            <View style={styles.headerIconContainer}>
+              <Feather name="plus-circle" size={28} color={theme.primary} />
+            </View>
+            <View style={styles.headerTextContainer}>
+              <Text style={styles.headerTitle}>Create Request</Text>
+              <Text style={styles.headerSubtitle}>
+                Request medical assistance
+              </Text>
+            </View>
+            <View style={styles.statusBadge}>
+              <Text style={styles.statusText}>
+                {isFormValid() ? "✓ Ready" : "In Progress"}
+              </Text>
+            </View>
+          </View>
+
+          <RequestTypeSelector
+            requestType={requestType}
+            setRequestType={setRequestType}
+          />
+
+          <RequestDetailsForm
+            requestType={requestType}
+            requestedBloodType={requestedBloodType}
+            setRequestedBloodType={setRequestedBloodType}
+            requestedOrgan={requestedOrgan}
+            setRequestedOrgan={setRequestedOrgan}
+            requestedTissue={requestedTissue}
+            setRequestedTissue={setRequestedTissue}
+            requestedStemCellType={requestedStemCellType}
+            setRequestedStemCellType={setRequestedStemCellType}
+            urgencyLevel={urgencyLevel}
+            setUrgencyLevel={setUrgencyLevel}
+            quantity={quantity}
+            setQuantity={setQuantity}
+            notes={notes}
+            setNotes={setNotes}
+          />
+
+          <View style={styles.sectionContainer}>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Request Date</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor={theme.textSecondary}
+                value={requestDate}
+                onChangeText={setRequestDate}
               />
-            ))}
-          </Picker>
-        </View>
+            </View>
+          </View>
+        </ScrollView>
 
-        <Text style={styles.label}>Organ Needed</Text>
-        <View style={styles.input}>
-          <Picker
-            selectedValue={form.requestedOrgan}
-            onValueChange={(value) => handleChange("requestedOrgan", value)}
+        <View style={styles.submitButtonContainer}>
+          <TouchableOpacity
+            style={[
+              styles.submitButton,
+              !isFormValid() || loading ? styles.submitButtonDisabled : null,
+            ]}
+            onPress={handleSubmit}
+            disabled={!isFormValid() || loading}
+            activeOpacity={0.8}
           >
-            <Picker.Item label="Select Organ" value="" />
-            {ORGAN_TYPES.map((ot) => (
-              <Picker.Item
-                label={ot.charAt(0) + ot.slice(1).toLowerCase()}
-                value={ot}
-                key={ot}
-              />
-            ))}
-          </Picker>
+            {loading ? (
+              <ActivityIndicator color="#fff" size="small" />
+            ) : (
+              <Text style={styles.submitButtonText}>Submit Request</Text>
+            )}
+          </TouchableOpacity>
         </View>
 
-        <Text style={styles.label}>Urgency Level</Text>
-        <View style={styles.input}>
-          <Picker
-            selectedValue={form.urgencyLevel}
-            onValueChange={(value) => handleChange("urgencyLevel", value)}
-          >
-            <Picker.Item label="High" value="HIGH" />
-            <Picker.Item label="Medium" value="MEDIUM" />
-            <Picker.Item label="Low" value="LOW" />
-          </Picker>
-        </View>
-
-        <Text style={styles.label}>Quantity</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Quantity (e.g., 1.0)"
-          keyboardType="numeric"
-          value={form.quantity}
-          onChangeText={(text) => handleChange("quantity", text)}
+        <ValidationAlert
+          visible={alertVisible}
+          title={alertTitle}
+          message={alertMessage}
+          type={alertType}
+          onClose={() => setAlertVisible(false)}
         />
-
-        <Text style={styles.label}>Request Date</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="YYYY-MM-DD"
-          value={form.requestDate}
-          onChangeText={(text) => handleChange("requestDate", text)}
-        />
-
-        <Text style={styles.label}>Status</Text>
-        <TextInput
-          style={[
-            styles.input,
-            { backgroundColor: "#f1f2f6", color: "#636e72" },
-          ]}
-          value={form.status}
-          editable={false}
-        />
-
-        <Text style={styles.label}>Notes (optional)</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Notes"
-          value={form.notes}
-          onChangeText={(text) => handleChange("notes", text)}
-        />
-
-        <TouchableOpacity
-          style={[
-            styles.button,
-            {
-              backgroundColor:
-                isFormValid() && !loading ? "#0984e3" : "#b2bec3",
-            },
-          ]}
-          onPress={handleSubmit}
-          disabled={!isFormValid() || loading}
-          activeOpacity={0.8}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Submit Request</Text>
-          )}
-        </TouchableOpacity>
-      </ScrollView>
+      </View>
     </AppLayout>
   );
 };

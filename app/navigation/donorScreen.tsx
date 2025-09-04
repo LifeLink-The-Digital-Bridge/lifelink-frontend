@@ -1,18 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../utils/auth-context";
-import { View, ScrollView, TouchableOpacity, Text } from "react-native";
+import { View, ScrollView, TouchableOpacity, Text, ActivityIndicator } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as SecureStore from "expo-secure-store";
 import { registerDonor } from "../api/donorApi";
 import { addDonorRole, refreshAuthTokens } from "../api/roleApi";
 import { useTheme } from "../../utils/theme-context";
 import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
-import { createDonateHubStyles } from "../../constants/styles/donateHubStyles";
+import { createUnifiedStyles } from "../../constants/styles/unifiedStyles";
 
 import { DonorForm } from "../../components/donor/DonorForm";
-import { SubmitButton } from "../../components/donor/SubmitButton";
-import { LoadingScreen } from "../../components/donor/LoadingScreen";
 import { ValidationAlert } from "../../components/common/ValidationAlert";
 import { useDonorFormState } from "../../hooks/useDonorFormState";
 import AppLayout from "@/components/AppLayout";
@@ -23,7 +21,7 @@ const DonorScreen: React.FC = () => {
   const router = useRouter();
   const isDark = colorScheme === "dark";
   const theme = isDark ? darkTheme : lightTheme;
-  const styles = createDonateHubStyles(theme);
+  const styles = createUnifiedStyles(theme);
 
   const formState = useDonorFormState();
 
@@ -228,7 +226,12 @@ const DonorScreen: React.FC = () => {
   };
 
   if (roleLoading) {
-    return <LoadingScreen />;
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={theme.primary} />
+        <Text style={styles.loadingText}>Setting up donor role...</Text>
+      </View>
+    );
   }
 
   return (
@@ -241,15 +244,7 @@ const DonorScreen: React.FC = () => {
           <View style={styles.headerContainer}>
             <TouchableOpacity
               onPress={() => router.back()}
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 18,
-                backgroundColor: theme.background,
-                justifyContent: "center",
-                alignItems: "center",
-                marginRight: 16,
-              }}
+              style={styles.backButton}
             >
               <Feather name="arrow-left" size={20} color={theme.text} />
             </TouchableOpacity>
@@ -276,12 +271,27 @@ const DonorScreen: React.FC = () => {
           />
         </ScrollView>
 
-        <SubmitButton
-          isFormValid={formState.isFormValid()}
-          loading={loading}
-          onSubmit={handleSubmit}
-          buttonText={loading ? "Registering..." : "Complete Registration"}
-        />
+        <View style={styles.submitButtonContainer}>
+          <TouchableOpacity
+            style={[
+              styles.submitButton,
+              !formState.isFormValid() || loading
+                ? styles.submitButtonDisabled
+                : null,
+            ]}
+            onPress={handleSubmit}
+            disabled={!formState.isFormValid() || loading}
+            activeOpacity={0.8}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" size="small" />
+            ) : (
+              <Text style={styles.submitButtonText}>
+                Complete Registration
+              </Text>
+            )}
+          </TouchableOpacity>
+        </View>
 
         <ValidationAlert
           visible={alertVisible}

@@ -2,7 +2,7 @@ import React from 'react';
 import { ScrollView } from 'react-native';
 import { useTheme } from '../../utils/theme-context';
 import { lightTheme, darkTheme } from '../../constants/styles/authStyles';
-import { createDonorStyles } from '../../constants/styles/donorStyles';
+import { createUnifiedStyles } from '../../constants/styles/unifiedStyles';
 
 import { MedicalDetails } from './MedicalDetails';
 import { EligibilityCriteria } from './EligibilityCriteria';
@@ -135,14 +135,10 @@ export const DonorForm: React.FC<DonorFormProps> = (props) => {
   const { colorScheme } = useTheme();
   const isDark = colorScheme === 'dark';
   const theme = isDark ? darkTheme : lightTheme;
-  const styles = createDonorStyles(theme);
+  const styles = createUnifiedStyles(theme);
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.scrollContent}
-      showsVerticalScrollIndicator={false}
-    >
+    <>
       <MedicalDetails
         hemoglobinLevel={props.hemoglobinLevel}
         setHemoglobinLevel={props.setHemoglobinLevel}
@@ -267,6 +263,6 @@ export const DonorForm: React.FC<DonorFormProps> = (props) => {
         isConsented={props.isConsented}
         setIsConsented={props.setIsConsented}
       />
-    </ScrollView>
+    </>
   );
 };

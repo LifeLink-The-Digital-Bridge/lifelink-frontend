@@ -4,70 +4,64 @@ import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../utils/theme-context';
 import { lightTheme, darkTheme } from '../../constants/styles/authStyles';
 import { createUnifiedStyles } from '../../constants/styles/unifiedStyles';
-import { DonationType } from '../../app/api/donationApi';
+import { RequestType } from '../../app/api/recipientApi';
 
-interface DonationTypeSelectorProps {
-  donationType: DonationType;
-  setDonationType: (type: DonationType) => void;
-  onTypeChange: () => void;
+interface RequestTypeSelectorProps {
+  requestType: RequestType;
+  setRequestType: (type: RequestType) => void;
 }
 
-const DONATION_TYPES: { type: DonationType; label: string; icon: string }[] = [
+const REQUEST_TYPES: { type: RequestType; label: string; icon: string }[] = [
   { type: 'BLOOD', label: 'Blood', icon: 'droplet' },
   { type: 'ORGAN', label: 'Organ', icon: 'heart' },
   { type: 'TISSUE', label: 'Tissue', icon: 'layers' },
   { type: 'STEM_CELL', label: 'Stem Cell', icon: 'circle' },
 ];
 
-export function DonationTypeSelector({ donationType, setDonationType, onTypeChange }: DonationTypeSelectorProps) {
+export function RequestTypeSelector({ requestType, setRequestType }: RequestTypeSelectorProps) {
   const { colorScheme } = useTheme();
   const isDark = colorScheme === 'dark';
   const theme = isDark ? darkTheme : lightTheme;
   const styles = createUnifiedStyles(theme);
 
-  const handleTypeChange = (type: DonationType) => {
-    setDonationType(type);
-    onTypeChange();
-  };
-
   return (
     <View style={styles.sectionContainer}>
       <View style={styles.sectionHeader}>
         <View style={styles.sectionIconContainer}>
-          <Feather name="gift" size={18} color={theme.primary} />
+          <Feather name="list" size={18} color={theme.primary} />
         </View>
-        <Text style={styles.sectionTitle}>Donation Type</Text>
+        <Text style={styles.sectionTitle}>Request Type</Text>
       </View>
 
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
-        {DONATION_TYPES.map((type) => (
+        {REQUEST_TYPES.map((type) => (
           <TouchableOpacity
             key={type.type}
             style={[
               {
                 flex: 1,
                 minWidth: '45%',
-                backgroundColor: donationType === type.type ? theme.primary : theme.card,
+                backgroundColor: requestType === type.type ? theme.primary : theme.card,
                 borderRadius: 12,
                 padding: 16,
                 alignItems: 'center',
                 borderWidth: 2,
-                borderColor: donationType === type.type ? theme.primary : theme.border,
+                borderColor: requestType === type.type ? theme.primary : theme.border,
               }
             ]}
-            onPress={() => handleTypeChange(type.type)}
+            onPress={() => setRequestType(type.type)}
           >
             <Feather
               name={type.icon as any}
               size={24}
-              color={donationType === type.type ? '#fff' : theme.primary}
+              color={requestType === type.type ? '#fff' : theme.primary}
             />
             <Text
               style={{
                 marginTop: 8,
                 fontSize: 14,
                 fontWeight: '600',
-                color: donationType === type.type ? '#fff' : theme.text,
+                color: requestType === type.type ? '#fff' : theme.text,
               }}
             >
               {type.label}

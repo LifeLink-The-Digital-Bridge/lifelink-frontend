@@ -11,7 +11,7 @@ import {
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../../utils/theme-context";
 import { lightTheme, darkTheme } from "../../../constants/styles/authStyles";
-import { createRecipientStyles } from "../../../constants/styles/recipientStyles";
+import { createUnifiedStyles } from "../../../constants/styles/unifiedStyles";
 import { getRecipientByUserId } from "../../api/recipientApi";
 import { useAuth } from "../../../utils/auth-context";
 import { ValidationAlert } from "../../../components/common/ValidationAlert";
@@ -24,7 +24,7 @@ const RecipientHubScreen = () => {
   const { colorScheme } = useTheme();
   const isDark = colorScheme === "dark";
   const theme = isDark ? darkTheme : lightTheme;
-  const styles = createRecipientStyles(theme);
+  const styles = createUnifiedStyles(theme);
 
   const [loading, setLoading] = useState(true);
   const [recipient, setRecipient] = useState<any>(null);

@@ -11,7 +11,7 @@ import {
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../../utils/theme-context";
 import { lightTheme, darkTheme } from "../../../constants/styles/authStyles";
-import { createDonorStyles } from "../../../constants/styles/donorStyles";
+import { createUnifiedStyles } from "../../../constants/styles/unifiedStyles";
 import { fetchDonorData } from "../../api/donorApi";
 import { useAuth } from "../../../utils/auth-context";
 import { DonorRegistrationPrompt } from "../../../components/donor/DonorRegistrationPrompt";
@@ -23,7 +23,7 @@ export default function DonateHubScreen() {
   const { colorScheme } = useTheme();
   const isDark = colorScheme === "dark";
   const theme = isDark ? darkTheme : lightTheme;
-  const styles = createDonorStyles(theme);
+  const styles = createUnifiedStyles(theme);
 
   const [loading, setLoading] = useState(true);
   const [donorData, setDonorData] = useState<any>(null);

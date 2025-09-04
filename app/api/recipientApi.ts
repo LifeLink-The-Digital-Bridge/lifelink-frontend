@@ -3,7 +3,6 @@ import Constants from "expo-constants";
 
 const BASE_URL = Constants.expoConfig?.extra?.API_URL;
 
-// api/recipientApi.ts (Updated)
 export interface MedicalDetails {
   hemoglobinLevel?: number;
   bloodPressure?: string;
@@ -58,10 +57,10 @@ export interface HlaProfile {
 }
 export interface Address {
   addressLine: string;
-  landmark?: string;
-  area?: string; 
+  landmark: string;
+  area: string;
   city: string;
-  district?: string;
+  district: string;
   state: string;
   country: string;
   pincode: string;
@@ -82,6 +81,7 @@ export interface RecipientDTO {
 export interface RegisterRecipientDTO {
   availability: string;
   addresses: Address[];
+  medicalDetails: MedicalDetails;
   eligibilityCriteria: EligibilityCriteria;
   consentForm: ConsentForm;
   hlaProfile?: HlaProfile;
@@ -89,19 +89,41 @@ export interface RegisterRecipientDTO {
 
 
 export interface ConsentForm {
-  userId: string;
   isConsented: boolean;
   consentedAt: string;
 }
 
 
-export interface ReceiveRequestDTO {
-  bloodType: string;
-  id?: number;
+export type RequestType = 'BLOOD' | 'ORGAN' | 'TISSUE' | 'STEM_CELL';
+export type BloodType = 'A_POSITIVE' | 'A_NEGATIVE' | 'B_POSITIVE' | 'B_NEGATIVE' | 'O_POSITIVE' | 'O_NEGATIVE' | 'AB_POSITIVE' | 'AB_NEGATIVE';
+export type OrganType = 'HEART' | 'LIVER' | 'KIDNEY' | 'LUNG' | 'PANCREAS' | 'INTESTINE';
+export type TissueType = 'BONE' | 'SKIN' | 'CORNEA' | 'VEIN' | 'TENDON' | 'LIGAMENT';
+export type StemCellType = 'PERIPHERAL_BLOOD' | 'BONE_MARROW' | 'CORD_BLOOD';
+export type UrgencyLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+
+export interface CreateReceiveRequestDTO {
   recipientId: string;
-  requestedBloodType: string;
-  requestedOrgan: string;
-  urgencyLevel: string;
+  locationId: string;
+  requestType: RequestType;
+  requestedBloodType?: BloodType;
+  requestedOrgan?: OrganType;
+  requestedTissue?: TissueType;
+  requestedStemCellType?: StemCellType;
+  urgencyLevel: UrgencyLevel;
+  quantity: number;
+  requestDate: string;
+  notes?: string;
+}
+
+export interface ReceiveRequestDTO {
+  id?: string;
+  recipientId: string;
+  requestType: RequestType;
+  requestedBloodType?: BloodType;
+  requestedOrgan?: OrganType;
+  requestedTissue?: TissueType;
+  requestedStemCellType?: StemCellType;
+  urgencyLevel: UrgencyLevel;
   quantity: number;
   requestDate: string;
   status: string;
@@ -129,6 +151,9 @@ export const registerRecipient = async (
   const token = await SecureStore.getItemAsync("jwt");
   const userId = await SecureStore.getItemAsync("userId");
   if (!token || !userId) throw new Error("Not authenticated");
+  
+  console.log('Sending payload:', JSON.stringify(payload, null, 2));
+  
   const response = await fetch(`${BASE_URL}/recipients/register`, {
     method: "POST",
     headers: {
@@ -138,12 +163,18 @@ export const registerRecipient = async (
     },
     body: JSON.stringify(payload),
   });
-  if (!response.ok) throw new Error("Failed to register recipient");
+  
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('Registration error:', response.status, errorText);
+    throw new Error(errorText || `Registration failed with status ${response.status}`);
+  }
+  
   return await response.json();
 };
 
 export const createReceiveRequest = async (
-  payload: Omit<ReceiveRequestDTO, "id" | "recipientId">
+  payload: CreateReceiveRequestDTO
 ): Promise<ReceiveRequestDTO> => {
   const token = await SecureStore.getItemAsync("jwt");
   const userId = await SecureStore.getItemAsync("userId");

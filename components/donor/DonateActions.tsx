@@ -1,8 +1,9 @@
 import React from 'react';
-import { TouchableOpacity, Text } from 'react-native';
+import { View, TouchableOpacity, Text } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../utils/theme-context';
 import { lightTheme, darkTheme } from '../../constants/styles/authStyles';
-import { createDonateHubStyles } from '../../constants/styles/donateHubStyles';
+import { createUnifiedStyles } from '../../constants/styles/unifiedStyles';
 
 interface DonateActionsProps {
   onUpdatePress: () => void;
@@ -13,25 +14,57 @@ export function DonateActions({ onUpdatePress, onContinuePress }: DonateActionsP
   const { colorScheme } = useTheme();
   const isDark = colorScheme === 'dark';
   const theme = isDark ? darkTheme : lightTheme;
-  const styles = createDonateHubStyles(theme);
+  const styles = createUnifiedStyles(theme);
 
   return (
-    <>
+    <View style={styles.actionsContainer}>
       <TouchableOpacity
-        style={[styles.button, styles.updateButton]}
+        style={[styles.actionButton, styles.updateButton]}
         onPress={onUpdatePress}
         activeOpacity={0.8}
       >
-        <Text style={styles.buttonText}>Update Donor Details</Text>
+        <View style={styles.actionButtonContent}>
+          <View
+            style={[
+              styles.actionIconContainer,
+              { backgroundColor: theme.primary + "20" },
+            ]}
+          >
+            <Feather name="edit-3" size={20} color={theme.primary} />
+          </View>
+          <View style={styles.actionTextContainer}>
+            <Text style={styles.actionTitle}>Update Profile</Text>
+            <Text style={styles.actionSubtitle}>
+              Modify your donor details
+            </Text>
+          </View>
+          <Feather name="chevron-right" size={16} color={theme.textSecondary} />
+        </View>
       </TouchableOpacity>
 
       <TouchableOpacity
-        style={[styles.button, styles.primaryButton]}
+        style={[styles.actionButton, styles.requestButton]}
         onPress={onContinuePress}
         activeOpacity={0.8}
       >
-        <Text style={styles.buttonText}>Continue to Donate</Text>
+        <View style={styles.actionButtonContent}>
+          <View
+            style={[
+              styles.actionIconContainer,
+              { backgroundColor: theme.success + "20" },
+            ]}
+          >
+            <Feather name="plus-circle" size={20} color={theme.success} />
+          </View>
+          <View style={styles.actionTextContainer}>
+            <Text style={styles.actionTitle}>Continue to Donate</Text>
+            <Text style={styles.actionSubtitle}>
+              Make a new donation
+            </Text>
+          </View>
+          <Feather name="chevron-right" size={16} color={theme.textSecondary} />
+        </View>
       </TouchableOpacity>
-    </>
+    </View>
   );
 }

@@ -3,7 +3,7 @@ import { View, Text, TextInput } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../utils/theme-context';
 import { lightTheme, darkTheme } from '../../constants/styles/authStyles';
-import { createDonorStyles } from '../../constants/styles/donorStyles';
+import { createUnifiedStyles } from '../../constants/styles/unifiedStyles';
 
 interface HlaProfileProps {
   hlaA1: string;
@@ -55,178 +55,186 @@ export function HlaProfile({
   const { colorScheme } = useTheme();
   const isDark = colorScheme === 'dark';
   const theme = isDark ? darkTheme : lightTheme;
-  const styles = createDonorStyles(theme);
+  const styles = createUnifiedStyles(theme);
 
   return (
     <View style={styles.sectionContainer}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-        <Feather name="shield" size={24} color={theme.primary} />
-        <Text style={[styles.sectionTitle, { marginTop: 0, marginLeft: 12 }]}>HLA Profile</Text>
+      <View style={styles.sectionHeader}>
+        <View style={styles.sectionIconContainer}>
+          <Feather name="shield" size={18} color={theme.primary} />
+        </View>
+        <Text style={styles.sectionTitle}>HLA Profile</Text>
       </View>
 
-      <Text style={{
-        fontSize: 16,
-        fontWeight: '600',
-        color: theme.text,
-        marginBottom: 12,
-        marginTop: 8,
-      }}>
-        HLA Class I Alleles
-      </Text>
+      <Text style={styles.subSectionTitle}>HLA Class I Alleles</Text>
 
-      <View style={{ flexDirection: 'row', gap: 12 }}>
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>HLA-A Alleles</Text>
+        <View style={styles.row}>
+          <TextInput
+            style={[styles.input, { flex: 1, marginRight: 12 }]}
+            placeholder="A*02:01"
+            placeholderTextColor={theme.textSecondary}
+            value={hlaA1}
+            onChangeText={setHlaA1}
+          />
+          <TextInput
+            style={[styles.input, { flex: 1 }]}
+            placeholder="A*24:02"
+            placeholderTextColor={theme.textSecondary}
+            value={hlaA2}
+            onChangeText={setHlaA2}
+          />
+        </View>
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>HLA-B Alleles</Text>
+        <View style={styles.row}>
+          <TextInput
+            style={[styles.input, { flex: 1, marginRight: 12 }]}
+            placeholder="B*15:01"
+            placeholderTextColor={theme.textSecondary}
+            value={hlaB1}
+            onChangeText={setHlaB1}
+          />
+          <TextInput
+            style={[styles.input, { flex: 1 }]}
+            placeholder="B*44:03"
+            placeholderTextColor={theme.textSecondary}
+            value={hlaB2}
+            onChangeText={setHlaB2}
+          />
+        </View>
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>HLA-C Alleles</Text>
+        <View style={styles.row}>
+          <TextInput
+            style={[styles.input, { flex: 1, marginRight: 12 }]}
+            placeholder="C*03:04"
+            placeholderTextColor={theme.textSecondary}
+            value={hlaC1}
+            onChangeText={setHlaC1}
+          />
+          <TextInput
+            style={[styles.input, { flex: 1 }]}
+            placeholder="C*16:01"
+            placeholderTextColor={theme.textSecondary}
+            value={hlaC2}
+            onChangeText={setHlaC2}
+          />
+        </View>
+      </View>
+
+      <Text style={styles.subSectionTitle}>HLA Class II Alleles</Text>
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>HLA-DR Alleles</Text>
+        <View style={styles.row}>
+          <TextInput
+            style={[styles.input, { flex: 1, marginRight: 12 }]}
+            placeholder="DRB1*07:01"
+            placeholderTextColor={theme.textSecondary}
+            value={hlaDR1}
+            onChangeText={setHlaDR1}
+          />
+          <TextInput
+            style={[styles.input, { flex: 1 }]}
+            placeholder="DRB1*15:01"
+            placeholderTextColor={theme.textSecondary}
+            value={hlaDR2}
+            onChangeText={setHlaDR2}
+          />
+        </View>
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>HLA-DQ Alleles</Text>
+        <View style={styles.row}>
+          <TextInput
+            style={[styles.input, { flex: 1, marginRight: 12 }]}
+            placeholder="DQB1*02:02"
+            placeholderTextColor={theme.textSecondary}
+            value={hlaDQ1}
+            onChangeText={setHlaDQ1}
+          />
+          <TextInput
+            style={[styles.input, { flex: 1 }]}
+            placeholder="DQB1*06:02"
+            placeholderTextColor={theme.textSecondary}
+            value={hlaDQ2}
+            onChangeText={setHlaDQ2}
+          />
+        </View>
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>HLA-DP Alleles</Text>
+        <View style={styles.row}>
+          <TextInput
+            style={[styles.input, { flex: 1, marginRight: 12 }]}
+            placeholder="DPB1*04:01"
+            placeholderTextColor={theme.textSecondary}
+            value={hlaDP1}
+            onChangeText={setHlaDP1}
+          />
+          <TextInput
+            style={[styles.input, { flex: 1 }]}
+            placeholder="DPB1*14:01"
+            placeholderTextColor={theme.textSecondary}
+            value={hlaDP2}
+            onChangeText={setHlaDP2}
+          />
+        </View>
+      </View>
+
+      <Text style={styles.subSectionTitle}>Laboratory Information</Text>
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Testing Date</Text>
         <TextInput
-          style={[styles.input, { flex: 1 }]}
-          placeholder="HLA-A1 (e.g., A*02:01)"
+          style={styles.input}
+          placeholder="YYYY-MM-DD"
           placeholderTextColor={theme.textSecondary}
-          value={hlaA1}
-          onChangeText={setHlaA1}
-        />
-        <TextInput
-          style={[styles.input, { flex: 1 }]}
-          placeholder="HLA-A2 (e.g., A*24:02)"
-          placeholderTextColor={theme.textSecondary}
-          value={hlaA2}
-          onChangeText={setHlaA2}
+          value={testingDate}
+          onChangeText={setTestingDate}
         />
       </View>
 
-      <View style={{ flexDirection: 'row', gap: 12 }}>
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Testing Method</Text>
         <TextInput
-          style={[styles.input, { flex: 1 }]}
-          placeholder="HLA-B1 (e.g., B*15:01)"
+          style={styles.input}
+          placeholder="e.g., NGS_SEQUENCING"
           placeholderTextColor={theme.textSecondary}
-          value={hlaB1}
-          onChangeText={setHlaB1}
-        />
-        <TextInput
-          style={[styles.input, { flex: 1 }]}
-          placeholder="HLA-B2 (e.g., B*44:03)"
-          placeholderTextColor={theme.textSecondary}
-          value={hlaB2}
-          onChangeText={setHlaB2}
+          value={testingMethod}
+          onChangeText={setTestingMethod}
         />
       </View>
 
-      <View style={{ flexDirection: 'row', gap: 12 }}>
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Laboratory Name</Text>
         <TextInput
-          style={[styles.input, { flex: 1 }]}
-          placeholder="HLA-C1 (e.g., C*03:04)"
+          style={styles.input}
+          placeholder="Enter laboratory name"
           placeholderTextColor={theme.textSecondary}
-          value={hlaC1}
-          onChangeText={setHlaC1}
-        />
-        <TextInput
-          style={[styles.input, { flex: 1 }]}
-          placeholder="HLA-C2 (e.g., C*16:01)"
-          placeholderTextColor={theme.textSecondary}
-          value={hlaC2}
-          onChangeText={setHlaC2}
+          value={laboratoryName}
+          onChangeText={setLaboratoryName}
         />
       </View>
 
-      <Text style={{
-        fontSize: 16,
-        fontWeight: '600',
-        color: theme.text,
-        marginBottom: 12,
-        marginTop: 16,
-      }}>
-        HLA Class II Alleles
-      </Text>
-
-      <View style={{ flexDirection: 'row', gap: 12 }}>
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Certification Number</Text>
         <TextInput
-          style={[styles.input, { flex: 1 }]}
-          placeholder="HLA-DR1 (e.g., DRB1*07:01)"
+          style={styles.input}
+          placeholder="Enter certification number"
           placeholderTextColor={theme.textSecondary}
-          value={hlaDR1}
-          onChangeText={setHlaDR1}
-        />
-        <TextInput
-          style={[styles.input, { flex: 1 }]}
-          placeholder="HLA-DR2 (e.g., DRB1*15:01)"
-          placeholderTextColor={theme.textSecondary}
-          value={hlaDR2}
-          onChangeText={setHlaDR2}
+          value={certificationNumber}
+          onChangeText={setCertificationNumber}
         />
       </View>
-
-      <View style={{ flexDirection: 'row', gap: 12 }}>
-        <TextInput
-          style={[styles.input, { flex: 1 }]}
-          placeholder="HLA-DQ1 (e.g., DQB1*02:02)"
-          placeholderTextColor={theme.textSecondary}
-          value={hlaDQ1}
-          onChangeText={setHlaDQ1}
-        />
-        <TextInput
-          style={[styles.input, { flex: 1 }]}
-          placeholder="HLA-DQ2 (e.g., DQB1*06:02)"
-          placeholderTextColor={theme.textSecondary}
-          value={hlaDQ2}
-          onChangeText={setHlaDQ2}
-        />
-      </View>
-
-      <View style={{ flexDirection: 'row', gap: 12 }}>
-        <TextInput
-          style={[styles.input, { flex: 1 }]}
-          placeholder="HLA-DP1 (e.g., DPB1*04:01)"
-          placeholderTextColor={theme.textSecondary}
-          value={hlaDP1}
-          onChangeText={setHlaDP1}
-        />
-        <TextInput
-          style={[styles.input, { flex: 1 }]}
-          placeholder="HLA-DP2 (e.g., DPB1*14:01)"
-          placeholderTextColor={theme.textSecondary}
-          value={hlaDP2}
-          onChangeText={setHlaDP2}
-        />
-      </View>
-
-      <Text style={{
-        fontSize: 16,
-        fontWeight: '600',
-        color: theme.text,
-        marginBottom: 12,
-        marginTop: 16,
-      }}>
-        Laboratory Information
-      </Text>
-
-      <TextInput
-        style={styles.input}
-        placeholder="Testing Date (YYYY-MM-DD)"
-        placeholderTextColor={theme.textSecondary}
-        value={testingDate}
-        onChangeText={setTestingDate}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Testing Method (e.g., NGS_SEQUENCING)"
-        placeholderTextColor={theme.textSecondary}
-        value={testingMethod}
-        onChangeText={setTestingMethod}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Laboratory Name"
-        placeholderTextColor={theme.textSecondary}
-        value={laboratoryName}
-        onChangeText={setLaboratoryName}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Certification Number"
-        placeholderTextColor={theme.textSecondary}
-        value={certificationNumber}
-        onChangeText={setCertificationNumber}
-      />
     </View>
   );
 }

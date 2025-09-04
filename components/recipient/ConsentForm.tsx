@@ -19,7 +19,9 @@ export function ConsentForm({ isConsented, setIsConsented }: ConsentFormProps) {
   return (
     <View style={styles.sectionContainer}>
       <View style={styles.sectionHeader}>
-        <Feather name="file-text" size={24} color={theme.primary} />
+        <View style={styles.sectionIconContainer}>
+          <Feather name="file-text" size={18} color={theme.primary} />
+        </View>
         <Text style={styles.sectionTitle}>Consent Agreement</Text>
       </View>
 

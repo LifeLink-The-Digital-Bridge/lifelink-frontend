@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../utils/theme-context';
 import { lightTheme, darkTheme } from '../../constants/styles/authStyles';
-import { createDonorStyles } from '../../constants/styles/donorStyles';
+import { createUnifiedStyles } from '../../constants/styles/unifiedStyles';
 
 interface LocationDetailsProps {
   addressLine: string;
@@ -49,101 +49,122 @@ export function LocationDetails({
   const { colorScheme } = useTheme();
   const isDark = colorScheme === 'dark';
   const theme = isDark ? darkTheme : lightTheme;
-  const styles = createDonorStyles(theme);
+  const styles = createUnifiedStyles(theme);
 
   return (
     <View style={styles.sectionContainer}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-        <Feather name="map-pin" size={24} color={theme.primary} />
-        <Text style={[styles.sectionTitle, { marginTop: 0, marginLeft: 12 }]}>Location</Text>
+      <View style={styles.sectionHeader}>
+        <View style={styles.sectionIconContainer}>
+          <Feather name="map-pin" size={18} color={theme.primary} />
+        </View>
+        <Text style={styles.sectionTitle}>Location Details</Text>
       </View>
       
-      <TextInput
-        style={styles.input}
-        placeholder="Address Line"
-        placeholderTextColor={theme.textSecondary}
-        value={addressLine}
-        onChangeText={setAddressLine}
-      />
-      
-      <TextInput
-        style={styles.input}
-        placeholder="Landmark"
-        placeholderTextColor={theme.textSecondary}
-        value={landmark}
-        onChangeText={setLandmark}
-      />
-      
-      <TextInput
-        style={styles.input}
-        placeholder="Area"
-        placeholderTextColor={theme.textSecondary}
-        value={area}
-        onChangeText={setArea}
-      />
-      
-      <TextInput
-        style={styles.input}
-        placeholder="District"
-        placeholderTextColor={theme.textSecondary}
-        value={district}
-        onChangeText={setDistrict}
-      />
-      
-      <View style={{ flexDirection: 'row', gap: 12 }}>
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Address Line</Text>
         <TextInput
-          style={[styles.input, { flex: 1 }]}
-          placeholder="City"
+          style={styles.input}
+          placeholder="Enter your address"
           placeholderTextColor={theme.textSecondary}
-          value={city}
-          onChangeText={setCity}
-        />
-        
-        <TextInput
-          style={[styles.input, { flex: 1 }]}
-          placeholder="State"
-          placeholderTextColor={theme.textSecondary}
-          value={stateVal}
-          onChangeText={setStateVal}
+          value={addressLine}
+          onChangeText={setAddressLine}
         />
       </View>
       
-      <View style={{ flexDirection: 'row', gap: 12 }}>
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Landmark (Optional)</Text>
         <TextInput
-          style={[styles.input, { flex: 1 }]}
-          placeholder="Country"
+          style={styles.input}
+          placeholder="Nearby landmark"
           placeholderTextColor={theme.textSecondary}
-          value={country}
-          onChangeText={setCountry}
-        />
-        
-        <TextInput
-          style={[styles.input, { flex: 1 }]}
-          placeholder="Pincode"
-          placeholderTextColor={theme.textSecondary}
-          value={pincode}
-          onChangeText={setPincode}
-          keyboardType="numeric"
+          value={landmark}
+          onChangeText={setLandmark}
         />
       </View>
       
-      <TouchableOpacity
-        style={styles.locationButton}
-        onPress={onLocationPress}
-        activeOpacity={0.8}
-      >
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Area</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter area"
+          placeholderTextColor={theme.textSecondary}
+          value={area}
+          onChangeText={setArea}
+        />
+      </View>
+      
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>District (Optional)</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter district"
+          placeholderTextColor={theme.textSecondary}
+          value={district}
+          onChangeText={setDistrict}
+        />
+      </View>
+      
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>City & State</Text>
+        <View style={styles.row}>
+          <TextInput
+            style={[styles.input, { flex: 1, marginRight: 12 }]}
+            placeholder="City"
+            placeholderTextColor={theme.textSecondary}
+            value={city}
+            onChangeText={setCity}
+          />
+          <TextInput
+            style={[styles.input, { flex: 1 }]}
+            placeholder="State"
+            placeholderTextColor={theme.textSecondary}
+            value={stateVal}
+            onChangeText={setStateVal}
+          />
+        </View>
+      </View>
+      
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Country & Pincode</Text>
+        <View style={styles.row}>
+          <TextInput
+            style={[styles.input, { flex: 1, marginRight: 12 }]}
+            placeholder="Country"
+            placeholderTextColor={theme.textSecondary}
+            value={country}
+            onChangeText={setCountry}
+          />
+          <TextInput
+            style={[styles.input, { flex: 1 }]}
+            placeholder="Pincode"
+            placeholderTextColor={theme.textSecondary}
+            value={pincode}
+            onChangeText={setPincode}
+            keyboardType="numeric"
+          />
+        </View>
+      </View>
+      
+      <View style={styles.locationButtonContainer}>
+        <TouchableOpacity
+          style={styles.locationButton}
+          onPress={onLocationPress}
+          activeOpacity={0.8}
+        >
           <Feather name="map" size={20} color="#fff" />
-          <Text style={[styles.locationButtonText, { marginLeft: 8 }]}>
+          <Text style={styles.locationButtonText}>
             {location ? "Change Location" : "Pick Location on Map"}
           </Text>
-        </View>
-      </TouchableOpacity>
+        </TouchableOpacity>
+      </View>
       
       {location && (
-        <Text style={styles.locationText}>
-          Selected: {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
-        </Text>
+        <View style={styles.coordinatesContainer}>
+          <Feather name="check-circle" size={16} color={theme.success} />
+          <Text style={styles.coordinatesText}>
+            Location: {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
+          </Text>
+        </View>
       )}
     </View>
   );

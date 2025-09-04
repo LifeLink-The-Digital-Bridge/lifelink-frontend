@@ -33,7 +33,9 @@ export function MedicalDetails(props: MedicalDetailsProps) {
   return (
     <View style={styles.sectionContainer}>
       <View style={styles.sectionHeader}>
-        <Feather name="heart" size={24} color={theme.primary} />
+        <View style={styles.sectionIconContainer}>
+          <Feather name="heart" size={18} color={theme.primary} />
+        </View>
         <Text style={styles.sectionTitle}>Medical Information</Text>
       </View>
 

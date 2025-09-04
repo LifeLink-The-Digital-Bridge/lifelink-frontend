@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../utils/auth-context";
-import { View, ScrollView, TouchableOpacity, Text, Alert } from "react-native";
+import { View, ScrollView, TouchableOpacity, Text, ActivityIndicator } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as SecureStore from "expo-secure-store";
 import * as Location from "expo-location";
@@ -14,8 +14,6 @@ import { ValidationAlert } from "../../components/common/ValidationAlert";
 import AppLayout from "@/components/AppLayout";
 
 import { RecipientForm } from "../../components/recipient/RecipientForm";
-import { RecipientSubmitButton } from "../../components/recipient/RecipientSubmitButton";
-import { RecipientLoadingScreen } from "../../components/recipient/RecipientLoadingScreen";
 import { useRecipientFormState } from "../../hooks/useRecipientFormState";
 
 const RecipientScreen: React.FC = () => {
@@ -211,8 +209,9 @@ const RecipientScreen: React.FC = () => {
           {
             addressLine: formState.addressLine.trim(),
             landmark: formState.landmark?.trim() || "",
+            area: formState.area?.trim() || "",
             city: formState.city.trim(),
-            district: formState.district?.trim() || undefined,
+            district: formState.district?.trim() || "",
             state: formState.stateVal.trim(),
             country: formState.country.trim(),
             pincode: formState.pincode.trim(),
@@ -266,7 +265,6 @@ const RecipientScreen: React.FC = () => {
           isLivingDonor: false,
         },
         consentForm: {
-          userId,
           isConsented: formState.isConsented,
           consentedAt: formState.consentedAt || new Date().toISOString(),
         },
@@ -357,7 +355,12 @@ const RecipientScreen: React.FC = () => {
       ? "Getting your location..."
       : "Loading...";
 
-    return <RecipientLoadingScreen message={loadingMessage} />;
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={theme.primary} />
+        <Text style={styles.loadingText}>{loadingMessage}</Text>
+      </View>
+    );
   }
 
   return (
@@ -400,18 +403,29 @@ const RecipientScreen: React.FC = () => {
           />
         </ScrollView>
 
-        <RecipientSubmitButton
-          isFormValid={formState.isFormValid()}
-          loading={formState.loading}
-          onSubmit={handleSubmit}
-          buttonText={
-            formState.loading
-              ? "Registering..."
-              : formState.isFormValid()
-              ? "Complete Registration"
-              : "Please Complete Form"
-          }
-        />
+        <View style={styles.submitButtonContainer}>
+          <TouchableOpacity
+            style={[
+              styles.submitButton,
+              !formState.isFormValid() || formState.loading
+                ? styles.submitButtonDisabled
+                : null,
+            ]}
+            onPress={handleSubmit}
+            disabled={!formState.isFormValid() || formState.loading}
+            activeOpacity={0.8}
+          >
+            {formState.loading ? (
+              <ActivityIndicator color="#fff" size="small" />
+            ) : (
+              <Text style={styles.submitButtonText}>
+                {formState.isFormValid()
+                  ? "Complete Registration"
+                  : "Please Complete Form"}
+              </Text>
+            )}
+          </TouchableOpacity>
+        </View>
 
         <ValidationAlert
           visible={alertVisible}

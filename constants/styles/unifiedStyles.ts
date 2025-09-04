@@ -51,9 +51,9 @@ export const createUnifiedStyles = (theme: any) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: theme.card,
-    padding: 24,
-    borderRadius: 20,
-    marginBottom: 28,
+    padding: 20,
+    borderRadius: 16,
+    marginBottom: 24,
     shadowColor: theme.shadow,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
@@ -64,13 +64,13 @@ export const createUnifiedStyles = (theme: any) => StyleSheet.create({
   },
 
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: theme.background,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: 12,
     shadowColor: theme.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -79,13 +79,13 @@ export const createUnifiedStyles = (theme: any) => StyleSheet.create({
   },
 
   headerIconContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     backgroundColor: theme.primary + '20',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 20,
+    marginRight: 16,
   },
 
   headerTextContainer: {
@@ -93,11 +93,11 @@ export const createUnifiedStyles = (theme: any) => StyleSheet.create({
   },
 
   headerTitle: {
-    fontSize: normalize(22),
-    fontWeight: '800',
+    fontSize: normalize(18),
+    fontWeight: '700',
     color: theme.text,
-    letterSpacing: 0.3,
-    lineHeight: normalize(26),
+    letterSpacing: 0.2,
+    lineHeight: normalize(22),
   },
 
   headerSubtitle: {
@@ -130,8 +130,8 @@ export const createUnifiedStyles = (theme: any) => StyleSheet.create({
   sectionContainer: {
     backgroundColor: theme.card,
     borderRadius: 20,
-    padding: 24,
-    marginBottom: 24,
+    padding: 28,
+    marginBottom: 28,
     shadowColor: theme.shadow,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,
@@ -144,7 +144,7 @@ export const createUnifiedStyles = (theme: any) => StyleSheet.create({
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 20,
     paddingBottom: 8,
     borderBottomWidth: 2,
     borderBottomColor: theme.primary + '30',
@@ -212,14 +212,14 @@ export const createUnifiedStyles = (theme: any) => StyleSheet.create({
   },
 
   inputContainer: {
-    marginBottom: 20,
+    marginBottom: 24,
   },
 
   label: {
     fontSize: normalize(16),
     color: theme.text,
     fontWeight: '600',
-    marginBottom: 10,
+    marginBottom: 12,
     letterSpacing: 0.1,
     lineHeight: normalize(20),
   },
@@ -227,13 +227,13 @@ export const createUnifiedStyles = (theme: any) => StyleSheet.create({
   input: {
     backgroundColor: theme.inputBackground,
     borderRadius: 12,
-    padding: 16,
+    padding: 18,
     fontSize: normalize(16),
     borderWidth: 2,
     borderColor: theme.border,
     color: theme.text,
     lineHeight: normalize(20),
-    minHeight: 52,
+    minHeight: 56,
   },
 
   inputDisabled: {
@@ -244,12 +244,12 @@ export const createUnifiedStyles = (theme: any) => StyleSheet.create({
   textArea: {
     backgroundColor: theme.inputBackground,
     borderRadius: 12,
-    padding: 16,
+    padding: 18,
     fontSize: normalize(16),
     borderWidth: 2,
     borderColor: theme.border,
     color: theme.text,
-    minHeight: 100,
+    minHeight: 120,
     textAlignVertical: 'top',
     lineHeight: normalize(22),
   },
@@ -262,9 +262,9 @@ export const createUnifiedStyles = (theme: any) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 12,
-    marginBottom: 20,
-    minHeight: 48,
+    paddingVertical: 8,
+    marginBottom: 12,
+    minHeight: 44,
   },
 
   switchLabel: {

@@ -13,11 +13,10 @@ import { Feather } from "@expo/vector-icons";
 import * as SecureStore from "expo-secure-store";
 import { useTheme } from "../../utils/theme-context";
 import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
-import { createDonationStyles } from "../../constants/styles/donationStyles";
-import { registerDonation } from "../api/donationApi";
+import { createUnifiedStyles } from "../../constants/styles/unifiedStyles";
+import { registerDonation, DonationType, BloodType, OrganType, TissueType, StemCellType } from "../api/donationApi";
 
-import { CustomAlert } from "../../components/common/CustomAlert";
-import { ValidationMessage } from "../../components/common/validationMessage";
+import { ValidationAlert } from "../../components/common/ValidationAlert";
 import { DonationTypeSelector } from "../../components/donation/DonationTypeSelector";
 import { BloodTypeSelector } from "../../components/donation/BloodTypeSelector";
 import { OrganDetailsForm } from "../../components/donation/OrganDetailsForm";
@@ -31,17 +30,17 @@ const DonationScreen = () => {
   const router = useRouter();
   const isDark = colorScheme === "dark";
   const theme = isDark ? darkTheme : lightTheme;
-  const styles = createDonationStyles(theme);
+  const styles = createUnifiedStyles(theme);
 
   const [loading, setLoading] = useState(false);
   const [donorId, setDonorId] = useState("");
   const [locationId, setLocationId] = useState("");
-  const [donationType, setDonationType] = useState("BLOOD");
+  const [donationType, setDonationType] = useState<DonationType>("BLOOD");
   const [donationDate, setDonationDate] = useState("");
-  const [bloodType, setBloodType] = useState("");
+  const [bloodType, setBloodType] = useState<BloodType>("" as BloodType);
   const [quantity, setQuantity] = useState("");
 
-  const [organType, setOrganType] = useState("");
+  const [organType, setOrganType] = useState<OrganType | "">("" as OrganType);
   const [isCompatible, setIsCompatible] = useState(false);
   const [organQuality, setOrganQuality] = useState("");
   const [organViabilityExpiry, setOrganViabilityExpiry] = useState("");
@@ -53,21 +52,18 @@ const DonationScreen = () => {
   const [hasAbnormalities, setHasAbnormalities] = useState(false);
   const [abnormalityDescription, setAbnormalityDescription] = useState("");
 
-  const [tissueType, setTissueType] = useState("");
-  const [stemCellType, setStemCellType] = useState("");
+  const [tissueType, setTissueType] = useState<TissueType | "">("" as TissueType);
+  const [stemCellType, setStemCellType] = useState<StemCellType | "">("" as StemCellType);
 
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
-  const [alertType, setAlertType] = useState<"success" | "error">("success");
-
-  const [validationError, setValidationError] = useState("");
-  const [validationSuccess, setValidationSuccess] = useState("");
+  const [alertType, setAlertType] = useState<'success' | 'error' | 'warning' | 'info'>('info');
 
   const showAlert = (
     title: string,
     message: string,
-    type: "success" | "error" = "success"
+    type: 'success' | 'error' | 'warning' | 'info' = 'info'
   ) => {
     setAlertTitle(title);
     setAlertMessage(message);
@@ -77,9 +73,9 @@ const DonationScreen = () => {
 
   const handleTypeChange = () => {
     setQuantity("");
-    setOrganType("");
-    setTissueType("");
-    setStemCellType("");
+    setOrganType("" as OrganType);
+    setTissueType("" as TissueType);
+    setStemCellType("" as StemCellType);
     setOrganQuality("");
     setOrganViabilityExpiry("");
     setColdIschemiaTime("");
@@ -90,8 +86,6 @@ const DonationScreen = () => {
     setIsCompatible(false);
     setOrganPerfused(false);
     setHasAbnormalities(false);
-    setValidationError("");
-    setValidationSuccess("");
   };
 
   useEffect(() => {
@@ -149,12 +143,11 @@ const DonationScreen = () => {
   };
 
   const handleSubmit = async () => {
-    setValidationError("");
-    setValidationSuccess("");
-
     if (!isFormValid()) {
-      setValidationError(
-        "Please fill all required fields to submit your donation."
+      showAlert(
+        "Validation Error",
+        "Please fill all required fields to submit your donation.",
+        "warning"
       );
       return;
     }
@@ -199,26 +192,16 @@ const DonationScreen = () => {
       }
 
       const response = await registerDonation(payload);
-      setValidationSuccess(
-        "Donation submitted successfully! Thank you for your generous contribution."
+      showAlert(
+        "Donation Successful!",
+        "Your donation has been recorded successfully. You will receive confirmation details shortly.",
+        "success"
       );
-
-      setTimeout(() => {
-        showAlert(
-          "Donation Successful!",
-          "Your donation has been recorded successfully. You will receive confirmation details shortly.",
-          "success"
-        );
-      }, 1000);
 
       setTimeout(() => {
         router.replace("/(tabs)/donate");
-      }, 3000);
+      }, 2000);
     } catch (error: any) {
-      setValidationError(
-        error.message ||
-          "Something went wrong while submitting your donation. Please try again."
-      );
       showAlert(
         "Donation Failed",
         error.message ||
@@ -258,8 +241,7 @@ const DonationScreen = () => {
             </View>
           </View>
 
-          <ValidationMessage error={validationError} />
-          <ValidationMessage success={validationSuccess} />
+
 
           <DonationTypeSelector
             donationType={donationType}
@@ -273,9 +255,11 @@ const DonationScreen = () => {
           />
 
           {donationType === "BLOOD" && (
-            <View style={styles.formSection}>
+            <View style={styles.sectionContainer}>
               <View style={styles.sectionHeader}>
-                <Feather name="droplet" size={20} color={theme.primary} />
+                <View style={styles.sectionIconContainer}>
+                  <Feather name="droplet" size={18} color={theme.primary} />
+                </View>
                 <Text style={styles.sectionTitle}>Blood Details</Text>
               </View>
               <View style={styles.inputContainer}>
@@ -357,12 +341,12 @@ const DonationScreen = () => {
           </TouchableOpacity>
         </ScrollView>
 
-        <CustomAlert
+        <ValidationAlert
           visible={alertVisible}
           title={alertTitle}
           message={alertMessage}
+          type={alertType}
           onClose={() => setAlertVisible(false)}
-          confirmText="OK"
         />
       </View>
     </AppLayout>
