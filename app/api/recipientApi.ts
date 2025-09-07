@@ -130,21 +130,6 @@ export interface ReceiveRequestDTO {
   notes?: string;
 }
 
-export const addRecipientRole = async (): Promise<string> => {
-  const token = await SecureStore.getItemAsync("jwt");
-  const userId = await SecureStore.getItemAsync("userId");
-  if (!token || !userId) throw new Error("Not authenticated");
-  const response = await fetch(`${BASE_URL}/recipients/addRole`, {
-    method: "PUT",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      id: userId,
-    },
-  });
-  if (!response.ok) throw new Error("Failed to add recipient role");
-  return await response.text();
-};
-
 export const registerRecipient = async (
   payload: RegisterRecipientDTO
 ): Promise<RecipientDTO> => {
@@ -154,7 +139,7 @@ export const registerRecipient = async (
   
   console.log('Sending payload:', JSON.stringify(payload, null, 2));
   
-  const response = await fetch(`${BASE_URL}/recipients/register`, {
+  const response = await fetch(`${BASE_URL}/recipients/profile`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -230,4 +215,33 @@ export const getRecipientRequests = async (
   });
   if (!response.ok) throw new Error("Failed to get recipient requests");
   return await response.json();
+};
+
+export const getMyRequests = async (): Promise<ReceiveRequestDTO[]> => {
+  const token = await SecureStore.getItemAsync("jwt");
+  const userId = await SecureStore.getItemAsync("userId");
+  if (!token || !userId) throw new Error("Not authenticated");
+  const response = await fetch(`${BASE_URL}/recipients/my-requests`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      id: userId,
+    },
+  });
+  if (!response.ok) throw new Error("Failed to get my requests");
+  return await response.json();
+};
+
+export const addRecipientRole = async (): Promise<string> => {
+  const token = await SecureStore.getItemAsync("jwt");
+  const userId = await SecureStore.getItemAsync("userId");
+  if (!token || !userId) throw new Error("Not authenticated");
+  const response = await fetch(`${BASE_URL}/recipients/addRole`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      id: userId,
+    },
+  });
+  if (!response.ok) throw new Error("Failed to add recipient role");
+  return await response.text();
 };

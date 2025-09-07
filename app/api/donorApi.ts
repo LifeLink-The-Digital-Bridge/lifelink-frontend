@@ -96,7 +96,7 @@ export interface RegisterDonorRequest {
 export const registerDonor = async (payload: RegisterDonorRequest) => {
   const token = await SecureStore.getItemAsync("jwt");
   const userId = await SecureStore.getItemAsync("userId");
-  const response = await fetch(`${BASE_URL}/donors/register`, {
+  const response = await fetch(`${BASE_URL}/donors/profile`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -178,4 +178,41 @@ export const fetchDonationsByDonorId = async (donorId: string): Promise<any> => 
     throw new Error("Failed to fetch donations");
   }
   return await response.json();
+};
+
+export const getMyDonations = async (): Promise<any> => {
+  const token = await SecureStore.getItemAsync("jwt");
+  const userId = await SecureStore.getItemAsync("userId");
+  if (!token || !userId) return null;
+
+  const response = await fetch(`${BASE_URL}/donors/my-donations`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      id: userId,
+    },
+  });
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      return [];
+    }
+    throw new Error("Failed to fetch my donations");
+  }
+  return await response.json();
+};
+
+export const addDonorRole = async (): Promise<string> => {
+  const token = await SecureStore.getItemAsync("jwt");
+  const userId = await SecureStore.getItemAsync("userId");
+  if (!token || !userId) throw new Error("Not authenticated");
+  const response = await fetch(`${BASE_URL}/donors/addRole`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      id: userId,
+    },
+  });
+  if (!response.ok) throw new Error("Failed to add donor role");
+  return await response.text();
 };

@@ -9,7 +9,8 @@ import { useTheme } from "../../utils/theme-context";
 import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
 import { createUnifiedStyles } from "../../constants/styles/unifiedStyles";
 import { registerRecipient } from "../api/recipientApi";
-import { addRecipientRole, refreshAuthTokens } from "../api/roleApi";
+import { addRecipientRole } from "../api/recipientApi";
+import { refreshAuthTokens } from "../api/roleApi";
 import { ValidationAlert } from "../../components/common/ValidationAlert";
 import AppLayout from "@/components/AppLayout";
 

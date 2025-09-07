@@ -4,7 +4,7 @@ import AppLayout from "../../components/AppLayout";
 
 export default function ProfileTab() {
   return (
-    <AppLayout title="Profile">
+    <AppLayout hideHeader>
       <ProfileScreen />
     </AppLayout>
   );

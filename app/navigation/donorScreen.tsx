@@ -5,7 +5,8 @@ import { View, ScrollView, TouchableOpacity, Text, ActivityIndicator } from "rea
 import { Feather } from "@expo/vector-icons";
 import * as SecureStore from "expo-secure-store";
 import { registerDonor } from "../api/donorApi";
-import { addDonorRole, refreshAuthTokens } from "../api/roleApi";
+import { addDonorRole } from "../api/donorApi";
+import { refreshAuthTokens } from "../api/roleApi";
 import { useTheme } from "../../utils/theme-context";
 import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
 import { createUnifiedStyles } from "../../constants/styles/unifiedStyles";

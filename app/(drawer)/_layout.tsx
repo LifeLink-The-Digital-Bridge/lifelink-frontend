@@ -6,5 +6,6 @@ export default function DrawerLayout() {
     <Drawer.Screen name="raiseFund" options={{ drawerLabel: "Raise Fund" }} />
     <Drawer.Screen name="DonationStatusScreen" options={{ drawerLabel: "My Donations" }} />
     <Drawer.Screen name="RecipientStatusScreen" options={{ drawerLabel: "Receiver Requests" }} />
+    <Drawer.Screen name="ManualMatchScreen" options={{ drawerLabel: "Manual Match" }} />
   </Drawer>;
 }
