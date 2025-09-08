@@ -66,7 +66,7 @@ const ManualMatchScreen = () => {
   };
 
   return (
-    <AppLayout hideHeader>
+    <AppLayout>
       <View style={styles.container}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.headerContainer}>

@@ -702,4 +702,23 @@ export const createUnifiedStyles = (theme: any) => StyleSheet.create({
     color: theme.error,
     backgroundColor: theme.error + '20',
   },
+  matchButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.primary + '15',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: theme.primary + '30',
+  },
+
+  matchButtonText: {
+    color: theme.primary,
+    fontSize: normalize(14),
+    fontWeight: '600',
+    marginLeft: 8,
+    letterSpacing: 0.1,
+  },
 });

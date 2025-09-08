@@ -398,6 +398,9 @@ export const getMyDonations = async () => {
   });
 
   if (!response.ok) {
+    if (response.status === 403) {
+      throw new Error('NOT_REGISTERED_AS_DONOR');
+    }
     throw new Error('Failed to fetch my donations');
   }
   
@@ -418,6 +421,9 @@ export const getMyRequests = async () => {
   });
 
   if (!response.ok) {
+    if (response.status === 403) {
+      throw new Error('NOT_REGISTERED_AS_RECIPIENT');
+    }
     throw new Error('Failed to fetch my requests');
   }
   

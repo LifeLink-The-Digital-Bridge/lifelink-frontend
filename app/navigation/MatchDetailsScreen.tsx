@@ -1,14 +1,33 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
-import { Feather, FontAwesome } from '@expo/vector-icons';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useTheme } from '../../utils/theme-context';
-import { lightTheme, darkTheme } from '../../constants/styles/authStyles';
-import { createUnifiedStyles } from '../../constants/styles/unifiedStyles';
-import { fetchUserById, donorConfirmMatch, recipientConfirmMatch, fetchDonationById, fetchRequestById, fetchDonationStatus, fetchRequestStatus, fetchDonorHistory, fetchRecipientHistory, getDonorByUserId, getRecipientByUserId } from '../api/matchingApi';
-import { ValidationAlert } from '../../components/common/ValidationAlert';
-import AppLayout from '../../components/AppLayout';
-import * as SecureStore from 'expo-secure-store';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+  Image,
+} from "react-native";
+import { Feather, FontAwesome } from "@expo/vector-icons";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { useTheme } from "../../utils/theme-context";
+import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
+import { createUnifiedStyles } from "../../constants/styles/unifiedStyles";
+import {
+  fetchUserById,
+  donorConfirmMatch,
+  recipientConfirmMatch,
+  fetchDonationById,
+  fetchRequestById,
+  fetchDonationStatus,
+  fetchRequestStatus,
+  fetchDonorHistory,
+  fetchRecipientHistory,
+  getDonorByUserId,
+  getRecipientByUserId,
+} from "../api/matchingApi";
+import { ValidationAlert } from "../../components/common/ValidationAlert";
+import AppLayout from "../../components/AppLayout";
+import * as SecureStore from "expo-secure-store";
 
 interface MatchDetails {
   matchResultId: string;
@@ -25,6 +44,7 @@ interface MatchDetails {
   recipientConfirmed: boolean;
   donorConfirmedAt?: string;
   recipientConfirmedAt?: string;
+  confirmedAt?: string;
   matchedAt: string;
   distance?: number;
 }
@@ -41,7 +61,7 @@ interface UserProfile {
 
 const MatchDetailsScreen = () => {
   const { colorScheme } = useTheme();
-  const isDark = colorScheme === 'dark';
+  const isDark = colorScheme === "dark";
   const theme = isDark ? darkTheme : lightTheme;
   const styles = createUnifiedStyles(theme);
   const router = useRouter();
@@ -49,22 +69,30 @@ const MatchDetailsScreen = () => {
 
   const [match, setMatch] = useState<MatchDetails | null>(null);
   const [donorProfile, setDonorProfile] = useState<UserProfile | null>(null);
-  const [recipientProfile, setRecipientProfile] = useState<UserProfile | null>(null);
+  const [recipientProfile, setRecipientProfile] = useState<UserProfile | null>(
+    null
+  );
   const [donationDetails, setDonationDetails] = useState<any>(null);
   const [requestDetails, setRequestDetails] = useState<any>(null);
   const [donorData, setDonorData] = useState<any>(null);
   const [recipientData, setRecipientData] = useState<any>(null);
-  const [donationStatus, setDonationStatus] = useState<string>('');
-  const [requestStatus, setRequestStatus] = useState<string>('');
+  const [donationStatus, setDonationStatus] = useState<string>("");
+  const [requestStatus, setRequestStatus] = useState<string>("");
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [confirmingMatch, setConfirmingMatch] = useState(false);
   const [loading, setLoading] = useState(true);
   const [alertVisible, setAlertVisible] = useState(false);
-  const [alertTitle, setAlertTitle] = useState('');
-  const [alertMessage, setAlertMessage] = useState('');
-  const [alertType, setAlertType] = useState<'success' | 'error' | 'warning' | 'info'>('info');
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertType, setAlertType] = useState<
+    "success" | "error" | "warning" | "info"
+  >("info");
 
-  const showAlert = (title: string, message: string, type: 'success' | 'error' | 'warning' | 'info' = 'info') => {
+  const showAlert = (
+    title: string,
+    message: string,
+    type: "success" | "error" | "warning" | "info" = "info"
+  ) => {
     setAlertTitle(title);
     setAlertMessage(message);
     setAlertType(type);
@@ -77,50 +105,53 @@ const MatchDetailsScreen = () => {
 
       try {
         setLoading(true);
-        
+
         const parsedMatch = JSON.parse(matchData as string);
         setMatch(parsedMatch);
 
-
         const [donorProfile, recipientProfile] = await Promise.all([
           fetchUserById(parsedMatch.donorUserId),
-          fetchUserById(parsedMatch.recipientUserId)
+          fetchUserById(parsedMatch.recipientUserId),
         ]);
-        
+
         setDonorProfile(donorProfile);
         setRecipientProfile(recipientProfile);
-        
+
         try {
           const [donorDetails, recipientDetails] = await Promise.all([
             getDonorByUserId(parsedMatch.donorUserId),
-            getRecipientByUserId(parsedMatch.recipientUserId)
+            getRecipientByUserId(parsedMatch.recipientUserId),
           ]);
           setDonorData(donorDetails);
           setRecipientData(recipientDetails);
         } catch (error) {
-          console.log('Could not fetch donor/recipient details:', error);
+          console.log("Could not fetch donor/recipient details:", error);
         }
 
-        const userId = await SecureStore.getItemAsync('userId');
+        const userId = await SecureStore.getItemAsync("userId");
         setCurrentUserId(userId);
 
         try {
-          const [donationData, requestData, donationStat, requestStat] = await Promise.all([
-            fetchDonationById(parsedMatch.donationId),
-            fetchRequestById(parsedMatch.receiveRequestId),
-            fetchDonationStatus(parsedMatch.donationId),
-            fetchRequestStatus(parsedMatch.receiveRequestId)
-          ]);
+          const [donationData, requestData, donationStat, requestStat] =
+            await Promise.all([
+              fetchDonationById(parsedMatch.donationId),
+              fetchRequestById(parsedMatch.receiveRequestId),
+              fetchDonationStatus(parsedMatch.donationId),
+              fetchRequestStatus(parsedMatch.receiveRequestId),
+            ]);
           setDonationDetails(donationData);
           setRequestDetails(requestData);
           setDonationStatus(donationStat);
           setRequestStatus(requestStat);
         } catch (error) {
-          console.log('Could not fetch donation/request details:', error);
+          console.log("Could not fetch donation/request details:", error);
         }
-
       } catch (error: any) {
-        showAlert('Error', error.message || 'Failed to load match details', 'error');
+        showAlert(
+          "Error",
+          error.message || "Failed to load match details",
+          "error"
+        );
       } finally {
         setLoading(false);
       }
@@ -130,18 +161,18 @@ const MatchDetailsScreen = () => {
   }, [matchData]);
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   const handleConfirmMatch = async () => {
     if (!match || !currentUserId) return;
-    
+
     setConfirmingMatch(true);
     try {
       let result;
@@ -150,11 +181,11 @@ const MatchDetailsScreen = () => {
       } else if (match.recipientUserId === currentUserId) {
         result = await recipientConfirmMatch(match.matchResultId);
       } else {
-        throw new Error('You are not authorized to confirm this match');
+        throw new Error("You are not authorized to confirm this match");
       }
-      
-      showAlert('Match Confirmed', result, 'success');
-      
+
+      showAlert("Match Confirmed", result, "success");
+
       const updatedMatch = { ...match };
       if (match.donorUserId === currentUserId) {
         updatedMatch.donorConfirmed = true;
@@ -163,10 +194,11 @@ const MatchDetailsScreen = () => {
         updatedMatch.recipientConfirmed = true;
         updatedMatch.recipientConfirmedAt = new Date().toISOString();
       }
-      updatedMatch.isConfirmed = updatedMatch.donorConfirmed && updatedMatch.recipientConfirmed;
+      updatedMatch.isConfirmed =
+        updatedMatch.donorConfirmed && updatedMatch.recipientConfirmed;
       setMatch(updatedMatch);
     } catch (error: any) {
-      showAlert('Confirmation Failed', error.message, 'error');
+      showAlert("Confirmation Failed", error.message, "error");
     } finally {
       setConfirmingMatch(false);
     }
@@ -174,59 +206,61 @@ const MatchDetailsScreen = () => {
 
   const viewUserProfile = (userId: string, userName: string) => {
     const otherPartyInfo = getOtherPartyInfo();
-    const profileType = otherPartyInfo?.role === 'Donor' ? 'donor' : 'recipient';
-    
+    const profileType =
+      otherPartyInfo?.role === "Donor" ? "donor" : "recipient";
+
     router.push({
-      pathname: '/navigation/UserProfileScreen',
-      params: { 
-        userId, 
+      pathname: "/navigation/UserProfileScreen",
+      params: {
+        userId,
         userName,
         profileType,
-        fromMatch: 'true',
+        fromMatch: "true",
         donationStatus,
         requestStatus,
-        matchId: match?.matchResultId
-      }
+        matchId: match?.matchResultId,
+      },
     });
   };
 
   const getUserRoleInMatch = () => {
-    if (!match || !currentUserId) return 'unknown';
-    if (currentUserId === match.donorUserId) return 'donor';
-    if (currentUserId === match.recipientUserId) return 'recipient';
-    return 'unknown';
+    if (!match || !currentUserId) return "unknown";
+    if (currentUserId === match.donorUserId) return "donor";
+    if (currentUserId === match.recipientUserId) return "recipient";
+    return "unknown";
   };
 
   const getOtherPartyInfo = () => {
     if (!match || !currentUserId) return null;
-    
+
     if (currentUserId === match.donorUserId) {
       return {
         userId: match.recipientUserId,
-        role: 'Recipient',
-        profile: recipientProfile
+        role: "Recipient",
+        profile: recipientProfile,
       };
     } else if (currentUserId === match.recipientUserId) {
       return {
         userId: match.donorUserId,
-        role: 'Donor',
-        profile: donorProfile
+        role: "Donor",
+        profile: donorProfile,
       };
     }
     return null;
   };
 
   const getCurrentUserRole = () => {
-    if (!match || !currentUserId) return 'Unknown';
-    if (currentUserId === match.donorUserId) return 'Donor';
-    if (currentUserId === match.recipientUserId) return 'Recipient';
-    return 'Unknown';
+    if (!match || !currentUserId) return "Unknown";
+    if (currentUserId === match.donorUserId) return "Donor";
+    if (currentUserId === match.recipientUserId) return "Recipient";
+    return "Unknown";
   };
 
   const getCurrentUserStatus = () => {
     if (!match || !currentUserId) return false;
     if (currentUserId === match.donorUserId) return match.donorConfirmed;
-    if (currentUserId === match.recipientUserId) return match.recipientConfirmed;
+    if (currentUserId === match.recipientUserId)
+      return match.recipientConfirmed;
     return false;
   };
 
@@ -239,17 +273,22 @@ const MatchDetailsScreen = () => {
 
   const canConfirmMatch = () => {
     if (!match || !currentUserId) return false;
-    const isPending = donationStatus === 'PENDING' && requestStatus === 'PENDING';
+    const isPending =
+      donationStatus === "PENDING" && requestStatus === "PENDING";
     const notConfirmed = !getCurrentUserStatus();
     return isPending && notConfirmed;
   };
 
   const getConfirmationButtonText = () => {
-    if (!match || !currentUserId) return 'Confirm Match';
+    if (!match || !currentUserId) return "Confirm Match";
     return `Confirm as ${getCurrentUserRole()}`;
   };
 
-  const renderUserProfile = (user: UserProfile, title: string, iconName: string) => (
+  const renderUserProfile = (
+    user: UserProfile,
+    title: string,
+    iconName: string
+  ) => (
     <View style={styles.sectionContainer}>
       <View style={styles.sectionHeader}>
         <View style={styles.sectionIconContainer}>
@@ -258,35 +297,48 @@ const MatchDetailsScreen = () => {
         <Text style={styles.sectionTitle}>{title}</Text>
       </View>
 
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
+      <View
+        style={{ flexDirection: "row", alignItems: "center", marginBottom: 20 }}
+      >
         {user.profileImageUrl ? (
-          <Image 
-            source={{ uri: user.profileImageUrl }} 
+          <Image
+            source={{ uri: user.profileImageUrl }}
             style={{ width: 60, height: 60, borderRadius: 30, marginRight: 16 }}
           />
         ) : (
-          <View style={{ 
-            width: 60, 
-            height: 60, 
-            borderRadius: 30, 
-            backgroundColor: theme.primary + '20', 
-            justifyContent: 'center', 
-            alignItems: 'center',
-            marginRight: 16
-          }}>
+          <View
+            style={{
+              width: 60,
+              height: 60,
+              borderRadius: 30,
+              backgroundColor: theme.primary + "20",
+              justifyContent: "center",
+              alignItems: "center",
+              marginRight: 16,
+            }}
+          >
             <FontAwesome name="user" size={24} color={theme.primary} />
           </View>
         )}
         <View style={{ flex: 1 }}>
-          <Text style={[styles.headerTitle, { fontSize: 18 }]}>{user.name}</Text>
+          <Text style={[styles.headerTitle, { fontSize: 18 }]}>
+            {user.name}
+          </Text>
           <Text style={styles.headerSubtitle}>@{user.username}</Text>
         </View>
         <TouchableOpacity
-          style={[styles.locationButton, { paddingHorizontal: 12, paddingVertical: 8 }]}
+          style={[
+            styles.locationButton,
+            { paddingHorizontal: 12, paddingVertical: 8 },
+          ]}
           onPress={() => viewUserProfile(user.id, user.name)}
         >
           <Feather name="eye" size={14} color="#fff" />
-          <Text style={[styles.locationButtonText, { fontSize: 12, marginLeft: 4 }]}>View</Text>
+          <Text
+            style={[styles.locationButtonText, { fontSize: 12, marginLeft: 4 }]}
+          >
+            View
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -313,7 +365,7 @@ const MatchDetailsScreen = () => {
 
   if (loading) {
     return (
-      <AppLayout hideHeader>
+      <AppLayout>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.primary} />
           <Text style={styles.loadingText}>Loading match details...</Text>
@@ -324,10 +376,13 @@ const MatchDetailsScreen = () => {
 
   if (!match) {
     return (
-      <AppLayout hideHeader>
+      <AppLayout>
         <View style={styles.promptContainer}>
           <Text style={styles.promptTitle}>Match Not Found</Text>
-          <TouchableOpacity style={styles.registerButton} onPress={() => router.back()}>
+          <TouchableOpacity
+            style={styles.registerButton}
+            onPress={() => router.back()}
+          >
             <Feather name="arrow-left" size={16} color="#fff" />
             <Text style={styles.registerButtonText}>Go Back</Text>
           </TouchableOpacity>
@@ -337,10 +392,13 @@ const MatchDetailsScreen = () => {
   }
 
   return (
-    <AppLayout hideHeader>
+    <AppLayout>
       <View style={styles.container}>
         <View style={styles.headerContainer}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.backButton}
+          >
             <Feather name="arrow-left" size={20} color={theme.text} />
           </TouchableOpacity>
 
@@ -349,25 +407,38 @@ const MatchDetailsScreen = () => {
           </View>
           <View style={styles.headerTextContainer}>
             <Text style={styles.headerTitle}>Match Details</Text>
-            <Text style={styles.headerSubtitle}>#{match.matchResultId.slice(0, 8)}</Text>
+            <Text style={styles.headerSubtitle}>
+              #{match.matchResultId.slice(0, 8)}
+            </Text>
           </View>
-          <View style={[
-            styles.statusBadge,
-            { 
-              backgroundColor: match.isConfirmed ? theme.success + '20' : theme.error + '20',
-              borderColor: match.isConfirmed ? theme.success + '40' : theme.error + '40'
-            }
-          ]}>
-            <Text style={[
-              styles.statusText, 
-              { color: match.isConfirmed ? theme.success : theme.error }
-            ]}>
-              {match.isConfirmed ? 'Confirmed' : 'Pending'}
+          <View
+            style={[
+              styles.statusBadge,
+              {
+                backgroundColor: match.isConfirmed
+                  ? theme.success + "20"
+                  : theme.error + "20",
+                borderColor: match.isConfirmed
+                  ? theme.success + "40"
+                  : theme.error + "40",
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.statusText,
+                { color: match.isConfirmed ? theme.success : theme.error },
+              ]}
+            >
+              {match.isConfirmed ? "Confirmed" : "Pending"}
             </Text>
           </View>
         </View>
 
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
           {/* Match Information */}
           <View style={styles.sectionContainer}>
             <View style={styles.sectionHeader}>
@@ -384,48 +455,68 @@ const MatchDetailsScreen = () => {
 
             <View style={styles.infoRow}>
               <Text style={styles.labelText}>Type:</Text>
-              <Text style={styles.valueText}>{match.donationType || match.requestType || 'N/A'}</Text>
+              <Text style={styles.valueText}>
+                {match.donationType || match.requestType || "N/A"}
+              </Text>
             </View>
 
             <View style={styles.infoRow}>
               <Text style={styles.labelText}>Blood Type:</Text>
-              <Text style={styles.valueText}>{match.bloodType || 'N/A'}</Text>
+              <Text style={styles.valueText}>{match.bloodType || "N/A"}</Text>
             </View>
 
             {match.distance && (
               <View style={styles.infoRow}>
                 <Text style={styles.labelText}>Distance:</Text>
-                <Text style={styles.valueText}>{match.distance.toFixed(1)} km</Text>
+                <Text style={styles.valueText}>
+                  {match.distance.toFixed(1)} km
+                </Text>
               </View>
             )}
 
             <View style={styles.infoRow}>
               <Text style={styles.labelText}>Your Status:</Text>
-              <Text style={[styles.valueText, { 
-                color: getCurrentUserStatus() ? theme.success : theme.error 
-              }]}>
-                {getCurrentUserStatus() ? '✓ Confirmed' : '⏳ Pending'}
+              <Text
+                style={[
+                  styles.valueText,
+                  {
+                    color: getCurrentUserStatus() ? theme.success : theme.error,
+                  },
+                ]}
+              >
+                {getCurrentUserStatus() ? "✓ Confirmed" : "⏳ Pending"}
               </Text>
             </View>
 
             <View style={styles.infoRow}>
-              <Text style={styles.labelText}>{getOtherPartyInfo()?.role || 'Other Party'} Status:</Text>
-              <Text style={[styles.valueText, { 
-                color: getOtherPartyStatus() ? theme.success : theme.error 
-              }]}>
-                {getOtherPartyStatus() ? '✓ Confirmed' : '⏳ Pending'}
+              <Text style={styles.labelText}>
+                {getOtherPartyInfo()?.role || "Other Party"} Status:
+              </Text>
+              <Text
+                style={[
+                  styles.valueText,
+                  {
+                    color: getOtherPartyStatus() ? theme.success : theme.error,
+                  },
+                ]}
+              >
+                {getOtherPartyStatus() ? "✓ Confirmed" : "⏳ Pending"}
               </Text>
             </View>
 
             <View style={styles.infoRow}>
               <Text style={styles.labelText}>Matched At:</Text>
-              <Text style={styles.valueText}>{formatDate(match.matchedAt)}</Text>
+              <Text style={styles.valueText}>
+                {formatDate(match.matchedAt)}
+              </Text>
             </View>
 
             {match.confirmedAt && (
               <View style={styles.infoRow}>
                 <Text style={styles.labelText}>Confirmed At:</Text>
-                <Text style={styles.valueText}>{formatDate(match.confirmedAt)}</Text>
+                <Text style={styles.valueText}>
+                  {formatDate(match.confirmedAt)}
+                </Text>
               </View>
             )}
 
@@ -441,13 +532,16 @@ const MatchDetailsScreen = () => {
           </View>
 
           {/* Other Party Profile */}
-          {getOtherPartyInfo()?.profile && renderUserProfile(
-            getOtherPartyInfo()!.profile, 
-            `${getOtherPartyInfo()!.role} Profile`, 
-            getCurrentUserRole() === 'Donor' ? 'user' : 'heart'
-          )}
+          {(() => {
+            const otherPartyInfo = getOtherPartyInfo();
+            if (!otherPartyInfo?.profile) return null;
 
-
+            return renderUserProfile(
+              otherPartyInfo.profile,
+              `${otherPartyInfo.role} Profile`,
+              getCurrentUserRole() === "Donor" ? "user" : "heart"
+            );
+          })()}
 
           {/* Donation Details */}
           {donationDetails && (
@@ -461,26 +555,41 @@ const MatchDetailsScreen = () => {
 
               <View style={styles.infoRow}>
                 <Text style={styles.labelText}>Type:</Text>
-                <Text style={styles.valueText}>{String(donationDetails.donationType || 'N/A')}</Text>
+                <Text style={styles.valueText}>
+                  {String(donationDetails.donationType || "N/A")}
+                </Text>
               </View>
 
               <View style={styles.infoRow}>
                 <Text style={styles.labelText}>Blood Type:</Text>
-                <Text style={styles.valueText}>{String(donationDetails.bloodType || 'N/A')}</Text>
+                <Text style={styles.valueText}>
+                  {String(donationDetails.bloodType || "N/A")}
+                </Text>
               </View>
 
               <View style={styles.infoRow}>
                 <Text style={styles.labelText}>Quantity:</Text>
-                <Text style={styles.valueText}>{String(donationDetails.quantity || 'N/A')}</Text>
+                <Text style={styles.valueText}>
+                  {String(donationDetails.quantity || "N/A")}
+                </Text>
               </View>
 
               <View style={[styles.infoRow, styles.lastInfoRow]}>
                 <Text style={styles.labelText}>Status:</Text>
-                <Text style={[styles.valueText, { 
-                  color: donationStatus === 'COMPLETED' ? theme.success : 
-                         donationStatus === 'PENDING' ? theme.error : theme.text 
-                }]}>
-                  {String(donationStatus || 'N/A')}
+                <Text
+                  style={[
+                    styles.valueText,
+                    {
+                      color:
+                        donationStatus === "COMPLETED"
+                          ? theme.success
+                          : donationStatus === "PENDING"
+                          ? theme.error
+                          : theme.text,
+                    },
+                  ]}
+                >
+                  {String(donationStatus || "N/A")}
                 </Text>
               </View>
             </View>
@@ -498,31 +607,48 @@ const MatchDetailsScreen = () => {
 
               <View style={styles.infoRow}>
                 <Text style={styles.labelText}>Type:</Text>
-                <Text style={styles.valueText}>{String(requestDetails.requestType || 'N/A')}</Text>
+                <Text style={styles.valueText}>
+                  {String(requestDetails.requestType || "N/A")}
+                </Text>
               </View>
 
               <View style={styles.infoRow}>
                 <Text style={styles.labelText}>Blood Type:</Text>
-                <Text style={styles.valueText}>{String(requestDetails.requestedBloodType || 'N/A')}</Text>
+                <Text style={styles.valueText}>
+                  {String(requestDetails.requestedBloodType || "N/A")}
+                </Text>
               </View>
 
               <View style={styles.infoRow}>
                 <Text style={styles.labelText}>Urgency:</Text>
-                <Text style={styles.valueText}>{String(requestDetails.urgencyLevel || 'N/A')}</Text>
+                <Text style={styles.valueText}>
+                  {String(requestDetails.urgencyLevel || "N/A")}
+                </Text>
               </View>
 
               <View style={styles.infoRow}>
                 <Text style={styles.labelText}>Quantity:</Text>
-                <Text style={styles.valueText}>{String(requestDetails.quantity || 'N/A')}</Text>
+                <Text style={styles.valueText}>
+                  {String(requestDetails.quantity || "N/A")}
+                </Text>
               </View>
 
               <View style={[styles.infoRow, styles.lastInfoRow]}>
                 <Text style={styles.labelText}>Status:</Text>
-                <Text style={[styles.valueText, { 
-                  color: requestStatus === 'FULFILLED' ? theme.success : 
-                         requestStatus === 'PENDING' ? theme.error : theme.text 
-                }]}>
-                  {String(requestStatus || 'N/A')}
+                <Text
+                  style={[
+                    styles.valueText,
+                    {
+                      color:
+                        requestStatus === "FULFILLED"
+                          ? theme.success
+                          : requestStatus === "PENDING"
+                          ? theme.error
+                          : theme.text,
+                    },
+                  ]}
+                >
+                  {String(requestStatus || "N/A")}
                 </Text>
               </View>
             </View>
@@ -543,7 +669,9 @@ const MatchDetailsScreen = () => {
               {confirmingMatch ? (
                 <ActivityIndicator color="#fff" size="small" />
               ) : (
-                <Text style={styles.submitButtonText}>{getConfirmationButtonText()}</Text>
+                <Text style={styles.submitButtonText}>
+                  {getConfirmationButtonText()}
+                </Text>
               )}
             </TouchableOpacity>
           </View>

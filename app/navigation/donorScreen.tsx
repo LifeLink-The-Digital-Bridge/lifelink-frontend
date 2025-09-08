@@ -236,7 +236,7 @@ const DonorScreen: React.FC = () => {
   }
 
   return (
-    <AppLayout hideHeader>
+    <AppLayout>
       <View style={styles.container}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}

@@ -83,14 +83,9 @@ export function SidebarMenu({ isVisible, onClose }: SidebarMenuProps) {
       route: '/navigation/RaiseFund' as const
     },
     { 
-      icon: 'heart', 
-      label: 'My Donations',
-      route: '/navigation/DonationStatusScreen' as const
-    },
-    { 
-      icon: 'gift', 
-      label: 'Receiver Requests',
-      route: '/navigation/RecipientStatusScreen' as const
+      icon: 'clipboard', 
+      label: 'My Status',
+      route: '/navigation/StatusScreen' as const
     },
     { 
       icon: 'link', 
@@ -105,7 +100,7 @@ export function SidebarMenu({ isVisible, onClose }: SidebarMenuProps) {
   ];
 
   const handleMenuItemPress = (
-    route: '/navigation/RaiseFund' | '/navigation/DonationStatusScreen' | '/navigation/RecipientStatusScreen' | '/navigation/ManualMatchScreen' | '/navigation/MatchResultsScreen'
+    route: '/navigation/RaiseFund' | '/navigation/StatusScreen' | '/navigation/ManualMatchScreen' | '/navigation/MatchResultsScreen'
   ) => {
     onClose();
     router.push(route);

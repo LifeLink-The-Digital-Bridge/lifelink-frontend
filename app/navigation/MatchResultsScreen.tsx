@@ -206,7 +206,7 @@ const MatchResultsScreen = () => {
 
   if (loading) {
     return (
-      <AppLayout hideHeader>
+      <AppLayout>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.primary} />
           <Text style={styles.loadingText}>Loading matches...</Text>
@@ -216,7 +216,7 @@ const MatchResultsScreen = () => {
   }
 
   return (
-    <AppLayout hideHeader>
+    <AppLayout>
       <View style={styles.container}>
         <View style={styles.headerContainer}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
