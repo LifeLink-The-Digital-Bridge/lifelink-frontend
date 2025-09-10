@@ -8,13 +8,27 @@ import { createUnifiedStyles } from "../../constants/styles/unifiedStyles";
 interface ConsentFormProps {
   isConsented: boolean;
   setIsConsented: (value: boolean) => void;
+  consentedAt: string;
+  setConsentedAt: (consentedAt: string) => void;
 }
 
-export function ConsentForm({ isConsented, setIsConsented }: ConsentFormProps) {
+export function ConsentForm({ 
+  isConsented, 
+  setIsConsented, 
+  consentedAt, 
+  setConsentedAt 
+}: ConsentFormProps) {
   const { colorScheme } = useTheme();
   const isDark = colorScheme === "dark";
   const theme = isDark ? darkTheme : lightTheme;
   const styles = createUnifiedStyles(theme);
+
+  const handleConsentChange = (value: boolean) => {
+    setIsConsented(value);
+    if (value && !consentedAt) {
+      setConsentedAt(new Date().toISOString());
+    }
+  };
 
   return (
     <View style={styles.sectionContainer}>
@@ -60,7 +74,7 @@ export function ConsentForm({ isConsented, setIsConsented }: ConsentFormProps) {
           <View style={{ flex: 1 }}>
             <Text style={styles.termsButtonText}>Read Terms & Conditions</Text>
             <Text style={styles.termsSubText}>
-              Understand your rights and responsibilities
+              Understand your rights and responsibilities as a recipient
             </Text>
           </View>
           <Feather name="external-link" size={14} color={theme.primary} />
@@ -72,7 +86,7 @@ export function ConsentForm({ isConsented, setIsConsented }: ConsentFormProps) {
           </Text>
           <Switch
             value={isConsented}
-            onValueChange={setIsConsented}
+            onValueChange={handleConsentChange}
             thumbColor={theme.primary}
             trackColor={{ false: theme.border, true: theme.primary + "50" }}
           />
@@ -87,6 +101,11 @@ export function ConsentForm({ isConsented, setIsConsented }: ConsentFormProps) {
             <Text style={styles.successSubtitle}>
               You're now ready to complete your recipient registration.
             </Text>
+            {consentedAt && (
+              <Text style={[styles.termsSubText, { marginTop: 4 }]}>
+                Consented on: {new Date(consentedAt).toLocaleDateString()}
+              </Text>
+            )}
           </View>
         </View>
       )}

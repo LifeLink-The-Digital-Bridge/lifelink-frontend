@@ -56,6 +56,7 @@ const RecipientHubScreen = () => {
     }
   }, [isAuthenticated]);
 
+  // RecipientHubScreen.tsx
   const loadRecipientData = useCallback(async () => {
     setLoading(true);
     setRefreshing(true);
@@ -72,12 +73,20 @@ const RecipientHubScreen = () => {
         setRecipient(null);
       }
     } catch (error: any) {
-      console.error("Failed to fetch recipient data:", error);
-      showAlert(
-        "Sync Error",
-        "Failed to sync your recipient information. Please check your internet connection.",
-        "warning"
-      );
+      if (
+        !error.message?.includes("401") &&
+        !error.message?.includes("404") &&
+        !error.message?.includes("Recipient not found")
+      ) {
+        console.error("Failed to fetch recipient data:", error);
+        showAlert(
+          "Sync Error",
+          "Failed to sync your recipient information. Please check your internet connection.",
+          "warning"
+        );
+      }
+      await SecureStore.deleteItemAsync("recipientData");
+      setRecipient(null);
     }
     setLoading(false);
     setRefreshing(false);

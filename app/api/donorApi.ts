@@ -46,7 +46,6 @@ export interface ConsentFormDTO {
   userId: string;
   isConsented: boolean;
   consentedAt: string;
-  consentType: string;
 }
 
 export interface AddressDTO {

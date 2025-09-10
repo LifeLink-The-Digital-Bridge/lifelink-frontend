@@ -74,10 +74,14 @@ const ProfileScreen: React.FC = () => {
   const loadDonations = useCallback(async () => {
     setDonationsLoading(true);
     try {
-      // Use StatusScreen for detailed donation view
       setDonations([]);
     } catch (error) {
-      console.error("Failed to fetch donations:", error);
+      const errorMessage = (error as any)?.message || '';
+      if (!errorMessage.includes('401') && 
+          !errorMessage.includes('404') && 
+          !errorMessage.includes('Donor not found')) {
+        console.error("Failed to fetch donations:", error);
+      }
       setDonations([]);
     }
     setDonationsLoading(false);
@@ -89,12 +93,18 @@ const ProfileScreen: React.FC = () => {
       const recipient = await getRecipientByUserId();
       if (recipient?.id) {
         const requests = await getRecipientRequests(recipient.id);
-        setReceives(requests);
+        setReceives(requests || []);
       } else {
         setReceives([]);
       }
     } catch (error) {
-      console.error("Failed to fetch receives:", error);
+      const errorMessage = (error as any)?.message || '';
+      if (!errorMessage.includes('401') && 
+          !errorMessage.includes('404') && 
+          !errorMessage.includes('Recipient not found') &&
+          !errorMessage.includes('Failed to fetch recipient')) {
+        console.error("Failed to fetch receives:", error);
+      }
       setReceives([]);
     }
     setReceivesLoading(false);
@@ -159,8 +169,6 @@ const ProfileScreen: React.FC = () => {
         return "System Default";
     }
   };
-
-
 
   if (loading) {
     return (
@@ -232,7 +240,7 @@ const ProfileScreen: React.FC = () => {
       />
 
       <ProfileActions
-        isOwnProfile={isOwnProfile}
+        isOwnProfile={!!isOwnProfile}
         isFollowing={isFollowing}
         followLoading={followLoading}
         theme={currentTheme}

@@ -1,20 +1,142 @@
-import React from "react";
-import { View } from "react-native";
-import { MedicalDetails } from "./MedicalDetails";
-import { EligibilityCriteria } from "./EligibilityCriteria";
-import { LocationDetails } from "./LocationDetails";
-import { HlaProfile } from "./HlaProfile";
-import { ConsentForm } from "./ConsentForm";
-import { RecipientFormState } from "../../hooks/useRecipientFormState";
+import React from 'react';
+import { ScrollView } from 'react-native';
+import { useTheme } from '../../utils/theme-context';
+import { lightTheme, darkTheme } from '../../constants/styles/authStyles';
+import { createUnifiedStyles } from '../../constants/styles/unifiedStyles';
 
-interface RecipientFormProps extends RecipientFormState {
+import { MedicalDetails } from './MedicalDetails';
+import { EligibilityCriteria } from './EligibilityCriteria';
+import { LocationDetails } from './LocationDetails';
+import { HlaProfile } from './HlaProfile';
+import { ConsentForm } from './ConsentForm';
+
+export interface RecipientFormProps {
+  // Medical Details
+  hemoglobinLevel: string;
+  setHemoglobinLevel: (value: string) => void;
+  bloodPressure: string;
+  setBloodPressure: (value: string) => void;
+  diagnosis: string;
+  setDiagnosis: (value: string) => void;
+  allergies: string;
+  setAllergies: (value: string) => void;
+  currentMedications: string;
+  setCurrentMedications: (value: string) => void;
+  additionalNotes: string;
+  setAdditionalNotes: (value: string) => void;
+  hasInfectiousDiseases: boolean;
+  setHasInfectiousDiseases: (value: boolean) => void;
+  infectiousDiseaseDetails: string;
+  setInfectiousDiseaseDetails: (value: string) => void;
+  creatinineLevel: string;
+  setCreatinineLevel: (value: string) => void;
+  liverFunctionTests: string;
+  setLiverFunctionTests: (value: string) => void;
+  cardiacStatus: string;
+  setCardiacStatus: (value: string) => void;
+  pulmonaryFunction: string;
+  setPulmonaryFunction: (value: string) => void;
+  overallHealthStatus: string;
+  setOverallHealthStatus: (value: string) => void;
+
+  // Eligibility Criteria
+  age: string;
+  setAge: (value: string) => void;
+  weight: string;
+  setWeight: (value: string) => void;
+  height: string;
+  setHeight: (value: string) => void;
+  bodyMassIndex: string;
+  setBodyMassIndex: (value: string) => void;
+  bodySize: string;
+  setBodySize: (value: string) => void;
+  weightEligible: boolean;
+  medicallyEligible: boolean;
+  setMedicallyEligible: (value: boolean) => void;
+  legalClearance: boolean;
+  setLegalClearance: (value: boolean) => void;
+  eligibilityNotes: string;
+  setEligibilityNotes: (value: string) => void;
+  lastReviewed: string;
+  setLastReviewed: (value: string) => void;
+
+  // Consent - Updated to include both props
+  isConsented: boolean;
+  setIsConsented: (value: boolean) => void;
+  consentedAt: string;
+  setConsentedAt: (consentedAt: string) => void;
+  
+  // Location
+  addressLine: string;
+  setAddressLine: (value: string) => void;
+  landmark: string;
+  setLandmark: (value: string) => void;
+  area: string;
+  setArea: (value: string) => void;
+  city: string;
+  setCity: (value: string) => void;
+  district: string;
+  setDistrict: (value: string) => void;
+  stateVal: string;
+  setStateVal: (value: string) => void;
+  country: string;
+  setCountry: (value: string) => void;
+  pincode: string;
+  setPincode: (value: string) => void;
+  latitude: number | null;
+  longitude: number | null;
   onLocationPress: () => void;
+
+  // HLA Profile
+  hlaA1: string;
+  setHlaA1: (value: string) => void;
+  hlaA2: string;
+  setHlaA2: (value: string) => void;
+  hlaB1: string;
+  setHlaB1: (value: string) => void;
+  hlaB2: string;
+  setHlaB2: (value: string) => void;
+  hlaC1: string;
+  setHlaC1: (value: string) => void;
+  hlaC2: string;
+  setHlaC2: (value: string) => void;
+  hlaDR1: string;
+  setHlaDR1: (value: string) => void;
+  hlaDR2: string;
+  setHlaDR2: (value: string) => void;
+  hlaDQ1: string;
+  setHlaDQ1: (value: string) => void;
+  hlaDQ2: string;
+  setHlaDQ2: (value: string) => void;
+  hlaDP1: string;
+  setHlaDP1: (value: string) => void;
+  hlaDP2: string;
+  setHlaDP2: (value: string) => void;
+  testingDate: string;
+  setTestingDate: (value: string) => void;
+  testingMethod: string;
+  setTestingMethod: (value: string) => void;
+  laboratoryName: string;
+  setLaboratoryName: (value: string) => void;
+  certificationNumber: string;
+  setCertificationNumber: (value: string) => void;
+
+  isFormValid: () => boolean;
 }
 
-export function RecipientForm(props: RecipientFormProps) {
+export const RecipientForm: React.FC<RecipientFormProps> = (props) => {
+  const { colorScheme } = useTheme();
+  const isDark = colorScheme === 'dark';
+  const theme = isDark ? darkTheme : lightTheme;
+  const styles = createUnifiedStyles(theme);
+
   return (
-    <View>
+    <>
       <MedicalDetails
+        hemoglobinLevel={props.hemoglobinLevel}
+        setHemoglobinLevel={props.setHemoglobinLevel}
+        bloodPressure={props.bloodPressure}
+        setBloodPressure={props.setBloodPressure}
         diagnosis={props.diagnosis}
         setDiagnosis={props.setDiagnosis}
         allergies={props.allergies}
@@ -23,17 +145,33 @@ export function RecipientForm(props: RecipientFormProps) {
         setCurrentMedications={props.setCurrentMedications}
         additionalNotes={props.additionalNotes}
         setAdditionalNotes={props.setAdditionalNotes}
-        hemoglobinLevel={props.hemoglobinLevel}
-        setHemoglobinLevel={props.setHemoglobinLevel}
-        bloodPressure={props.bloodPressure}
-        setBloodPressure={props.setBloodPressure}
+        hasInfectiousDiseases={props.hasInfectiousDiseases}
+        setHasInfectiousDiseases={props.setHasInfectiousDiseases}
+        infectiousDiseaseDetails={props.infectiousDiseaseDetails}
+        setInfectiousDiseaseDetails={props.setInfectiousDiseaseDetails}
         creatinineLevel={props.creatinineLevel}
         setCreatinineLevel={props.setCreatinineLevel}
+        liverFunctionTests={props.liverFunctionTests}
+        setLiverFunctionTests={props.setLiverFunctionTests}
+        cardiacStatus={props.cardiacStatus}
+        setCardiacStatus={props.setCardiacStatus}
+        pulmonaryFunction={props.pulmonaryFunction}
+        setPulmonaryFunction={props.setPulmonaryFunction}
         overallHealthStatus={props.overallHealthStatus}
         setOverallHealthStatus={props.setOverallHealthStatus}
       />
 
       <EligibilityCriteria
+        age={props.age}
+        setAge={props.setAge}
+        weight={props.weight}
+        setWeight={props.setWeight}
+        height={props.height}
+        setHeight={props.setHeight}
+        bodyMassIndex={props.bodyMassIndex}
+        bodySize={props.bodySize}
+        setBodySize={props.setBodySize}
+        weightEligible={props.weightEligible}
         medicallyEligible={props.medicallyEligible}
         setMedicallyEligible={props.setMedicallyEligible}
         legalClearance={props.legalClearance}
@@ -42,12 +180,6 @@ export function RecipientForm(props: RecipientFormProps) {
         setEligibilityNotes={props.setEligibilityNotes}
         lastReviewed={props.lastReviewed}
         setLastReviewed={props.setLastReviewed}
-        age={props.age}
-        setAge={props.setAge}
-        weight={props.weight}
-        setWeight={props.setWeight}
-        height={props.height}
-        setHeight={props.setHeight}
       />
 
       <LocationDetails
@@ -110,7 +242,9 @@ export function RecipientForm(props: RecipientFormProps) {
       <ConsentForm
         isConsented={props.isConsented}
         setIsConsented={props.setIsConsented}
+        consentedAt={props.consentedAt}
+        setConsentedAt={props.setConsentedAt}
       />
-    </View>
+    </>
   );
-}
+};

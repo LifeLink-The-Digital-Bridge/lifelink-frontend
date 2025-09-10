@@ -1,7 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../utils/auth-context";
-import { View, ScrollView, TouchableOpacity, Text, ActivityIndicator } from "react-native";
+import {
+  View,
+  ScrollView,
+  TouchableOpacity,
+  Text,
+  ActivityIndicator,
+} from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as SecureStore from "expo-secure-store";
 import { registerDonor } from "../api/donorApi";
@@ -28,6 +34,7 @@ const DonorScreen: React.FC = () => {
 
   const [roleLoading, setRoleLoading] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(false);
+  const [canGoBack, setCanGoBack] = useState<boolean>(false);
 
   const [alertVisible, setAlertVisible] = useState<boolean>(false);
   const [alertTitle, setAlertTitle] = useState<string>("");
@@ -46,6 +53,19 @@ const DonorScreen: React.FC = () => {
     setAlertType(type);
     setAlertVisible(true);
   };
+
+  useEffect(() => {
+    const checkNavigation = () => {
+      try {
+        const navigationState = router.canGoBack?.();
+        setCanGoBack(!!navigationState);
+      } catch (error) {
+        setCanGoBack(false);
+      }
+    };
+
+    checkNavigation();
+  }, [router]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -93,6 +113,14 @@ const DonorScreen: React.FC = () => {
     };
     ensureDonorRole();
   }, [router]);
+
+  const handleBackPress = () => {
+    if (canGoBack) {
+      router.back();
+    } else {
+      router.replace("/(tabs)/donate");
+    }
+  };
 
   const handleSubmit = async (): Promise<void> => {
     if (!formState.isFormValid()) {
@@ -158,7 +186,6 @@ const DonorScreen: React.FC = () => {
           userId: formState.userId,
           isConsented: formState.isConsented,
           consentedAt: new Date().toISOString(),
-          consentType: "BLOOD_DONATION",
         },
         addresses: [
           {
@@ -244,7 +271,7 @@ const DonorScreen: React.FC = () => {
         >
           <View style={styles.headerContainer}>
             <TouchableOpacity
-              onPress={() => router.back()}
+              onPress={handleBackPress}
               style={styles.backButton}
             >
               <Feather name="arrow-left" size={20} color={theme.text} />
@@ -287,9 +314,7 @@ const DonorScreen: React.FC = () => {
             {loading ? (
               <ActivityIndicator color="#fff" size="small" />
             ) : (
-              <Text style={styles.submitButtonText}>
-                Complete Registration
-              </Text>
+              <Text style={styles.submitButtonText}>Complete Registration</Text>
             )}
           </TouchableOpacity>
         </View>

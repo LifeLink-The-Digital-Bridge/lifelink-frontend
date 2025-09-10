@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { createAuthStyles } from '../../constants/styles/authStyles';
 
 interface ProfileActionsProps {
-  isOwnProfile: boolean;
+  isOwnProfile?: boolean;
   isFollowing: boolean;
   followLoading: boolean;
   theme: any;
@@ -15,7 +15,7 @@ interface ProfileActionsProps {
 }
 
 export const ProfileActions: React.FC<ProfileActionsProps> = ({
-  isOwnProfile,
+  isOwnProfile = false,
   isFollowing,
   followLoading,
   theme,

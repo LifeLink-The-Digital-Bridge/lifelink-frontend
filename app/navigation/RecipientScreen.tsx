@@ -1,20 +1,25 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../utils/auth-context";
-import { View, ScrollView, TouchableOpacity, Text, ActivityIndicator } from "react-native";
+import {
+  View,
+  ScrollView,
+  TouchableOpacity,
+  Text,
+  ActivityIndicator,
+} from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as SecureStore from "expo-secure-store";
 import * as Location from "expo-location";
+import { registerRecipient, addRecipientRole } from "../api/recipientApi";
+import { refreshAuthTokens } from "../api/roleApi";
 import { useTheme } from "../../utils/theme-context";
 import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
 import { createUnifiedStyles } from "../../constants/styles/unifiedStyles";
-import { registerRecipient } from "../api/recipientApi";
-import { addRecipientRole } from "../api/recipientApi";
-import { refreshAuthTokens } from "../api/roleApi";
-import { ValidationAlert } from "../../components/common/ValidationAlert";
 import AppLayout from "@/components/AppLayout";
 
 import { RecipientForm } from "../../components/recipient/RecipientForm";
+import { ValidationAlert } from "../../components/common/ValidationAlert";
 import { useRecipientFormState } from "../../hooks/useRecipientFormState";
 
 const RecipientScreen: React.FC = () => {
@@ -27,12 +32,14 @@ const RecipientScreen: React.FC = () => {
 
   const formState = useRecipientFormState();
 
-  const [roleLoading, setRoleLoading] = useState(true);
-  const [locationLoading, setLocationLoading] = useState(true);
+  const [roleLoading, setRoleLoading] = useState<boolean>(true);
+  const [locationLoading, setLocationLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [canGoBack, setCanGoBack] = useState<boolean>(false);
 
-  const [alertVisible, setAlertVisible] = useState(false);
-  const [alertTitle, setAlertTitle] = useState("");
-  const [alertMessage, setAlertMessage] = useState("");
+  const [alertVisible, setAlertVisible] = useState<boolean>(false);
+  const [alertTitle, setAlertTitle] = useState<string>("");
+  const [alertMessage, setAlertMessage] = useState<string>("");
   const [alertType, setAlertType] = useState<
     "success" | "error" | "warning" | "info"
   >("info");
@@ -41,7 +48,7 @@ const RecipientScreen: React.FC = () => {
     title: string,
     message: string,
     type: "success" | "error" | "warning" | "info" = "info"
-  ) => {
+  ): void => {
     setAlertTitle(title);
     setAlertMessage(message);
     setAlertType(type);
@@ -49,13 +56,25 @@ const RecipientScreen: React.FC = () => {
   };
 
   useEffect(() => {
+    const checkNavigation = () => {
+      try {
+        const navigationState = router.canGoBack?.();
+        setCanGoBack(!!navigationState);
+      } catch (error) {
+        setCanGoBack(false);
+      }
+    };
+    checkNavigation();
+  }, [router]);
+
+  useEffect(() => {
     if (!isAuthenticated) {
       router.replace("../(auth)/loginScreen");
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, router]);
 
   useEffect(() => {
-    const ensureRecipientRole = async () => {
+    const ensureRecipientRole = async (): Promise<void> => {
       setRoleLoading(true);
       try {
         let rolesString = await SecureStore.getItemAsync("roles");
@@ -65,6 +84,7 @@ const RecipientScreen: React.FC = () => {
         } catch {
           roles = [];
         }
+
         if (!roles.includes("RECIPIENT")) {
           await addRecipientRole();
           const newTokens = await refreshAuthTokens();
@@ -80,6 +100,7 @@ const RecipientScreen: React.FC = () => {
           ]);
         }
       } catch (error: any) {
+        console.error("Role assignment error:", error);
         showAlert(
           "Role Assignment Failed",
           error.message ||
@@ -93,7 +114,7 @@ const RecipientScreen: React.FC = () => {
       }
     };
     ensureRecipientRole();
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     const initializeLocation = async () => {
@@ -141,133 +162,87 @@ const RecipientScreen: React.FC = () => {
         setLocationLoading(false);
       }
     };
-
     initializeLocation();
   }, [formState.latitude, formState.longitude]);
 
-  const validateForm = (): { isValid: boolean; errors: string[] } => {
-    const errors: string[] = [];
-
-    if (!formState.diagnosis.trim()) {
-      errors.push("Medical diagnosis is required");
+  const handleBackPress = () => {
+    if (canGoBack) {
+      router.back();
+    } else {
+      router.replace("/(tabs)/receive");
     }
-    if (!formState.addressLine.trim()) {
-      errors.push("Address line is required");
-    }
-    if (!formState.city.trim()) {
-      errors.push("City is required");
-    }
-    if (!formState.stateVal.trim()) {
-      errors.push("State is required");
-    }
-    if (!formState.country.trim()) {
-      errors.push("Country is required");
-    }
-    if (!formState.pincode.trim()) {
-      errors.push("Pincode is required");
-    }
-    if (!formState.isConsented) {
-      errors.push("Consent is required to proceed");
-    }
-    if (formState.latitude === null || formState.longitude === null) {
-      errors.push("Location coordinates are required");
-    }
-    if (formState.age && parseInt(formState.age) < 18) {
-      errors.push("Age must be 18 or above");
-    }
-    if (formState.weight && parseFloat(formState.weight) < 30) {
-      errors.push("Weight seems too low, please verify");
-    }
-
-    return { isValid: errors.length === 0, errors };
   };
 
-  const handleSubmit = async () => {
-    const validation = validateForm();
-
-    if (!validation.isValid) {
+  const handleSubmit = async (): Promise<void> => {
+    if (!formState.isFormValid()) {
       showAlert(
-        "Form Validation Failed",
-        `Please fix the following issues:\n\n• ${validation.errors.join(
-          "\n• "
-        )}`,
+        "Incomplete Form",
+        "Please fill all required fields to continue.",
         "warning"
       );
       return;
     }
 
-    formState.setLoading(true);
-
+    setLoading(true);
     try {
-      const userId = await SecureStore.getItemAsync("userId");
-      if (!userId) {
-        throw new Error("User session expired. Please log in again.");
-      }
-
       const payload = {
         availability: formState.availability,
         addresses: [
           {
-            addressLine: formState.addressLine.trim(),
-            landmark: formState.landmark?.trim() || "",
-            area: formState.area?.trim() || "",
-            city: formState.city.trim(),
-            district: formState.district?.trim() || "",
-            state: formState.stateVal.trim(),
-            country: formState.country.trim(),
-            pincode: formState.pincode.trim(),
-            latitude: formState.latitude!,
-            longitude: formState.longitude!,
+            addressLine: formState.addressLine,
+            landmark: formState.landmark,
+            area: formState.area,
+            city: formState.city,
+            district: formState.district,
+            state: formState.stateVal,
+            country: formState.country,
+            pincode: formState.pincode,
+            latitude: formState.latitude || 0,
+            longitude: formState.longitude || 0,
           },
         ],
         medicalDetails: {
-          diagnosis: formState.diagnosis.trim(),
-          allergies: formState.allergies?.trim() || undefined,
-          currentMedications: formState.currentMedications?.trim() || undefined,
-          additionalNotes: formState.additionalNotes?.trim() || undefined,
           hemoglobinLevel: formState.hemoglobinLevel
-            ? parseFloat(formState.hemoglobinLevel)
+            ? Number(formState.hemoglobinLevel)
             : undefined,
-          bloodPressure: formState.bloodPressure?.trim() || undefined,
+          bloodPressure: formState.bloodPressure || undefined,
+          diagnosis: formState.diagnosis,
+          allergies: formState.allergies || undefined,
+          currentMedications: formState.currentMedications || undefined,
+          additionalNotes: formState.additionalNotes || undefined,
           hasInfectiousDiseases: formState.hasInfectiousDiseases,
           infectiousDiseaseDetails: formState.hasInfectiousDiseases
-            ? formState.infectiousDiseaseDetails?.trim()
+            ? formState.infectiousDiseaseDetails
             : undefined,
           creatinineLevel: formState.creatinineLevel
-            ? parseFloat(formState.creatinineLevel)
+            ? Number(formState.creatinineLevel)
             : undefined,
-          liverFunctionTests: formState.liverFunctionTests?.trim() || undefined,
-          cardiacStatus: formState.cardiacStatus?.trim() || undefined,
+          liverFunctionTests: formState.liverFunctionTests || undefined,
+          cardiacStatus: formState.cardiacStatus || undefined,
           pulmonaryFunction: formState.pulmonaryFunction
-            ? parseFloat(formState.pulmonaryFunction)
+            ? Number(formState.pulmonaryFunction)
             : undefined,
-          overallHealthStatus:
-            formState.overallHealthStatus?.trim() || undefined,
+          overallHealthStatus: formState.overallHealthStatus || undefined,
         },
         eligibilityCriteria: {
           ageEligible: formState.age ? parseInt(formState.age) >= 18 : false,
           age: formState.age ? parseInt(formState.age) : undefined,
-          dob: formState.dob?.trim() || undefined,
+          dob: formState.dob || undefined,
           weightEligible: formState.weight
             ? parseFloat(formState.weight) >= 45
             : false,
-          weight: formState.weight ? parseFloat(formState.weight) : undefined,
-          height: formState.height ? parseFloat(formState.height) : undefined,
+          weight: formState.weight ? Number(formState.weight) : undefined,
+          height: formState.height ? Number(formState.height) : undefined,
           bodyMassIndex: formState.bodyMassIndex
-            ? parseFloat(formState.bodyMassIndex)
+            ? Number(formState.bodyMassIndex)
             : undefined,
-          bodySize: formState.bodySize?.trim() || undefined,
+          bodySize: formState.bodySize || undefined,
           medicallyEligible: formState.medicallyEligible,
           legalClearance: formState.legalClearance,
-          notes: formState.eligibilityNotes?.trim() || undefined,
+          notes: formState.eligibilityNotes || undefined,
           lastReviewed:
-            formState.lastReviewed?.trim() ||
-            new Date().toISOString().slice(0, 10),
+            formState.lastReviewed || new Date().toISOString().slice(0, 10),
           isLivingDonor: false,
-        },
-        consentForm: {
-          isConsented: formState.isConsented,
-          consentedAt: formState.consentedAt || new Date().toISOString(),
         },
         hlaProfile:
           formState.hlaA1 ||
@@ -275,77 +250,70 @@ const RecipientScreen: React.FC = () => {
           formState.hlaB1 ||
           formState.hlaB2
             ? {
-                hlaA1: formState.hlaA1?.trim() || undefined,
-                hlaA2: formState.hlaA2?.trim() || undefined,
-                hlaB1: formState.hlaB1?.trim() || undefined,
-                hlaB2: formState.hlaB2?.trim() || undefined,
-                hlaC1: formState.hlaC1?.trim() || undefined,
-                hlaC2: formState.hlaC2?.trim() || undefined,
-                hlaDR1: formState.hlaDR1?.trim() || undefined,
-                hlaDR2: formState.hlaDR2?.trim() || undefined,
-                hlaDQ1: formState.hlaDQ1?.trim() || undefined,
-                hlaDQ2: formState.hlaDQ2?.trim() || undefined,
-                hlaDP1: formState.hlaDP1?.trim() || undefined,
-                hlaDP2: formState.hlaDP2?.trim() || undefined,
-                testingDate: formState.testingDate?.trim() || undefined,
-                testingMethod: formState.testingMethod?.trim() || undefined,
-                laboratoryName: formState.laboratoryName?.trim() || undefined,
-                certificationNumber:
-                  formState.certificationNumber?.trim() || undefined,
-                hlaString: `${formState.hlaA1 || "N/A"},${
-                  formState.hlaA2 || "N/A"
-                },${formState.hlaB1 || "N/A"},${formState.hlaB2 || "N/A"},${
-                  formState.hlaC1 || "N/A"
-                },${formState.hlaC2 || "N/A"},${formState.hlaDR1 || "N/A"},${
-                  formState.hlaDR2 || "N/A"
-                },${formState.hlaDQ1 || "N/A"},${formState.hlaDQ2 || "N/A"},${
-                  formState.hlaDP1 || "N/A"
-                },${formState.hlaDP2 || "N/A"}`,
+                hlaA1: formState.hlaA1 || undefined,
+                hlaA2: formState.hlaA2 || undefined,
+                hlaB1: formState.hlaB1 || undefined,
+                hlaB2: formState.hlaB2 || undefined,
+                hlaC1: formState.hlaC1 || undefined,
+                hlaC2: formState.hlaC2 || undefined,
+                hlaDR1: formState.hlaDR1 || undefined,
+                hlaDR2: formState.hlaDR2 || undefined,
+                hlaDQ1: formState.hlaDQ1 || undefined,
+                hlaDQ2: formState.hlaDQ2 || undefined,
+                hlaDP1: formState.hlaDP1 || undefined,
+                hlaDP2: formState.hlaDP2 || undefined,
+                testingDate: formState.testingDate || undefined,
+                testingMethod: formState.testingMethod || undefined,
+                laboratoryName: formState.laboratoryName || undefined,
+                certificationNumber: formState.certificationNumber || undefined,
+                hlaString: `${formState.hlaA1 || ""},${formState.hlaA2 || ""},${
+                  formState.hlaB1 || ""
+                },${formState.hlaB2 || ""},${formState.hlaC1 || ""},${
+                  formState.hlaC2 || ""
+                },${formState.hlaDR1 || ""},${formState.hlaDR2 || ""},${
+                  formState.hlaDQ1 || ""
+                },${formState.hlaDQ2 || ""},${formState.hlaDP1 || ""},${
+                  formState.hlaDP2 || ""
+                }`,
                 isHighResolution: true,
               }
             : undefined,
+      consentForm: {
+        isConsented: formState.isConsented,
+        consentedAt: formState.consentedAt || new Date().toISOString(),
+      },
       };
 
       const response = await registerRecipient(payload);
-
-      if (response && response.id) {
-        await Promise.all([
-          SecureStore.setItemAsync("recipientId", response.id),
-          SecureStore.setItemAsync("recipientData", JSON.stringify(response)),
-        ]);
-
+      if (response?.id) {
+        await SecureStore.setItemAsync("recipientId", response.id);
+        await SecureStore.setItemAsync(
+          "recipientData",
+          JSON.stringify(response)
+        );
         showAlert(
           "Registration Successful!",
-          "Your recipient profile has been created successfully. You can now create medical requests and receive notifications for matching donations.",
+          "Your recipient profile has been created successfully. You can now create medical requests.",
           "success"
         );
 
         setTimeout(() => {
           router.replace("/(tabs)/receive");
-        }, 2500);
+        }, 2000);
       } else {
         throw new Error(
-          "Registration completed but recipient ID is missing from response."
+          "Registration succeeded but recipientId missing in response."
         );
       }
     } catch (error: any) {
-      console.error("Registration error:", error);
-
-      let errorMessage = "Registration failed. Please try again.";
-
-      if (error.message?.includes("network")) {
-        errorMessage =
-          "Network error. Please check your internet connection and try again.";
-      } else if (error.message?.includes("timeout")) {
-        errorMessage =
-          "Request timeout. Please check your connection and try again.";
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-
-      showAlert("Registration Failed", errorMessage, "error");
+      showAlert(
+        "Registration Failed",
+        error.message ||
+          "Something went wrong during registration. Please try again.",
+        "error"
+      );
     } finally {
-      formState.setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -365,16 +333,15 @@ const RecipientScreen: React.FC = () => {
   }
 
   return (
-    <AppLayout hideHeader>
+    <AppLayout>
       <View style={styles.container}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
         >
           <View style={styles.headerContainer}>
             <TouchableOpacity
-              onPress={() => router.back()}
+              onPress={handleBackPress}
               style={styles.backButton}
             >
               <Feather name="arrow-left" size={20} color={theme.text} />
@@ -383,14 +350,12 @@ const RecipientScreen: React.FC = () => {
             <View style={styles.headerIconContainer}>
               <Feather name="user-check" size={28} color={theme.primary} />
             </View>
-
             <View style={styles.headerTextContainer}>
               <Text style={styles.headerTitle}>Recipient Registration</Text>
               <Text style={styles.headerSubtitle}>
                 Complete your medical profile
               </Text>
             </View>
-
             <View style={styles.statusBadge}>
               <Text style={styles.statusText}>
                 {formState.isFormValid() ? "✓ Ready" : "In Progress"}
@@ -408,22 +373,18 @@ const RecipientScreen: React.FC = () => {
           <TouchableOpacity
             style={[
               styles.submitButton,
-              !formState.isFormValid() || formState.loading
+              !formState.isFormValid() || loading
                 ? styles.submitButtonDisabled
                 : null,
             ]}
             onPress={handleSubmit}
-            disabled={!formState.isFormValid() || formState.loading}
+            disabled={!formState.isFormValid() || loading}
             activeOpacity={0.8}
           >
-            {formState.loading ? (
+            {loading ? (
               <ActivityIndicator color="#fff" size="small" />
             ) : (
-              <Text style={styles.submitButtonText}>
-                {formState.isFormValid()
-                  ? "Complete Registration"
-                  : "Please Complete Form"}
-              </Text>
+              <Text style={styles.submitButtonText}>Complete Registration</Text>
             )}
           </TouchableOpacity>
         </View>

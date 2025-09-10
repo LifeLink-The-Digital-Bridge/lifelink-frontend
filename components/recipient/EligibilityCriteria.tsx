@@ -1,11 +1,22 @@
-import React from "react";
-import { View, Text, TextInput, Switch } from "react-native";
-import { Feather } from "@expo/vector-icons";
-import { useTheme } from "../../utils/theme-context";
-import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
-import { createUnifiedStyles } from "../../constants/styles/unifiedStyles";
+import React from 'react';
+import { View, Text, TextInput, Switch } from 'react-native';
+import { useTheme } from '../../utils/theme-context';
+import { lightTheme, darkTheme } from '../../constants/styles/authStyles';
+import { createUnifiedStyles } from '../../constants/styles/unifiedStyles';
+import { createDonorStyles } from '../../constants/styles/donorStyles';
+import { Feather } from '@expo/vector-icons';
 
 interface EligibilityCriteriaProps {
+  age: string;
+  setAge: (value: string) => void;
+  weight: string;
+  setWeight: (value: string) => void;
+  height: string;
+  setHeight: (value: string) => void;
+  bodyMassIndex: string;
+  bodySize: string;
+  setBodySize: (value: string) => void;
+  weightEligible: boolean;
   medicallyEligible: boolean;
   setMedicallyEligible: (value: boolean) => void;
   legalClearance: boolean;
@@ -14,32 +25,17 @@ interface EligibilityCriteriaProps {
   setEligibilityNotes: (value: string) => void;
   lastReviewed: string;
   setLastReviewed: (value: string) => void;
-  age: string;
-  setAge: (value: string) => void;
-  weight: string;
-  setWeight: (value: string) => void;
-  height: string;
-  setHeight: (value: string) => void;
 }
 
 export function EligibilityCriteria(props: EligibilityCriteriaProps) {
   const { colorScheme } = useTheme();
-  const isDark = colorScheme === "dark";
+  const isDark = colorScheme === 'dark';
   const theme = isDark ? darkTheme : lightTheme;
   const styles = createUnifiedStyles(theme);
+  const donorStyles = createDonorStyles(theme);
 
-  const bmi =
-    props.height && props.weight
-      ? (
-          parseFloat(props.weight) / Math.pow(parseFloat(props.height) / 100, 2)
-        ).toFixed(1)
-      : "N/A";
-
-  const isEligible =
-    props.medicallyEligible &&
-    props.legalClearance &&
-    parseFloat(props.age) >= 18 &&
-    parseFloat(props.weight) >= 45;
+  const ageEligible = props.age ? parseInt(props.age) >= 18 : false;
+  const isEligible = props.medicallyEligible && props.legalClearance && ageEligible && props.weightEligible;
 
   return (
     <View style={styles.sectionContainer}>
@@ -52,7 +48,7 @@ export function EligibilityCriteria(props: EligibilityCriteriaProps) {
 
       <View style={styles.row}>
         <View style={[styles.inputContainer, { flex: 1, marginRight: 8 }]}>
-          <Text style={styles.label}>Age *</Text>
+          <Text style={styles.label}>Age</Text>
           <TextInput
             style={styles.input}
             placeholder="45"
@@ -61,10 +57,17 @@ export function EligibilityCriteria(props: EligibilityCriteriaProps) {
             onChangeText={props.setAge}
             keyboardType="numeric"
           />
+          {props.age && (
+            <Text style={[
+              donorStyles.eligibilityText,
+              ageEligible ? donorStyles.eligibleText : donorStyles.ineligibleText
+            ]}>
+              {ageEligible ? "✓ Age Eligible (≥18)" : "⚠ Must be 18 or older"}
+            </Text>
+          )}
         </View>
-
         <View style={[styles.inputContainer, { flex: 1, marginLeft: 8 }]}>
-          <Text style={styles.label}>Weight (kg) *</Text>
+          <Text style={styles.label}>Weight (kg)</Text>
           <TextInput
             style={styles.input}
             placeholder="75.5"
@@ -73,6 +76,14 @@ export function EligibilityCriteria(props: EligibilityCriteriaProps) {
             onChangeText={props.setWeight}
             keyboardType="numeric"
           />
+          {props.weight && (
+            <Text style={[
+              donorStyles.eligibilityText,
+              props.weightEligible ? donorStyles.eligibleText : donorStyles.ineligibleText
+            ]}>
+              {props.weightEligible ? "✓ Weight Eligible (≥45kg)" : "⚠ Minimum 45kg required"}
+            </Text>
+          )}
         </View>
       </View>
 
@@ -88,24 +99,32 @@ export function EligibilityCriteria(props: EligibilityCriteriaProps) {
         />
       </View>
 
-      {bmi !== "N/A" && (
+      {props.bodyMassIndex && (
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Body Mass Index (BMI)</Text>
-          <Text
-            style={[
-              styles.eligibilityText,
-              parseFloat(bmi) >= 18.5 && parseFloat(bmi) <= 30
-                ? styles.eligibleText
-                : styles.ineligibleText,
-            ]}
-          >
-            {bmi} -{" "}
-            {parseFloat(bmi) >= 18.5 && parseFloat(bmi) <= 30
-              ? "Normal Range"
-              : "Outside Normal Range"}
+          <Text style={[
+            donorStyles.eligibilityText,
+            parseFloat(props.bodyMassIndex) >= 18.5 && parseFloat(props.bodyMassIndex) <= 30
+              ? donorStyles.eligibleText : donorStyles.ineligibleText
+          ]}>
+            {props.bodyMassIndex} - {
+              parseFloat(props.bodyMassIndex) >= 18.5 && parseFloat(props.bodyMassIndex) <= 30
+                ? "Normal Range" : "Outside Normal Range"
+            }
           </Text>
         </View>
       )}
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Body Size</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="SMALL/MEDIUM/LARGE"
+          placeholderTextColor={theme.textSecondary}
+          value={props.bodySize}
+          onChangeText={props.setBodySize}
+        />
+      </View>
 
       <View style={styles.switchRow}>
         <Text style={styles.switchLabel}>Medically Eligible?</Text>
@@ -113,7 +132,7 @@ export function EligibilityCriteria(props: EligibilityCriteriaProps) {
           value={props.medicallyEligible}
           onValueChange={props.setMedicallyEligible}
           thumbColor={theme.primary}
-          trackColor={{ false: theme.border, true: theme.primary + "50" }}
+          trackColor={{ false: theme.border, true: theme.primary + '50' }}
         />
       </View>
 
@@ -123,16 +142,14 @@ export function EligibilityCriteria(props: EligibilityCriteriaProps) {
           value={props.legalClearance}
           onValueChange={props.setLegalClearance}
           thumbColor={theme.primary}
-          trackColor={{ false: theme.border, true: theme.primary + "50" }}
+          trackColor={{ false: theme.border, true: theme.primary + '50' }}
         />
       </View>
 
-      <Text
-        style={[
-          styles.eligibilityText,
-          isEligible ? styles.eligibleText : styles.ineligibleText,
-        ]}
-      >
+      <Text style={[
+        donorStyles.eligibilityText,
+        isEligible ? donorStyles.eligibleText : donorStyles.ineligibleText
+      ]}>
         {isEligible
           ? "✓ Eligible for Receiving Donations"
           : "⚠ Additional Requirements Needed"}
