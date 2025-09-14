@@ -125,6 +125,8 @@ export interface DonorFormProps {
   setPincode: (value: string) => void;
   location: { latitude: number; longitude: number } | null;
   onLocationPress: () => void;
+  locationLoading?: boolean;
+  locationError?: string | null; 
 
   userId?: string;
   isFormValid: () => boolean;

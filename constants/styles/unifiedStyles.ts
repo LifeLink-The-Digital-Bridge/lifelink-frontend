@@ -721,4 +721,169 @@ export const createUnifiedStyles = (theme: any) => StyleSheet.create({
     marginLeft: 8,
     letterSpacing: 0.1,
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: theme.card,
+    borderRadius: 16,
+    padding: 20,
+    width: '90%',
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: theme.text,
+  },
+  locationItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.border,
+  },
+  locationAddress: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: theme.text,
+    marginBottom: 4,
+  },
+  locationDetails: {
+    fontSize: 14,
+    color: theme.textSecondary,
+  },
+  emptyText: {
+    textAlign: 'center',
+    color: theme.textSecondary,
+    fontSize: 16,
+    marginVertical: 20,
+  },
+  addNewButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: theme.border,
+    marginTop: 10,
+  },
+  addNewText: {
+    marginLeft: 8,
+    fontSize: 16,
+    fontWeight: '500',
+    color: theme.primary,
+  },
+  addForm: {
+    gap: 12,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 16,
+  },
+  cancelButton: {
+    backgroundColor: theme.border,
+  },
+  cancelButtonText: {
+    color: theme.text,
+    fontWeight: '500',
+  },
+  saveButton: {
+    backgroundColor: theme.primary,
+  },
+  saveButtonText: {
+    color: 'white',
+    fontWeight: '500',
+  },
+  inputText: {
+    flex: 1,
+    fontSize: 16,
+    color: theme.text,
+  },
+
+  locationStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    backgroundColor: theme.primary + '15',
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  locationStatusText: {
+    marginLeft: 8,
+    color: theme.primary,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  locationError: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    backgroundColor: theme.error + '15',
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  locationErrorText: {
+    marginLeft: 8,
+    color: theme.error,
+    fontSize: 14,
+    flex: 1,
+  },
+    locationSelector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  locationSelectorContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+
+  selectedLocationItem: {
+    backgroundColor: theme.primary + '10',
+    borderRadius: 8,
+    marginVertical: 2,
+    paddingHorizontal: 8,
+    borderWidth: 1,
+    borderColor: theme.primary + '30',
+  },
+
+  locationItemContent: {
+    flex: 1,
+  },
+
+  emptyContainer: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+
+  emptySubtext: {
+    fontSize: normalize(14),
+    color: theme.textSecondary,
+    marginTop: 4,
+    textAlign: 'center',
+    lineHeight: normalize(18),
+  },
+
+  addFormTitle: {
+    fontSize: normalize(18),
+    fontWeight: '600',
+    color: theme.text,
+    marginBottom: 16,
+    letterSpacing: 0.1,
+  },
 });

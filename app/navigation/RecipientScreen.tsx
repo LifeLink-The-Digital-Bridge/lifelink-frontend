@@ -150,6 +150,11 @@ const RecipientScreen: React.FC = () => {
           let location = await getLocationWithTimeout();
           formState.setLatitude(location.coords.latitude);
           formState.setLongitude(location.coords.longitude);
+
+          console.log("✅ Location auto-fetched for recipient:", {
+            latitude: location.coords.latitude,
+            longitude: location.coords.longitude,
+          });
         }
       } catch (error: any) {
         console.error("Location error:", error);
@@ -185,22 +190,32 @@ const RecipientScreen: React.FC = () => {
 
     setLoading(true);
     try {
+      const addressData: any = {
+        addressLine: formState.addressLine,
+        landmark: formState.landmark,
+        area: formState.area,
+        city: formState.city,
+        district: formState.district,
+        state: formState.stateVal,
+        country: formState.country,
+        pincode: formState.pincode,
+        latitude: formState.latitude || 0,
+        longitude: formState.longitude || 0,
+      };
+
+      if (formState.addressId) {
+        addressData.id = formState.addressId;
+        console.log(
+          "✅ Including existing address ID for recipient:",
+          formState.addressId
+        );
+      } else {
+        console.log("➕ Creating new address for recipient (no existing ID)");
+      }
+
       const payload = {
         availability: formState.availability,
-        addresses: [
-          {
-            addressLine: formState.addressLine,
-            landmark: formState.landmark,
-            area: formState.area,
-            city: formState.city,
-            district: formState.district,
-            state: formState.stateVal,
-            country: formState.country,
-            pincode: formState.pincode,
-            latitude: formState.latitude || 0,
-            longitude: formState.longitude || 0,
-          },
-        ],
+        addresses: [addressData],
         medicalDetails: {
           hemoglobinLevel: formState.hemoglobinLevel
             ? Number(formState.hemoglobinLevel)
@@ -278,11 +293,16 @@ const RecipientScreen: React.FC = () => {
                 isHighResolution: true,
               }
             : undefined,
-      consentForm: {
-        isConsented: formState.isConsented,
-        consentedAt: formState.consentedAt || new Date().toISOString(),
-      },
+        consentForm: {
+          isConsented: formState.isConsented,
+          consentedAt: formState.consentedAt || new Date().toISOString(),
+        },
       };
+
+      console.log(
+        "📤 Sending recipient payload with address:",
+        JSON.stringify(addressData, null, 2)
+      );
 
       const response = await registerRecipient(payload);
       if (response?.id) {
@@ -291,6 +311,20 @@ const RecipientScreen: React.FC = () => {
           "recipientData",
           JSON.stringify(response)
         );
+
+        if (
+          response.addresses &&
+          response.addresses.length > 0 &&
+          !formState.addressId
+        ) {
+          formState.setAddressId(response.addresses[0].id || null);
+
+          console.log(
+            "✅ New recipient address ID saved:",
+            response.addresses[0].id
+          );
+        }
+
         showAlert(
           "Registration Successful!",
           "Your recipient profile has been created successfully. You can now create medical requests.",

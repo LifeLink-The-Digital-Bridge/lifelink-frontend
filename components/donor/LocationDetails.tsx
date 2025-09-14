@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../utils/theme-context';
 import { lightTheme, darkTheme } from '../../constants/styles/authStyles';
@@ -24,6 +24,8 @@ interface LocationDetailsProps {
   setPincode: (value: string) => void;
   location: { latitude: number; longitude: number } | null;
   onLocationPress: () => void;
+  locationLoading?: boolean;
+  locationError?: string | null;
 }
 
 export function LocationDetails({
@@ -45,6 +47,8 @@ export function LocationDetails({
   setPincode,
   location,
   onLocationPress,
+  locationLoading = false,
+  locationError = null,
 }: LocationDetailsProps) {
   const { colorScheme } = useTheme();
   const isDark = colorScheme === 'dark';
@@ -59,6 +63,20 @@ export function LocationDetails({
         </View>
         <Text style={styles.sectionTitle}>Location Details</Text>
       </View>
+
+      {locationLoading && (
+        <View style={styles.locationStatus}>
+          <ActivityIndicator size="small" color={theme.primary} />
+          <Text style={styles.locationStatusText}>Getting your location...</Text>
+        </View>
+      )}
+
+      {locationError && (
+        <View style={styles.locationError}>
+          <Feather name="alert-circle" size={16} color={theme.error} />
+          <Text style={styles.locationErrorText}>{locationError}</Text>
+        </View>
+      )}
       
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Address Line</Text>

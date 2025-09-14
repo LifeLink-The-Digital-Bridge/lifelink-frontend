@@ -29,7 +29,6 @@ export interface EligibilityCriteriaDTO {
   weight: number;
   medicalClearance: boolean;
   recentTattooOrPiercing: boolean;
-  recentTravel: boolean;
   recentTravelDetails: string;
   recentVaccination: boolean;
   recentSurgery: boolean;

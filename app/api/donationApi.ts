@@ -17,7 +17,6 @@ export interface DonationRequest {
   bloodType: BloodType;
   quantity?: number;
   
-  // Organ-specific fields
   organType?: OrganType;
   isCompatible?: boolean;
   organQuality?: string;
@@ -30,14 +29,11 @@ export interface DonationRequest {
   hasAbnormalities?: boolean;
   abnormalityDescription?: string;
   
-  // Tissue-specific fields
   tissueType?: TissueType;
   
-  // Stem cell-specific fields
   stemCellType?: StemCellType;
 }
 
-// ADD THIS MISSING EXPORT
 export async function registerDonation(payload: DonationRequest) {
   const token = await SecureStore.getItemAsync('jwt');
   const userId = await SecureStore.getItemAsync('userId');
@@ -79,3 +75,54 @@ export const fetchDonationsByDonorId = async (donorId: string): Promise<any> => 
   }
   return await response.json();
 };
+
+export async function fetchDonorAddresses(donorId: string): Promise<any[]> {
+  const token = await SecureStore.getItemAsync('jwt');
+  const userId = await SecureStore.getItemAsync('userId');
+  
+  if (!token || !donorId) {
+    throw new Error('Missing authentication or donor ID');
+  }
+
+  const response = await fetch(`${BASE_URL}/donors/${donorId}/addresses`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'id': userId || '',
+      'Content-Type': 'application/json'
+    }
+  });
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      return [];
+    }
+    const errorText = await response.text();
+    throw new Error(`Failed to fetch addresses: ${errorText}`);
+  }
+  
+  return await response.json();
+}
+
+export async function addDonorAddress(donorId: string, locationData: any): Promise<any> {
+  const token = await SecureStore.getItemAsync('jwt');
+  const userId = await SecureStore.getItemAsync('userId');
+  
+  const response = await fetch(`${BASE_URL}/donors/${donorId}/addresses`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'id': userId || '',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(locationData),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to add address: ${errorText}`);
+  }
+  
+  return await response.json();
+}
+

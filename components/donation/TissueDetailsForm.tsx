@@ -1,15 +1,15 @@
 import React from "react";
 import { View, Text, TextInput } from "react-native";
-import { Picker } from "@react-native-picker/picker";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../utils/theme-context";
 import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
 import { createDonationStyles } from "../../constants/styles/donationStyles";
 import { CustomPicker } from '../common/CustomPicker';
+import { TissueType } from '../../app/api/donationApi';
 
 interface TissueDetailsFormProps {
-  tissueType: string;
-  setTissueType: (value: string) => void;
+  tissueType: TissueType | "";
+  setTissueType: (value: TissueType | "") => void;
   quantity: string;
   setQuantity: (value: string) => void;
 }
@@ -22,6 +22,7 @@ const TISSUE_TYPES = [
   { label: "Tendon", value: "TENDON" },
   { label: "Ligament", value: "LIGAMENT" },
 ];
+
 export function TissueDetailsForm({
   tissueType,
   setTissueType,
@@ -45,7 +46,7 @@ export function TissueDetailsForm({
         <View style={styles.pickerContainer}>
           <CustomPicker
             selectedValue={tissueType}
-            onValueChange={setTissueType}
+            onValueChange={(value: string) => setTissueType(value as TissueType | "")}
             items={TISSUE_TYPES}
             placeholder="Select Tissue"
           />

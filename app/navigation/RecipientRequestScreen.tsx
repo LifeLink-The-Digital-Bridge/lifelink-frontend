@@ -14,11 +14,20 @@ import { useAuth } from "../../utils/auth-context";
 import { useTheme } from "../../utils/theme-context";
 import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
 import { createUnifiedStyles } from "../../constants/styles/unifiedStyles";
-import { createReceiveRequest, RequestType, BloodType, OrganType, TissueType, StemCellType, UrgencyLevel } from "../api/recipientApi";
+import {
+  createReceiveRequest,
+  RequestType,
+  BloodType,
+  OrganType,
+  TissueType,
+  StemCellType,
+  UrgencyLevel,
+} from "../api/recipientApi";
 import AppLayout from "../../components/AppLayout";
 import { ValidationAlert } from "../../components/common/ValidationAlert";
 import { RequestTypeSelector } from "../../components/request/RequestTypeSelector";
 import { RequestDetailsForm } from "../../components/request/RequestDetailsForm";
+import { LocationSelector } from "@/components/request/LocationSelector";
 
 const RecipientRequestScreen = () => {
   const { colorScheme } = useTheme();
@@ -31,23 +40,33 @@ const RecipientRequestScreen = () => {
   const [roleLoading, setRoleLoading] = useState(true);
   const [recipientId, setRecipientId] = useState("");
   const [locationId, setLocationId] = useState("");
-  
-  const [requestType, setRequestType] = useState<RequestType>('BLOOD');
-  const [requestedBloodType, setRequestedBloodType] = useState<BloodType | ''>('');
-  const [requestedOrgan, setRequestedOrgan] = useState<OrganType | ''>('');
-  const [requestedTissue, setRequestedTissue] = useState<TissueType | ''>('');
-  const [requestedStemCellType, setRequestedStemCellType] = useState<StemCellType | ''>('');
-  const [urgencyLevel, setUrgencyLevel] = useState<UrgencyLevel>('HIGH');
-  const [quantity, setQuantity] = useState('');
-  const [requestDate, setRequestDate] = useState('');
-  const [notes, setNotes] = useState('');
+
+  const [requestType, setRequestType] = useState<RequestType>("BLOOD");
+  const [requestedBloodType, setRequestedBloodType] = useState<BloodType | "">(
+    ""
+  );
+  const [requestedOrgan, setRequestedOrgan] = useState<OrganType | "">("");
+  const [requestedTissue, setRequestedTissue] = useState<TissueType | "">("");
+  const [requestedStemCellType, setRequestedStemCellType] = useState<
+    StemCellType | ""
+  >("");
+  const [urgencyLevel, setUrgencyLevel] = useState<UrgencyLevel>("HIGH");
+  const [quantity, setQuantity] = useState("");
+  const [requestDate, setRequestDate] = useState("");
+  const [notes, setNotes] = useState("");
 
   const [alertVisible, setAlertVisible] = useState(false);
-  const [alertTitle, setAlertTitle] = useState('');
-  const [alertMessage, setAlertMessage] = useState('');
-  const [alertType, setAlertType] = useState<'success' | 'error' | 'warning' | 'info'>('info');
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertType, setAlertType] = useState<
+    "success" | "error" | "warning" | "info"
+  >("info");
 
-  const showAlert = (title: string, message: string, type: 'success' | 'error' | 'warning' | 'info' = 'info') => {
+  const showAlert = (
+    title: string,
+    message: string,
+    type: "success" | "error" | "warning" | "info" = "info"
+  ) => {
     setAlertTitle(title);
     setAlertMessage(message);
     setAlertType(type);
@@ -73,15 +92,21 @@ const RecipientRequestScreen = () => {
         }
 
         if (!roles.includes("RECIPIENT")) {
-          showAlert("Not a Recipient", "You must register as a recipient before making a request.", "warning");
+          showAlert(
+            "Not a Recipient",
+            "You must register as a recipient before making a request.",
+            "warning"
+          );
           router.replace("/navigation/RecipientScreen");
           return;
         }
-        
+
         const id = await SecureStore.getItemAsync("recipientId");
         if (id) setRecipientId(id);
-        
-        const recipientDataStr = await SecureStore.getItemAsync("recipientData");
+
+        const recipientDataStr = await SecureStore.getItemAsync(
+          "recipientData"
+        );
         if (recipientDataStr) {
           try {
             const recipientData = JSON.parse(recipientDataStr);
@@ -93,7 +118,11 @@ const RecipientRequestScreen = () => {
           }
         }
       } catch (error: any) {
-        showAlert("Role Error", error.message || "Failed to check recipient role", "error");
+        showAlert(
+          "Role Error",
+          error.message || "Failed to check recipient role",
+          "error"
+        );
         router.replace("../(auth)/loginScreen");
         return;
       } finally {
@@ -110,15 +139,15 @@ const RecipientRequestScreen = () => {
 
   const isFormValid = () => {
     if (!recipientId || !locationId || !quantity || !requestDate) return false;
-    
+
     switch (requestType) {
-      case 'BLOOD':
+      case "BLOOD":
         return !!requestedBloodType;
-      case 'ORGAN':
+      case "ORGAN":
         return !!requestedOrgan;
-      case 'TISSUE':
+      case "TISSUE":
         return !!requestedTissue;
-      case 'STEM_CELL':
+      case "STEM_CELL":
         return !!requestedStemCellType;
       default:
         return false;
@@ -127,10 +156,14 @@ const RecipientRequestScreen = () => {
 
   const handleSubmit = async () => {
     if (!isFormValid()) {
-      showAlert("Validation Error", "Please fill in all required fields.", "warning");
+      showAlert(
+        "Validation Error",
+        "Please fill in all required fields.",
+        "warning"
+      );
       return;
     }
-    
+
     setLoading(true);
     try {
       const payload: any = {
@@ -144,23 +177,23 @@ const RecipientRequestScreen = () => {
       };
 
       switch (requestType) {
-        case 'BLOOD':
+        case "BLOOD":
           payload.requestedBloodType = requestedBloodType;
           break;
-        case 'ORGAN':
+        case "ORGAN":
           payload.requestedOrgan = requestedOrgan;
           break;
-        case 'TISSUE':
+        case "TISSUE":
           payload.requestedTissue = requestedTissue;
           break;
-        case 'STEM_CELL':
+        case "STEM_CELL":
           payload.requestedStemCellType = requestedStemCellType;
           break;
       }
 
       await createReceiveRequest(payload);
       showAlert("Success", "Request created successfully!", "success");
-      
+
       setTimeout(() => {
         router.back();
       }, 2000);
@@ -181,7 +214,7 @@ const RecipientRequestScreen = () => {
   }
 
   return (
-    <AppLayout hideHeader>
+    <AppLayout>
       <View style={styles.container}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.headerContainer}>
@@ -211,6 +244,11 @@ const RecipientRequestScreen = () => {
           <RequestTypeSelector
             requestType={requestType}
             setRequestType={setRequestType}
+          />
+          <LocationSelector
+            selectedLocationId={locationId}
+            onLocationSelect={setLocationId}
+            recipientId={recipientId}
           />
 
           <RequestDetailsForm

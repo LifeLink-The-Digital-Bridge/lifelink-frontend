@@ -101,7 +101,8 @@ export function useDonorFormState() {
   const [testingMethod, setTestingMethod] = useState<string>("NGS_SEQUENCING");
   const [laboratoryName, setLaboratoryName] = useState<string>("");
   const [certificationNumber, setCertificationNumber] = useState<string>("");
-
+  const [addressId, setAddressId] = useState<string | null>(null);
+  
   useEffect(() => {
     const loadDonorData = async () => {
       try {
@@ -181,6 +182,7 @@ export function useDonorFormState() {
           }
           if (donor.addresses?.length > 0) {
             const address = donor.addresses[0];
+            setAddressId(address.id);
             setAddressLine(address.addressLine || "");
             setLandmark(address.landmark || "");
             setArea(address.area || "");
@@ -379,6 +381,8 @@ export function useDonorFormState() {
     isConsented,
     setIsConsented,
 
+    addressId,
+    setAddressId,
     addressLine,
     setAddressLine,
     landmark,
@@ -400,7 +404,7 @@ export function useDonorFormState() {
 
     gender,
     userId,
-hlaA1,
+    hlaA1,
     setHlaA1,
     hlaA2,
     setHlaA2,

@@ -14,7 +14,14 @@ import * as SecureStore from "expo-secure-store";
 import { useTheme } from "../../utils/theme-context";
 import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
 import { createUnifiedStyles } from "../../constants/styles/unifiedStyles";
-import { registerDonation, DonationType, BloodType, OrganType, TissueType, StemCellType } from "../api/donationApi";
+import {
+  registerDonation,
+  DonationType,
+  BloodType,
+  OrganType,
+  TissueType,
+  StemCellType,
+} from "../api/donationApi";
 
 import { ValidationAlert } from "../../components/common/ValidationAlert";
 import { DonationTypeSelector } from "../../components/donation/DonationTypeSelector";
@@ -23,6 +30,7 @@ import { OrganDetailsForm } from "../../components/donation/OrganDetailsForm";
 import { TissueDetailsForm } from "../../components/donation/TissueDetailsForm";
 import { StemCellDetailsForm } from "../../components/donation/StemCellDetailsForm";
 import AppLayout from "@/components/AppLayout";
+import { LocationSelector } from "@/components/donation/LocationSelector";
 
 const DonationScreen = () => {
   const { colorScheme } = useTheme();
@@ -52,18 +60,24 @@ const DonationScreen = () => {
   const [hasAbnormalities, setHasAbnormalities] = useState(false);
   const [abnormalityDescription, setAbnormalityDescription] = useState("");
 
-  const [tissueType, setTissueType] = useState<TissueType | "">("" as TissueType);
-  const [stemCellType, setStemCellType] = useState<StemCellType | "">("" as StemCellType);
+  const [tissueType, setTissueType] = useState<TissueType | "">(
+    "" as TissueType
+  );
+  const [stemCellType, setStemCellType] = useState<StemCellType | "">(
+    "" as StemCellType
+  );
 
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
-  const [alertType, setAlertType] = useState<'success' | 'error' | 'warning' | 'info'>('info');
+  const [alertType, setAlertType] = useState<
+    "success" | "error" | "warning" | "info"
+  >("info");
 
   const showAlert = (
     title: string,
     message: string,
-    type: 'success' | 'error' | 'warning' | 'info' = 'info'
+    type: "success" | "error" | "warning" | "info" = "info"
   ) => {
     setAlertTitle(title);
     setAlertMessage(message);
@@ -95,18 +109,6 @@ const DonationScreen = () => {
     const fetchData = async () => {
       const id = await SecureStore.getItemAsync("donorId");
       if (id) setDonorId(id);
-
-      const donorDataStr = await SecureStore.getItemAsync("donorData");
-      if (donorDataStr) {
-        try {
-          const donorData = JSON.parse(donorDataStr);
-          if (donorData?.addresses?.[0]?.id) {
-            setLocationId(donorData.addresses[0].id);
-          }
-        } catch (e) {
-          console.error("Error parsing donor data:", e);
-        }
-      }
     };
     fetchData();
   }, []);
@@ -214,7 +216,7 @@ const DonationScreen = () => {
   };
 
   return (
-    <AppLayout hideHeader>
+    <AppLayout>
       <View style={styles.container}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.headerContainer}>
@@ -241,14 +243,16 @@ const DonationScreen = () => {
             </View>
           </View>
 
-
-
           <DonationTypeSelector
             donationType={donationType}
             setDonationType={setDonationType}
             onTypeChange={handleTypeChange}
           />
-
+          <LocationSelector
+            selectedLocationId={locationId}
+            onLocationSelect={setLocationId}
+            donorId={donorId}
+          />
           <BloodTypeSelector
             bloodType={bloodType}
             setBloodType={setBloodType}

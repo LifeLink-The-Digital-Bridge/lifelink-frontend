@@ -1,15 +1,15 @@
 import React from "react";
 import { View, Text, TextInput } from "react-native";
-import { Picker } from "@react-native-picker/picker";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../utils/theme-context";
 import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
 import { createDonationStyles } from "../../constants/styles/donationStyles";
 import { CustomPicker } from "../common/CustomPicker";
+import { StemCellType } from '../../app/api/donationApi';
 
 interface StemCellDetailsFormProps {
-  stemCellType: string;
-  setStemCellType: (value: string) => void;
+  stemCellType: StemCellType | "";
+  setStemCellType: (value: StemCellType | "") => void;
   quantity: string;
   setQuantity: (value: string) => void;
 }
@@ -43,7 +43,7 @@ export function StemCellDetailsForm({
         <View style={styles.pickerContainer}>
           <CustomPicker
             selectedValue={stemCellType}
-            onValueChange={setStemCellType}
+            onValueChange={(value: string) => setStemCellType(value as StemCellType | "")}
             items={STEM_CELL_TYPES}
             placeholder="Select Stem Cell Type"
           />

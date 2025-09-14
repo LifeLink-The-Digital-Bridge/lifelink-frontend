@@ -13,12 +13,13 @@ import {
   fetchUserById,
   donorConfirmMatch,
   recipientConfirmMatch,
-  fetchDonationById,
-  fetchRequestById,
-  fetchDonationStatus,
-  fetchRequestStatus,
+  fetchDonationByIdWithAccess,
+  fetchRequestByIdWithAccess,
   getDonorByUserId,
   getRecipientByUserId,
+  fetchMatchHistory,
+  fetchDonorHistoryByUser,
+  fetchRecipientHistoryByUser,
 } from '../api/matchingApi';
 
 interface MatchDetails {
@@ -63,22 +64,22 @@ const MatchDetailsScreen = () => {
   const [loading, setLoading] = useState(true);
   const [confirmingMatch, setConfirmingMatch] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [userRoles, setUserRoles] = useState<string[]>([]);
 
-  // User profiles
   const [donorProfile, setDonorProfile] = useState<UserProfile | null>(null);
   const [recipientProfile, setRecipientProfile] = useState<UserProfile | null>(null);
 
-  // Medical data
   const [donorData, setDonorData] = useState<any>(null);
   const [recipientData, setRecipientData] = useState<any>(null);
 
-  // Donation/Request details
-  const [donationDetails, setDonationDetails] = useState<any>(null);
-  const [requestDetails, setRequestDetails] = useState<any>(null);
-  const [donationStatus, setDonationStatus] = useState<string>('');
-  const [requestStatus, setRequestStatus] = useState<string>('');
+  const [donorHistoryData, setDonorHistoryData] = useState<any>(null);
+  const [recipientHistoryData, setRecipientHistoryData] = useState<any>(null);
+  const [matchHistory, setMatchHistory] = useState<any>(null);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
-  // Alert state
+  const [yourDetails, setYourDetails] = useState<any>(null);
+  const [loadingYourDetails, setLoadingYourDetails] = useState(false);
+
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertTitle, setAlertTitle] = useState('');
   const [alertMessage, setAlertMessage] = useState('');
@@ -89,6 +90,63 @@ const MatchDetailsScreen = () => {
     setAlertMessage(message);
     setAlertType(type);
     setAlertVisible(true);
+  };
+
+  const getUserRoleInMatch = (): 'donor' | 'recipient' | 'unknown' => {
+    if (!match || !currentUserId) return 'unknown';
+    if (currentUserId === match.donorUserId) return 'donor';
+    if (currentUserId === match.recipientUserId) return 'recipient';
+    return 'unknown';
+  };
+
+  const loadUserRoles = async () => {
+    try {
+      const rolesString = await SecureStore.getItemAsync('roles');
+      const roles = rolesString ? JSON.parse(rolesString) : [];
+      setUserRoles(roles);
+    } catch (error) {
+      console.log('Could not load user roles:', error);
+    }
+  };
+
+  const loadMatchHistory = async (matchId: string) => {
+    if (!match?.isConfirmed) return;
+    
+    setLoadingHistory(true);
+    try {
+      const history = await fetchMatchHistory(matchId);
+      setMatchHistory(history);
+      console.log('✅ Match history loaded:', history);
+      
+      if (history.donorHistory && history.donorHistory.length > 0) {
+        setDonorHistoryData(history.donorHistory[0]);
+      }
+      
+      if (history.recipientHistory && history.recipientHistory.length > 0) {
+        setRecipientHistoryData(history.recipientHistory[0]); 
+      }
+    } catch (error: any) {
+      console.log('Could not fetch match history:', error.message);
+      
+      try {
+        const userRole = getUserRoleInMatch();
+        if (userRole === 'donor') {
+          const recipientHistory = await fetchRecipientHistoryByUser(match!.recipientUserId);
+          if (recipientHistory.length > 0) {
+            setRecipientHistoryData(recipientHistory[0]);
+          }
+        } else if (userRole === 'recipient') {
+          const donorHistory = await fetchDonorHistoryByUser(match!.donorUserId);
+          if (donorHistory.length > 0) {
+            setDonorHistoryData(donorHistory[0]);
+          }
+        }
+      } catch (fallbackError) {
+        console.log('Fallback history fetch also failed:', fallbackError);
+      }
+    } finally {
+      setLoadingHistory(false);
+    }
   };
 
   useEffect(() => {
@@ -103,7 +161,8 @@ const MatchDetailsScreen = () => {
         const userId = await SecureStore.getItemAsync('userId');
         setCurrentUserId(userId);
 
-        // Load user profiles
+        await loadUserRoles();
+
         const [donorProfile, recipientProfile] = await Promise.all([
           fetchUserById(parsedMatch.donorUserId),
           fetchUserById(parsedMatch.recipientUserId)
@@ -111,33 +170,25 @@ const MatchDetailsScreen = () => {
         setDonorProfile(donorProfile);
         setRecipientProfile(recipientProfile);
 
-        // Load medical data
-        try {
-          const [donorDetails, recipientDetails] = await Promise.all([
-            getDonorByUserId(parsedMatch.donorUserId),
-            getRecipientByUserId(parsedMatch.recipientUserId)
-          ]);
-          setDonorData(donorDetails);
-          setRecipientData(recipientDetails);
-        } catch (error) {
-          console.log('Could not fetch donor/recipient details:', error);
+        if (parsedMatch.isConfirmed) {
+          console.log('✅ Match is confirmed, loading history data...');
+          await loadMatchHistory(parsedMatch.matchResultId);
+        } else {
+          console.log('⏳ Match not confirmed, loading current data...');
+          try {
+            const [donorDetails, recipientDetails] = await Promise.all([
+              getDonorByUserId(parsedMatch.donorUserId),
+              getRecipientByUserId(parsedMatch.recipientUserId)
+            ]);
+            setDonorData(donorDetails);
+            setRecipientData(recipientDetails);
+          } catch (error) {
+            console.log('Could not fetch current donor/recipient details:', error);
+          }
         }
 
-        // Load donation/request details and status
-        try {
-          const [donationData, requestData, donationStat, requestStat] = await Promise.all([
-            fetchDonationById(parsedMatch.donationId),
-            fetchRequestById(parsedMatch.receiveRequestId),
-            fetchDonationStatus(parsedMatch.donationId),
-            fetchRequestStatus(parsedMatch.receiveRequestId)
-          ]);
-          setDonationDetails(donationData);
-          setRequestDetails(requestData);
-          setDonationStatus(donationStat);
-          setRequestStatus(requestStat);
-        } catch (error) {
-          console.log('Could not fetch donation/request details:', error);
-        }
+        await loadYourDetails(parsedMatch, userId);
+
       } catch (error: any) {
         showAlert('Error', error.message || 'Failed to load match details', 'error');
       } finally {
@@ -147,6 +198,32 @@ const MatchDetailsScreen = () => {
 
     loadMatchDetails();
   }, [matchData]);
+
+  useEffect(() => {
+    if (match?.isConfirmed && !matchHistory && !loadingHistory) {
+      loadMatchHistory(match.matchResultId);
+    }
+  }, [match?.isConfirmed]);
+
+  const loadYourDetails = async (match: MatchDetails, userId: string | null) => {
+    if (!userId) return;
+    
+    setLoadingYourDetails(true);
+    try {
+      if (match.donorUserId === userId) {
+        const requestDetails = await fetchRequestByIdWithAccess(match.receiveRequestId);
+        setYourDetails({ type: 'request', data: requestDetails });
+      } else if (match.recipientUserId === userId) {
+        const donationDetails = await fetchDonationByIdWithAccess(match.donationId);
+        setYourDetails({ type: 'donation', data: donationDetails });
+      }
+    } catch (error: any) {
+      console.log('Could not fetch your details:', error.message);
+      setYourDetails(null);
+    } finally {
+      setLoadingYourDetails(false);
+    }
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -163,9 +240,11 @@ const MatchDetailsScreen = () => {
     setConfirmingMatch(true);
     try {
       let result;
-      if (match.donorUserId === currentUserId) {
+      const userRole = getUserRoleInMatch();
+      
+      if (userRole === 'donor') {
         result = await donorConfirmMatch(match.matchResultId);
-      } else if (match.recipientUserId === currentUserId) {
+      } else if (userRole === 'recipient') {
         result = await recipientConfirmMatch(match.matchResultId);
       } else {
         throw new Error('You are not authorized to confirm this match');
@@ -174,7 +253,7 @@ const MatchDetailsScreen = () => {
       showAlert('Match Confirmed', result, 'success');
       
       const updatedMatch = { ...match };
-      if (match.donorUserId === currentUserId) {
+      if (userRole === 'donor') {
         updatedMatch.donorConfirmed = true;
         updatedMatch.donorConfirmedAt = new Date().toISOString();
       } else {
@@ -183,6 +262,12 @@ const MatchDetailsScreen = () => {
       }
       updatedMatch.isConfirmed = updatedMatch.donorConfirmed && updatedMatch.recipientConfirmed;
       setMatch(updatedMatch);
+
+      if (updatedMatch.isConfirmed) {
+        setTimeout(() => {
+          loadMatchHistory(match.matchResultId);
+        }, 2000);
+      }
     } catch (error: any) {
       showAlert('Confirmation Failed', error.message, 'error');
     } finally {
@@ -190,83 +275,52 @@ const MatchDetailsScreen = () => {
     }
   };
 
-  const getUserRoleInMatch = () => {
-    if (!match || !currentUserId) return 'unknown';
-    if (currentUserId === match.donorUserId) return 'donor';
-    if (currentUserId === match.recipientUserId) return 'recipient';
-    return 'unknown';
+  const getCurrentUserRole = (): string => {
+    const role = getUserRoleInMatch();
+    return role === 'donor' ? 'Donor' : role === 'recipient' ? 'Recipient' : 'Unknown';
   };
 
-  const getCurrentUserRole = () => {
-    if (!match || !currentUserId) return 'Unknown';
-    if (currentUserId === match.donorUserId) return 'Donor';
-    if (currentUserId === match.recipientUserId) return 'Recipient';
-    return 'Unknown';
-  };
-
-  const getCurrentUserStatus = () => {
+  const getCurrentUserStatus = (): boolean => {
     if (!match || !currentUserId) return false;
-    if (currentUserId === match.donorUserId) return match.donorConfirmed;
-    if (currentUserId === match.recipientUserId) return match.recipientConfirmed;
-    return false;
+    const role = getUserRoleInMatch();
+    return role === 'donor' ? match.donorConfirmed : match.recipientConfirmed;
   };
 
-  const getOtherPartyStatus = () => {
+  const getOtherPartyStatus = (): boolean => {
     if (!match || !currentUserId) return false;
-    if (currentUserId === match.donorUserId) return match.recipientConfirmed;
-    if (currentUserId === match.recipientUserId) return match.donorConfirmed;
-    return false;
+    const role = getUserRoleInMatch();
+    return role === 'donor' ? match.recipientConfirmed : match.donorConfirmed;
   };
 
-  const canConfirmMatch = () => {
+  const canConfirmMatch = (): boolean => {
     if (!match || !currentUserId) return false;
-    const isPending = donationStatus === 'PENDING' && requestStatus === 'PENDING';
-    const notConfirmed = !getCurrentUserStatus();
-    return isPending && notConfirmed;
+    const userConfirmed = getCurrentUserStatus();
+    const matchFullyConfirmed = match.isConfirmed;
+    
+    return !userConfirmed && !matchFullyConfirmed;
   };
 
-  const getConfirmationButtonText = () => {
-    if (!match || !currentUserId) return 'Confirm Match';
+  const getConfirmationButtonText = (): string => {
     return `Confirm as ${getCurrentUserRole()}`;
   };
 
   const getOtherPartyInfo = () => {
     if (!match || !currentUserId) return null;
     
-    if (currentUserId === match.donorUserId) {
+    const userRole = getUserRoleInMatch();
+    if (userRole === 'donor') {
       return {
         userId: match.recipientUserId,
         role: 'Recipient',
         profile: recipientProfile,
-        data: recipientData
+        data: match.isConfirmed ? recipientHistoryData : recipientData
       };
-    } else if (currentUserId === match.recipientUserId) {
+    } else if (userRole === 'recipient') {
       return {
         userId: match.donorUserId,
         role: 'Donor',
         profile: donorProfile,
-        data: donorData
-      };
-    }
-    return null;
-  };
-
-  const getCurrentUserInfo = () => {
-    if (!match || !currentUserId) return null;
-    
-    if (currentUserId === match.donorUserId) {
-      return {
-        userId: match.donorUserId,
-        role: 'Donor',
-        profile: donorProfile,
-        data: donorData
-      };
-    } else if (currentUserId === match.recipientUserId) {
-      return {
-        userId: match.recipientUserId,
-        role: 'Recipient',
-        profile: recipientProfile,
-        data: recipientData
+        data: match.isConfirmed ? donorHistoryData : donorData
       };
     }
     return null;
@@ -282,22 +336,308 @@ const MatchDetailsScreen = () => {
         userName,
         profileType,
         fromMatch: 'true',
-        donationStatus,
-        requestStatus,
         matchId: match?.matchResultId
       }
     });
   };
 
-  const renderUserProfile = (user: UserProfile, title: string, iconName: string, isCurrentUser = false) => (
-    <View style={styles.sectionContainer}>
+  const renderMatchHistory = () => {
+    if (!match?.isConfirmed) {
+      return (
+        <View style={[styles.sectionContainer, { paddingHorizontal: 24 }]}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionIconContainer}>
+              <Feather name="clock" size={18} color={theme.primary} />
+            </View>
+            <Text style={styles.sectionTitle}>Match History</Text>
+          </View>
+          <Text style={styles.valueText}>
+            History will be available after both parties confirm the match.
+          </Text>
+        </View>
+      );
+    }
+
+    if (loadingHistory) {
+      return (
+        <View style={[styles.sectionContainer, { paddingHorizontal: 24 }]}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionIconContainer}>
+              <Feather name="clock" size={18} color={theme.primary} />
+            </View>
+            <Text style={styles.sectionTitle}>Loading Match History...</Text>
+          </View>
+          <ActivityIndicator size="small" color={theme.primary} />
+        </View>
+      );
+    }
+
+    if (!matchHistory && !donorHistoryData && !recipientHistoryData) {
+      return (
+        <View style={[styles.sectionContainer, { paddingHorizontal: 24 }]}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionIconContainer}>
+              <Feather name="history" size={18} color={theme.primary} />
+            </View>
+            <Text style={styles.sectionTitle}>Match History</Text>
+          </View>
+          <Text style={styles.valueText}>No history available for this match.</Text>
+        </View>
+      );
+    }
+
+    return (
+      <View style={[styles.sectionContainer, { paddingHorizontal: 24 }]}>
+        <View style={styles.sectionHeader}>
+          <View style={styles.sectionIconContainer}>
+            <Feather name="history" size={18} color={theme.primary} />
+          </View>
+          <Text style={styles.sectionTitle}>Match History</Text>
+        </View>
+        
+        <View style={styles.infoRow}>
+          <Text style={[styles.labelText, { fontWeight: 'bold' }]}>Match Completed:</Text>
+          <Text style={[styles.valueText, { color: theme.success }]}>
+            ✓ {match.confirmedAt ? formatDate(match.confirmedAt) : 'Recently'}
+          </Text>
+        </View>
+
+        {donorHistoryData && (
+          <View style={{ marginTop: 16 }}>
+            <Text style={[styles.labelText, { fontWeight: 'bold', marginBottom: 8 }]}>Donor History:</Text>
+            <View style={{ marginLeft: 12 }}>
+              {donorHistoryData.donationSnapshot && (
+                <>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.labelText}>Donation Type:</Text>
+                    <Text style={styles.valueText}>{donorHistoryData.donationSnapshot.donationType || 'N/A'}</Text>
+                  </View>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.labelText}>Blood Type:</Text>
+                    <Text style={styles.valueText}>{donorHistoryData.donationSnapshot.bloodType || 'N/A'}</Text>
+                  </View>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.labelText}>Quantity:</Text>
+                    <Text style={styles.valueText}>{donorHistoryData.donationSnapshot.quantity || 'N/A'} units</Text>
+                  </View>
+                </>
+              )}
+              {donorHistoryData.medicalDetailsSnapshot && (
+                <>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.labelText}>Hemoglobin Level:</Text>
+                    <Text style={styles.valueText}>{donorHistoryData.medicalDetailsSnapshot.hemoglobinLevel || 'N/A'}</Text>
+                  </View>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.labelText}>Overall Health:</Text>
+                    <Text style={styles.valueText}>{donorHistoryData.medicalDetailsSnapshot.overallHealthStatus || 'N/A'}</Text>
+                  </View>
+                </>
+              )}
+            </View>
+          </View>
+        )}
+
+        {recipientHistoryData && (
+          <View style={{ marginTop: 16 }}>
+            <Text style={[styles.labelText, { fontWeight: 'bold', marginBottom: 8 }]}>Recipient History:</Text>
+            <View style={{ marginLeft: 12 }}>
+              {recipientHistoryData.receiveRequestSnapshot && (
+                <>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.labelText}>Request Type:</Text>
+                    <Text style={styles.valueText}>{recipientHistoryData.receiveRequestSnapshot.requestType || 'N/A'}</Text>
+                  </View>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.labelText}>Blood Type Needed:</Text>
+                    <Text style={styles.valueText}>{recipientHistoryData.receiveRequestSnapshot.requestedBloodType || 'N/A'}</Text>
+                  </View>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.labelText}>Urgency Level:</Text>
+                    <Text style={[styles.valueText, { 
+                      color: recipientHistoryData.receiveRequestSnapshot.urgencyLevel === 'CRITICAL' ? theme.error : 
+                             recipientHistoryData.receiveRequestSnapshot.urgencyLevel === 'HIGH' ? '#FF6B35' : 
+                             recipientHistoryData.receiveRequestSnapshot.urgencyLevel === 'MEDIUM' ? '#FFA500' : theme.success 
+                    }]}>
+                      {recipientHistoryData.receiveRequestSnapshot.urgencyLevel || 'N/A'}
+                    </Text>
+                  </View>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.labelText}>Quantity Needed:</Text>
+                    <Text style={styles.valueText}>{recipientHistoryData.receiveRequestSnapshot.quantity || 'N/A'} units</Text>
+                  </View>
+                </>
+              )}
+              {recipientHistoryData.medicalDetailsSnapshot && (
+                <>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.labelText}>Diagnosis:</Text>
+                    <Text style={styles.valueText}>{recipientHistoryData.medicalDetailsSnapshot.diagnosis || 'N/A'}</Text>
+                  </View>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.labelText}>Overall Health:</Text>
+                    <Text style={styles.valueText}>{recipientHistoryData.medicalDetailsSnapshot.overallHealthStatus || 'N/A'}</Text>
+                  </View>
+                </>
+              )}
+            </View>
+          </View>
+        )}
+      </View>
+    );
+  };
+
+  const renderYourDetails = () => {
+    if (loadingYourDetails) {
+      return (
+        <View style={[styles.sectionContainer, { paddingHorizontal: 24 }]}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionIconContainer}>
+              <Feather name="clock" size={18} color={theme.primary} />
+            </View>
+            <Text style={styles.sectionTitle}>Loading Your Details...</Text>
+          </View>
+          <Text style={styles.loadingText}>Please wait...</Text>
+        </View>
+      );
+    }
+
+    const userRole = getUserRoleInMatch();
+    const title = userRole === 'donor' ? 'Your Match Details (Request)' : 'Your Match Details (Donation)';
+    const icon = userRole === 'donor' ? 'clipboard' : 'droplet';
+
+    if (!yourDetails?.data) {
+      return (
+        <View style={[styles.sectionContainer, { paddingHorizontal: 24 }]}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionIconContainer}>
+              <Feather name={icon as any} size={18} color={theme.primary} />
+            </View>
+            <Text style={styles.sectionTitle}>{title}</Text>
+          </View>
+          <View style={styles.infoRow}>
+            <Text style={styles.valueText}>
+              {userRole === 'donor' 
+                ? 'Request details not available or access denied' 
+                : 'Donation details not available or access denied'
+              }
+            </Text>
+          </View>
+        </View>
+      );
+    }
+
+    const data = yourDetails.data;
+
+    return (
+      <View style={[styles.sectionContainer, { paddingHorizontal: 24 }]}>
+        <View style={styles.sectionHeader}>
+          <View style={styles.sectionIconContainer}>
+            <Feather name={icon as any} size={18} color={theme.primary} />
+          </View>
+          <Text style={styles.sectionTitle}>{title}</Text>
+        </View>
+
+        {userRole === 'donor' ? (
+          <>
+            <View style={styles.infoRow}>
+              <Text style={styles.labelText}>Request Type:</Text>
+              <Text style={styles.valueText}>{data.requestType || 'N/A'}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.labelText}>Blood Type Needed:</Text>
+              <Text style={styles.valueText}>{data.requestedBloodType || 'N/A'}</Text>
+            </View>
+            {data.requestedOrgan && (
+              <View style={styles.infoRow}>
+                <Text style={styles.labelText}>Organ Needed:</Text>
+                <Text style={styles.valueText}>{data.requestedOrgan}</Text>
+              </View>
+            )}
+            <View style={styles.infoRow}>
+              <Text style={styles.labelText}>Urgency Level:</Text>
+              <Text style={[styles.valueText, { 
+                color: data.urgencyLevel === 'CRITICAL' ? theme.error : 
+                       data.urgencyLevel === 'HIGH' ? '#FF6B35' : 
+                       data.urgencyLevel === 'MEDIUM' ? '#FFA500' : theme.success 
+              }]}>
+                {data.urgencyLevel || 'N/A'}
+              </Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.labelText}>Quantity Needed:</Text>
+              <Text style={styles.valueText}>{data.quantity || 'N/A'}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.labelText}>Status:</Text>
+              <Text style={[styles.valueText, { 
+                color: data.status === 'FULFILLED' ? theme.success : 
+                       data.status === 'PENDING' ? theme.error : theme.text 
+              }]}>
+                {data.status || 'N/A'}
+              </Text>
+            </View>
+            {data.notes && (
+              <View style={styles.infoRow}>
+                <Text style={styles.labelText}>Notes:</Text>
+                <Text style={styles.valueText}>{data.notes}</Text>
+              </View>
+            )}
+            <View style={[styles.infoRow, styles.lastInfoRow]}>
+              <Text style={styles.labelText}>Request Date:</Text>
+              <Text style={styles.valueText}>
+                {data.requestDate ? new Date(data.requestDate).toLocaleDateString() : 'N/A'}
+              </Text>
+            </View>
+          </>
+        ) : (
+          <>
+            <View style={styles.infoRow}>
+              <Text style={styles.labelText}>Donation Type:</Text>
+              <Text style={styles.valueText}>{data.donationType || 'N/A'}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.labelText}>Blood Type:</Text>
+              <Text style={styles.valueText}>{data.bloodType || 'N/A'}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.labelText}>Quantity:</Text>
+              <Text style={styles.valueText}>{data.quantity || 'N/A'}</Text>
+            </View>
+            <View style={styles.infoRow}>
+              <Text style={styles.labelText}>Status:</Text>
+              <Text style={[styles.valueText, { 
+                color: data.status === 'COMPLETED' ? theme.success : 
+                       data.status === 'PENDING' ? theme.error : theme.text 
+              }]}>
+                {data.status || 'N/A'}
+              </Text>
+            </View>
+            {data.notes && (
+              <View style={styles.infoRow}>
+                <Text style={styles.labelText}>Notes:</Text>
+                <Text style={styles.valueText}>{data.notes}</Text>
+              </View>
+            )}
+            <View style={[styles.infoRow, styles.lastInfoRow]}>
+              <Text style={styles.labelText}>Donation Date:</Text>
+              <Text style={styles.valueText}>
+                {data.donationDate ? new Date(data.donationDate).toLocaleDateString() : 'N/A'}
+              </Text>
+            </View>
+          </>
+        )}
+      </View>
+    );
+  };
+
+  const renderUserProfile = (user: UserProfile, title: string, iconName: string) => (
+    <View style={[styles.sectionContainer, { paddingHorizontal: 24 }]}>
       <View style={styles.sectionHeader}>
         <View style={styles.sectionIconContainer}>
           <Feather name={iconName as any} size={18} color={theme.primary} />
         </View>
-        <Text style={styles.sectionTitle}>
-          {isCurrentUser ? `Your Profile (${title})` : `${title} Profile`}
-        </Text>
+        <Text style={styles.sectionTitle}>{title} Profile</Text>
       </View>
       <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
         {user.profileImageUrl ? (
@@ -319,20 +659,16 @@ const MatchDetailsScreen = () => {
           </View>
         )}
         <View style={{ flex: 1 }}>
-          <Text style={[styles.headerTitle, { fontSize: 18 }]}>
-            {isCurrentUser ? `${user.name} (You)` : user.name}
-          </Text>
+          <Text style={[styles.headerTitle, { fontSize: 18 }]}>{user.name}</Text>
           <Text style={styles.headerSubtitle}>@{user.username}</Text>
         </View>
-        {!isCurrentUser && (
-          <TouchableOpacity
-            style={[styles.locationButton, { paddingHorizontal: 12, paddingVertical: 8 }]}
-            onPress={() => viewUserProfile(user.id, user.name)}
-          >
-            <Feather name="eye" size={14} color="#fff" />
-            <Text style={[styles.locationButtonText, { fontSize: 12, marginLeft: 4 }]}>View</Text>
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity
+          style={[styles.locationButton, { paddingHorizontal: 12, paddingVertical: 8 }]}
+          onPress={() => viewUserProfile(user.id, user.name)}
+        >
+          <Feather name="eye" size={14} color="#fff" />
+          <Text style={[styles.locationButtonText, { fontSize: 12, marginLeft: 4 }]}>View</Text>
+        </TouchableOpacity>
       </View>
       <View style={styles.infoRow}>
         <Text style={styles.labelText}>Email:</Text>
@@ -353,103 +689,109 @@ const MatchDetailsScreen = () => {
     </View>
   );
 
-  const renderDonorDetails = (donor: any, isCurrentUser = false) => (
-    <View style={styles.sectionContainer}>
-      <View style={styles.sectionHeader}>
-        <View style={styles.sectionIconContainer}>
-          <Feather name="heart" size={18} color={theme.primary} />
+  const renderOtherPartyMedicalDetails = () => {
+    const otherPartyInfo = getOtherPartyInfo();
+    if (!otherPartyInfo?.data) return null;
+
+    const isDonor = otherPartyInfo.role === 'Donor';
+    
+    const isHistoricalData = match?.isConfirmed && (donorHistoryData || recipientHistoryData);
+    const dataSource = isHistoricalData ? 'Historical' : 'Current';
+    
+    return (
+      <View style={[styles.sectionContainer, { paddingHorizontal: 24 }]}>
+        <View style={styles.sectionHeader}>
+          <View style={styles.sectionIconContainer}>
+            <Feather name={isDonor ? "heart" : "user"} size={18} color={theme.primary} />
+          </View>
+          <Text style={styles.sectionTitle}>
+            {otherPartyInfo.role} Medical Details {isHistoricalData && '(Historical)'}
+          </Text>
         </View>
-        <Text style={styles.sectionTitle}>
-          {isCurrentUser ? 'Your Donor Details' : 'Donor Details'}
-        </Text>
+        
+        {/* Handle historical data structure vs current data structure */}
+        {(() => {
+          let medicalDetails;
+          let eligibilityCriteria;
+          
+          if (isHistoricalData && otherPartyInfo.data.medicalDetailsSnapshot) {
+            medicalDetails = otherPartyInfo.data.medicalDetailsSnapshot;
+            eligibilityCriteria = otherPartyInfo.data.eligibilityCriteriaSnapshot;
+          } else {
+            medicalDetails = otherPartyInfo.data.medicalDetails;
+            eligibilityCriteria = otherPartyInfo.data.eligibilityCriteria;
+          }
+          
+          return (
+            <>
+              {medicalDetails && (
+                <>
+                  {isDonor ? (
+                    <>
+                      <View style={styles.infoRow}>
+                        <Text style={styles.labelText}>Blood Pressure:</Text>
+                        <Text style={styles.valueText}>{medicalDetails.bloodPressure || 'N/A'}</Text>
+                      </View>
+                      <View style={styles.infoRow}>
+                        <Text style={styles.labelText}>Hemoglobin Level:</Text>
+                        <Text style={styles.valueText}>{medicalDetails.hemoglobinLevel || 'N/A'}</Text>
+                      </View>
+                      <View style={styles.infoRow}>
+                        <Text style={styles.labelText}>Overall Health:</Text>
+                        <Text style={styles.valueText}>{medicalDetails.overallHealthStatus || 'N/A'}</Text>
+                      </View>
+                    </>
+                  ) : (
+                    <>
+                      <View style={styles.infoRow}>
+                        <Text style={styles.labelText}>Diagnosis:</Text>
+                        <Text style={styles.valueText}>{medicalDetails.diagnosis || 'N/A'}</Text>
+                      </View>
+                      <View style={styles.infoRow}>
+                        <Text style={styles.labelText}>Overall Health:</Text>
+                        <Text style={styles.valueText}>{medicalDetails.overallHealthStatus || 'N/A'}</Text>
+                      </View>
+                      <View style={styles.infoRow}>
+                        <Text style={styles.labelText}>Hemoglobin Level:</Text>
+                        <Text style={styles.valueText}>{medicalDetails.hemoglobinLevel || 'N/A'}</Text>
+                      </View>
+                    </>
+                  )}
+                </>
+              )}
+
+              {eligibilityCriteria && (
+                <>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.labelText}>Age:</Text>
+                    <Text style={styles.valueText}>{eligibilityCriteria.age || 'N/A'}</Text>
+                  </View>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.labelText}>Weight:</Text>
+                    <Text style={styles.valueText}>
+                      {eligibilityCriteria.weight ? `${eligibilityCriteria.weight} kg` : 'N/A'}
+                    </Text>
+                  </View>
+                  <View style={[styles.infoRow, styles.lastInfoRow]}>
+                    <Text style={styles.labelText}>{isDonor ? 'Body Size' : 'Medical Eligibility'}:</Text>
+                    <Text style={[styles.valueText, { 
+                      color: isDonor ? theme.text : 
+                             (eligibilityCriteria.medicallyEligible ? theme.success : theme.error)
+                    }]}>
+                      {isDonor 
+                        ? (eligibilityCriteria.bodySize || 'N/A')
+                        : (eligibilityCriteria.medicallyEligible ? '✓ Eligible' : '⚠ Not Eligible')
+                      }
+                    </Text>
+                  </View>
+                </>
+              )}
+            </>
+          );
+        })()}
       </View>
-      
-      {donor?.medicalDetails && (
-        <>
-          <View style={styles.infoRow}>
-            <Text style={styles.labelText}>Blood Type:</Text>
-            <Text style={styles.valueText}>{donor.medicalDetails.bloodPressure || 'N/A'}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.labelText}>Hemoglobin Level:</Text>
-            <Text style={styles.valueText}>{donor.medicalDetails.hemoglobinLevel || 'N/A'}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.labelText}>Overall Health:</Text>
-            <Text style={styles.valueText}>{donor.medicalDetails.overallHealthStatus || 'N/A'}</Text>
-          </View>
-        </>
-      )}
-
-      {donor?.eligibilityCriteria && (
-        <>
-          <View style={styles.infoRow}>
-            <Text style={styles.labelText}>Age:</Text>
-            <Text style={styles.valueText}>{donor.eligibilityCriteria.age || 'N/A'}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.labelText}>Weight:</Text>
-            <Text style={styles.valueText}>{donor.eligibilityCriteria.weight ? `${donor.eligibilityCriteria.weight} kg` : 'N/A'}</Text>
-          </View>
-          <View style={[styles.infoRow, styles.lastInfoRow]}>
-            <Text style={styles.labelText}>Body Size:</Text>
-            <Text style={styles.valueText}>{donor.eligibilityCriteria.bodySize || 'N/A'}</Text>
-          </View>
-        </>
-      )}
-    </View>
-  );
-
-  const renderRecipientDetails = (recipient: any, isCurrentUser = false) => (
-    <View style={styles.sectionContainer}>
-      <View style={styles.sectionHeader}>
-        <View style={styles.sectionIconContainer}>
-          <Feather name="user" size={18} color={theme.primary} />
-        </View>
-        <Text style={styles.sectionTitle}>
-          {isCurrentUser ? 'Your Recipient Details' : 'Recipient Details'}
-        </Text>
-      </View>
-      
-      {recipient?.medicalDetails && (
-        <>
-          <View style={styles.infoRow}>
-            <Text style={styles.labelText}>Diagnosis:</Text>
-            <Text style={styles.valueText}>{recipient.medicalDetails.diagnosis || 'N/A'}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.labelText}>Overall Health:</Text>
-            <Text style={styles.valueText}>{recipient.medicalDetails.overallHealthStatus || 'N/A'}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.labelText}>Hemoglobin Level:</Text>
-            <Text style={styles.valueText}>{recipient.medicalDetails.hemoglobinLevel || 'N/A'}</Text>
-          </View>
-        </>
-      )}
-
-      {recipient?.eligibilityCriteria && (
-        <>
-          <View style={styles.infoRow}>
-            <Text style={styles.labelText}>Age:</Text>
-            <Text style={styles.valueText}>{recipient.eligibilityCriteria.age || 'N/A'}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Text style={styles.labelText}>Weight:</Text>
-            <Text style={styles.valueText}>{recipient.eligibilityCriteria.weight ? `${recipient.eligibilityCriteria.weight} kg` : 'N/A'}</Text>
-          </View>
-          <View style={[styles.infoRow, styles.lastInfoRow]}>
-            <Text style={styles.labelText}>Medical Eligibility:</Text>
-            <Text style={[styles.valueText, { 
-              color: recipient.eligibilityCriteria.medicallyEligible ? theme.success : theme.error 
-            }]}>
-              {recipient.eligibilityCriteria.medicallyEligible ? '✓ Eligible' : '⚠ Not Eligible'}
-            </Text>
-          </View>
-        </>
-      )}
-    </View>
-  );
+    );
+  };
 
   if (loading) {
     return (
@@ -476,13 +818,13 @@ const MatchDetailsScreen = () => {
     );
   }
 
-  const currentUserInfo = getCurrentUserInfo();
   const otherPartyInfo = getOtherPartyInfo();
 
   return (
     <AppLayout>
       <View style={styles.container}>
-        <View style={styles.headerContainer}>
+        {/* Header with padding */}
+        <View style={[styles.headerContainer, { paddingHorizontal: 24 }]}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <Feather name="arrow-left" size={20} color={theme.text} />
           </TouchableOpacity>
@@ -512,7 +854,7 @@ const MatchDetailsScreen = () => {
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           {/* Match Information */}
-          <View style={styles.sectionContainer}>
+          <View style={[styles.sectionContainer, { paddingHorizontal: 24 }]}>
             <View style={styles.sectionHeader}>
               <View style={styles.sectionIconContainer}>
                 <Feather name="activity" size={18} color={theme.primary} />
@@ -525,11 +867,15 @@ const MatchDetailsScreen = () => {
               <Text style={styles.valueText}>{getCurrentUserRole()}</Text>
             </View>
             <View style={styles.infoRow}>
+              <Text style={styles.labelText}>Match Type:</Text>
+              <Text style={styles.valueText}>{match.matchType || 'N/A'}</Text>
+            </View>
+            <View style={styles.infoRow}>
               <Text style={styles.labelText}>Type:</Text>
               <Text style={styles.valueText}>{match.donationType || match.requestType || 'N/A'}</Text>
             </View>
 
-            {match.distance && (
+            {match.distance !== undefined && (
               <View style={styles.infoRow}>
                 <Text style={styles.labelText}>Distance:</Text>
                 <Text style={styles.valueText}>{match.distance.toFixed(1)} km</Text>
@@ -573,118 +919,26 @@ const MatchDetailsScreen = () => {
             </View>
           </View>
 
-          {/* Current User Profile */}
-          {currentUserInfo?.profile && renderUserProfile(
-            currentUserInfo.profile, 
-            currentUserInfo.role, 
-            currentUserInfo.role === 'Donor' ? 'heart' : 'user',
-            true
-          )}
+          {/* Your Details Section */}
+          {renderYourDetails()}
 
           {/* Other Party Profile */}
           {otherPartyInfo?.profile && renderUserProfile(
             otherPartyInfo.profile, 
             otherPartyInfo.role, 
-            otherPartyInfo.role === 'Donor' ? 'heart' : 'user',
-            false
+            otherPartyInfo.role === 'Donor' ? 'heart' : 'user'
           )}
-
-          {/* Current User Medical Details */}
-          {currentUserInfo?.role === 'Donor' && currentUserInfo?.data && 
-            renderDonorDetails(currentUserInfo.data, true)}
-          
-          {currentUserInfo?.role === 'Recipient' && currentUserInfo?.data && 
-            renderRecipientDetails(currentUserInfo.data, true)}
 
           {/* Other Party Medical Details */}
-          {otherPartyInfo?.role === 'Donor' && otherPartyInfo?.data && 
-            renderDonorDetails(otherPartyInfo.data, false)}
-          
-          {otherPartyInfo?.role === 'Recipient' && otherPartyInfo?.data && 
-            renderRecipientDetails(otherPartyInfo.data, false)}
+          {renderOtherPartyMedicalDetails()}
 
-          {/* Donation Details */}
-          {donationDetails && (
-            <View style={styles.sectionContainer}>
-              <View style={styles.sectionHeader}>
-                <View style={styles.sectionIconContainer}>
-                  <Feather name="droplet" size={18} color={theme.primary} />
-                </View>
-                <Text style={styles.sectionTitle}>Donation Details</Text>
-              </View>
-
-              <View style={styles.infoRow}>
-                <Text style={styles.labelText}>Type:</Text>
-                <Text style={styles.valueText}>{String(donationDetails.donationType || 'N/A')}</Text>
-              </View>
-
-              <View style={styles.infoRow}>
-                <Text style={styles.labelText}>Blood Type:</Text>
-                <Text style={styles.valueText}>{String(donationDetails.bloodType || 'N/A')}</Text>
-              </View>
-
-              <View style={styles.infoRow}>
-                <Text style={styles.labelText}>Quantity:</Text>
-                <Text style={styles.valueText}>{String(donationDetails.quantity || 'N/A')}</Text>
-              </View>
-
-              <View style={[styles.infoRow, styles.lastInfoRow]}>
-                <Text style={styles.labelText}>Status:</Text>
-                <Text style={[styles.valueText, { 
-                  color: donationStatus === 'COMPLETED' ? theme.success : 
-                         donationStatus === 'PENDING' ? theme.error : theme.text 
-                }]}>
-                  {String(donationStatus || 'N/A')}
-                </Text>
-              </View>
-            </View>
-          )}
-
-          {/* Request Details */}
-          {requestDetails && (
-            <View style={styles.sectionContainer}>
-              <View style={styles.sectionHeader}>
-                <View style={styles.sectionIconContainer}>
-                  <Feather name="clipboard" size={18} color={theme.primary} />
-                </View>
-                <Text style={styles.sectionTitle}>Request Details</Text>
-              </View>
-
-              <View style={styles.infoRow}>
-                <Text style={styles.labelText}>Type:</Text>
-                <Text style={styles.valueText}>{String(requestDetails.requestType || 'N/A')}</Text>
-              </View>
-
-              <View style={styles.infoRow}>
-                <Text style={styles.labelText}>Blood Type:</Text>
-                <Text style={styles.valueText}>{String(requestDetails.requestedBloodType || 'N/A')}</Text>
-              </View>
-
-              <View style={styles.infoRow}>
-                <Text style={styles.labelText}>Urgency:</Text>
-                <Text style={styles.valueText}>{String(requestDetails.urgencyLevel || 'N/A')}</Text>
-              </View>
-
-              <View style={styles.infoRow}>
-                <Text style={styles.labelText}>Quantity:</Text>
-                <Text style={styles.valueText}>{String(requestDetails.quantity || 'N/A')}</Text>
-              </View>
-              <View style={[styles.infoRow, styles.lastInfoRow]}>
-                <Text style={styles.labelText}>Status:</Text>
-                <Text style={[styles.valueText, { 
-                  color: requestStatus === 'FULFILLED' ? theme.success : 
-                         requestStatus === 'PENDING' ? theme.error : theme.text 
-                }]}>
-                  {String(requestStatus || 'N/A')}
-                </Text>
-              </View>
-            </View>
-          )}
+          {/* ✅ Match History Section - Shows historical data for confirmed matches */}
+          {renderMatchHistory()}
         </ScrollView>
 
-        {/* Confirm Button - Fixed */}
+        {/* Confirm Button */}
         {canConfirmMatch() && (
-          <View style={styles.submitButtonContainer}>
+          <View style={[styles.submitButtonContainer, { paddingHorizontal: 24 }]}>
             <TouchableOpacity
               style={[
                 styles.submitButton,

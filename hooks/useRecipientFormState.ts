@@ -7,7 +7,6 @@ export interface RecipientFormState {
   availability: string;
   setAvailability: (availability: string) => void;
 
-  // Medical Details
   hemoglobinLevel: string;
   setHemoglobinLevel: (hemoglobinLevel: string) => void;
   bloodPressure: string;
@@ -35,7 +34,6 @@ export interface RecipientFormState {
   overallHealthStatus: string;
   setOverallHealthStatus: (overallHealthStatus: string) => void;
 
-  // Eligibility Criteria
   age: string;
   setAge: (age: string) => void;
   weight: string;
@@ -58,7 +56,8 @@ export interface RecipientFormState {
   dob: string;
   setDob: (dob: string) => void;
 
-  // Location
+  addressId: string | null;
+  setAddressId: (addressId: string | null) => void;
   addressLine: string;
   setAddressLine: (addressLine: string) => void;
   landmark: string;
@@ -80,13 +79,11 @@ export interface RecipientFormState {
   longitude: number | null;
   setLongitude: (longitude: number | null) => void;
 
-  // Consent - Add missing consentedAt
   isConsented: boolean;
   setIsConsented: (isConsented: boolean) => void;
   consentedAt: string;
   setConsentedAt: (consentedAt: string) => void;
 
-  // HLA Profile
   hlaA1: string;
   setHlaA1: (hlaA1: string) => void;
   hlaA2: string;
@@ -139,22 +136,23 @@ export function useRecipientFormState(): RecipientFormState {
   const [loading, setLoading] = useState<boolean>(false);
   const [availability, setAvailability] = useState<string>("AVAILABLE");
 
-  // Medical Details
   const [hemoglobinLevel, setHemoglobinLevel] = useState<string>("");
   const [bloodPressure, setBloodPressure] = useState<string>("");
   const [diagnosis, setDiagnosis] = useState<string>("");
   const [allergies, setAllergies] = useState<string>("");
   const [currentMedications, setCurrentMedications] = useState<string>("");
   const [additionalNotes, setAdditionalNotes] = useState<string>("");
-  const [hasInfectiousDiseases, setHasInfectiousDiseases] = useState<boolean>(false);
-  const [infectiousDiseaseDetails, setInfectiousDiseaseDetails] = useState<string>("");
+  const [hasInfectiousDiseases, setHasInfectiousDiseases] =
+    useState<boolean>(false);
+  const [infectiousDiseaseDetails, setInfectiousDiseaseDetails] =
+    useState<string>("");
   const [creatinineLevel, setCreatinineLevel] = useState<string>("");
-  const [liverFunctionTests, setLiverFunctionTests] = useState<string>("Normal");
+  const [liverFunctionTests, setLiverFunctionTests] =
+    useState<string>("Normal");
   const [cardiacStatus, setCardiacStatus] = useState<string>("Normal");
   const [pulmonaryFunction, setPulmonaryFunction] = useState<string>("");
   const [overallHealthStatus, setOverallHealthStatus] = useState<string>("");
 
-  // Eligibility Criteria
   const [age, setAge] = useState<string>("");
   const [weight, setWeight] = useState<string>("");
   const [height, setHeight] = useState<string>("");
@@ -167,7 +165,7 @@ export function useRecipientFormState(): RecipientFormState {
   const [lastReviewed, setLastReviewed] = useState<string>("");
   const [dob, setDob] = useState<string>("");
 
-  // Location
+  const [addressId, setAddressId] = useState<string | null>(null);
   const [addressLine, setAddressLine] = useState<string>("");
   const [landmark, setLandmark] = useState<string>("");
   const [area, setArea] = useState<string>("");
@@ -179,11 +177,9 @@ export function useRecipientFormState(): RecipientFormState {
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
 
-  // Consent - Add missing state
   const [isConsented, setIsConsented] = useState<boolean>(false);
   const [consentedAt, setConsentedAt] = useState<string>("");
 
-  // HLA Profile
   const [hlaA1, setHlaA1] = useState<string>("");
   const [hlaA2, setHlaA2] = useState<string>("");
   const [hlaB1, setHlaB1] = useState<string>("");
@@ -203,7 +199,6 @@ export function useRecipientFormState(): RecipientFormState {
 
   const [userId, setUserId] = useState<string | null>(null);
 
-  // Load data effect
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -218,34 +213,62 @@ export function useRecipientFormState(): RecipientFormState {
           if (recipient.medicalDetails) {
             setDiagnosis(recipient.medicalDetails.diagnosis || "");
             setAllergies(recipient.medicalDetails.allergies || "");
-            setCurrentMedications(recipient.medicalDetails.currentMedications || "");
+            setCurrentMedications(
+              recipient.medicalDetails.currentMedications || ""
+            );
             setAdditionalNotes(recipient.medicalDetails.additionalNotes || "");
-            setHemoglobinLevel(recipient.medicalDetails.hemoglobinLevel?.toString() || "");
+            setHemoglobinLevel(
+              recipient.medicalDetails.hemoglobinLevel?.toString() || ""
+            );
             setBloodPressure(recipient.medicalDetails.bloodPressure || "");
-            setCreatinineLevel(recipient.medicalDetails.creatinineLevel?.toString() || "");
-            setLiverFunctionTests(recipient.medicalDetails.liverFunctionTests || "Normal");
-            setCardiacStatus(recipient.medicalDetails.cardiacStatus || "Normal");
-            setPulmonaryFunction(recipient.medicalDetails.pulmonaryFunction?.toString() || "");
-            setOverallHealthStatus(recipient.medicalDetails.overallHealthStatus || "");
-            setHasInfectiousDiseases(recipient.medicalDetails.hasInfectiousDiseases || false);
-            setInfectiousDiseaseDetails(recipient.medicalDetails.infectiousDiseaseDetails || "");
+            setCreatinineLevel(
+              recipient.medicalDetails.creatinineLevel?.toString() || ""
+            );
+            setLiverFunctionTests(
+              recipient.medicalDetails.liverFunctionTests || "Normal"
+            );
+            setCardiacStatus(
+              recipient.medicalDetails.cardiacStatus || "Normal"
+            );
+            setPulmonaryFunction(
+              recipient.medicalDetails.pulmonaryFunction?.toString() || ""
+            );
+            setOverallHealthStatus(
+              recipient.medicalDetails.overallHealthStatus || ""
+            );
+            setHasInfectiousDiseases(
+              recipient.medicalDetails.hasInfectiousDiseases || false
+            );
+            setInfectiousDiseaseDetails(
+              recipient.medicalDetails.infectiousDiseaseDetails || ""
+            );
           }
 
           if (recipient.eligibilityCriteria) {
-            setMedicallyEligible(recipient.eligibilityCriteria.medicallyEligible ?? true);
-            setLegalClearance(recipient.eligibilityCriteria.legalClearance ?? true);
+            setMedicallyEligible(
+              recipient.eligibilityCriteria.medicallyEligible ?? true
+            );
+            setLegalClearance(
+              recipient.eligibilityCriteria.legalClearance ?? true
+            );
             setEligibilityNotes(recipient.eligibilityCriteria.notes || "");
             setLastReviewed(recipient.eligibilityCriteria.lastReviewed || "");
             setAge(recipient.eligibilityCriteria.age?.toString() || "");
             setWeight(recipient.eligibilityCriteria.weight?.toString() || "");
             setHeight(recipient.eligibilityCriteria.height?.toString() || "");
-            setBodyMassIndex(recipient.eligibilityCriteria.bodyMassIndex?.toString() || "");
+            setBodyMassIndex(
+              recipient.eligibilityCriteria.bodyMassIndex?.toString() || ""
+            );
             setBodySize(recipient.eligibilityCriteria.bodySize || "MEDIUM");
             setDob(recipient.eligibilityCriteria.dob || "");
           }
 
           const location = recipient.addresses?.[0] || recipient.location;
           if (location) {
+            if (location.id) {
+              setAddressId(location.id);
+              console.log("✅ Loaded existing address ID:", location.id);
+            }
             setAddressLine(location.addressLine || "");
             setLandmark(location.landmark || "");
             setArea(location.area || "");
@@ -272,12 +295,15 @@ export function useRecipientFormState(): RecipientFormState {
             setHlaDP1(recipient.hlaProfile.hlaDP1 || "");
             setHlaDP2(recipient.hlaProfile.hlaDP2 || "");
             setTestingDate(recipient.hlaProfile.testingDate || "");
-            setTestingMethod(recipient.hlaProfile.testingMethod || "NGS_SEQUENCING");
+            setTestingMethod(
+              recipient.hlaProfile.testingMethod || "NGS_SEQUENCING"
+            );
             setLaboratoryName(recipient.hlaProfile.laboratoryName || "");
-            setCertificationNumber(recipient.hlaProfile.certificationNumber || "");
+            setCertificationNumber(
+              recipient.hlaProfile.certificationNumber || ""
+            );
           }
 
-          // Load consent data
           if (recipient.consentForm) {
             setIsConsented(recipient.consentForm.isConsented || false);
             setConsentedAt(recipient.consentForm.consentedAt || "");
@@ -290,7 +316,6 @@ export function useRecipientFormState(): RecipientFormState {
     loadData();
   }, []);
 
-  // BMI calculation effect
   useEffect(() => {
     const w = parseFloat(weight);
     const h = parseFloat(height);
@@ -302,7 +327,6 @@ export function useRecipientFormState(): RecipientFormState {
     setWeightEligible(!isNaN(w) && w >= 45);
   }, [weight, height]);
 
-  // Auto-set consentedAt when isConsented changes to true
   useEffect(() => {
     if (isConsented && !consentedAt) {
       setConsentedAt(new Date().toISOString());
@@ -375,6 +399,9 @@ export function useRecipientFormState(): RecipientFormState {
     setLastReviewed,
     dob,
     setDob,
+
+    addressId,
+    setAddressId,
     addressLine,
     setAddressLine,
     landmark,

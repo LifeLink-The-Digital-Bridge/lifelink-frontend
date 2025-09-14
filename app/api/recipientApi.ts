@@ -57,6 +57,7 @@ export interface HlaProfile {
 }
 
 export interface Address {
+    id?: string;
   addressLine: string;
   landmark: string;
   area: string;
@@ -128,7 +129,6 @@ export interface ReceiveRequestDTO {
   notes?: string;
 }
 
-// API Functions
 export const registerRecipient = async (
   payload: RegisterRecipientDTO
 ): Promise<RecipientDTO> => {
@@ -314,7 +314,6 @@ export const addRecipientRole = async (): Promise<string> => {
   return await response.text();
 };
 
-// Additional utility function for request status updates
 export const updateRequestStatus = async (
   requestId: string,
   status: string
@@ -338,7 +337,6 @@ export const updateRequestStatus = async (
   }
 };
 
-// Utility function to get request by ID
 export const getRequestById = async (requestId: string): Promise<ReceiveRequestDTO> => {
   const token = await SecureStore.getItemAsync("jwt");
   const userId = await SecureStore.getItemAsync("userId");
@@ -360,3 +358,55 @@ export const getRequestById = async (requestId: string): Promise<ReceiveRequestD
   
   return await response.json();
 };
+
+
+
+export async function fetchRecipientAddresses(recipientId: string): Promise<any[]> {
+  const token = await SecureStore.getItemAsync('jwt');
+  const userId = await SecureStore.getItemAsync('userId');
+  
+  if (!token || !recipientId) {
+    throw new Error('Missing authentication or recipient ID');
+  }
+
+  const response = await fetch(`${BASE_URL}/recipients/${recipientId}/addresses`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'id': userId || '',
+      'Content-Type': 'application/json'
+    }
+  });
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      return [];
+    }
+    const errorText = await response.text();
+    throw new Error(`Failed to fetch addresses: ${errorText}`);
+  }
+  
+  return await response.json();
+}
+
+export async function addRecipientAddress(recipientId: string, locationData: any): Promise<any> {
+  const token = await SecureStore.getItemAsync('jwt');
+  const userId = await SecureStore.getItemAsync('userId');
+  
+  const response = await fetch(`${BASE_URL}/recipients/${recipientId}/addresses`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'id': userId || '',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(locationData),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to add address: ${errorText}`);
+  }
+  
+  return await response.json();
+}

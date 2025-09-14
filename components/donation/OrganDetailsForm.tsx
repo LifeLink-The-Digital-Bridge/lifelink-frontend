@@ -1,15 +1,15 @@
 import React from 'react';
 import { View, Text, TextInput, TouchableOpacity } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../utils/theme-context';
 import { lightTheme, darkTheme } from '../../constants/styles/authStyles';
 import { createDonationStyles } from '../../constants/styles/donationStyles';
 import { CustomPicker } from '../common/CustomPicker';
+import { OrganType } from '../../app/api/donationApi';
 
 interface OrganDetailsFormProps {
-  organType: string;
-  setOrganType: (value: string) => void;
+  organType: OrganType | "";
+  setOrganType: (value: OrganType | "") => void;
   isCompatible: boolean;
   setIsCompatible: (value: boolean) => void;
   organQuality: string;
@@ -70,7 +70,7 @@ export function OrganDetailsForm(props: OrganDetailsFormProps) {
         <Text style={styles.label}>Organ Type</Text>
         <CustomPicker
           selectedValue={props.organType}
-          onValueChange={props.setOrganType}
+          onValueChange={(value: string) => props.setOrganType(value as OrganType | "")}
           items={ORGAN_TYPES}
           placeholder="Select Organ"
         />
