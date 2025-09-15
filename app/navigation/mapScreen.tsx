@@ -53,7 +53,7 @@ const MapScreen = () => {
 
   return (
     <AuthProvider>
-      <AppLayout title="Select Location" hideHeader>
+      <AppLayout>
         <View style={{ flex: 1 }}>
           <MapView
             style={{ flex: 1 }}

@@ -520,3 +520,46 @@ export const fetchHistoryByMatch = async (matchId: string, type: 'donor' | 'reci
   
   return await response.json();
 };
+
+export const getMatchConfirmationStatus = async (matchId: string): Promise<boolean> => {
+  const headers = await getAuthHeaders();
+  
+  const response = await fetch(`${BASE_URL}/matching/match/${matchId}/status`, {
+    headers,
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch match confirmation status');
+  }
+  
+  return await response.json();
+};
+
+export const fetchDonorHistoryForRecipient = async (donorUserId: string): Promise<any[]> => {
+  const headers = await getAuthHeaders();
+  
+  const response = await fetch(`${BASE_URL}/donors/history/for-recipient/${donorUserId}`, {
+    headers,
+  });
+
+  if (!response.ok) {
+    throw new Error('Access denied to donor history');
+  }
+  
+  return await response.json();
+};
+
+export const fetchRecipientHistoryForDonor = async (recipientUserId: string): Promise<any[]> => {
+  const headers = await getAuthHeaders();
+  
+  const response = await fetch(`${BASE_URL}/recipients/history/for-donor/${recipientUserId}`, {
+    headers,
+  });
+
+  if (!response.ok) {
+    throw new Error('Access denied to recipient history');
+  }
+  
+  return await response.json();
+};
+

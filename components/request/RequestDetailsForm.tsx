@@ -55,7 +55,7 @@ export function RequestDetailsForm(props: RequestDetailsFormProps) {
           <Text style={styles.label}>Blood Type *</Text>
           <CustomPicker
             selectedValue={props.requestedBloodType}
-            onValueChange={props.setRequestedBloodType}
+            onValueChange={props.setRequestedBloodType as (value: string) => void}
             items={[
               { label: 'Select Blood Type', value: '' },
               ...BLOOD_TYPES.map(type => ({ label: formatLabel(type), value: type }))
@@ -70,7 +70,7 @@ export function RequestDetailsForm(props: RequestDetailsFormProps) {
           <Text style={styles.label}>Organ Type *</Text>
           <CustomPicker
             selectedValue={props.requestedOrgan}
-            onValueChange={props.setRequestedOrgan}
+            onValueChange={props.setRequestedOrgan as (value: string) => void}
             items={[
               { label: 'Select Organ', value: '' },
               ...ORGAN_TYPES.map(organ => ({ label: formatLabel(organ), value: organ }))
@@ -85,7 +85,7 @@ export function RequestDetailsForm(props: RequestDetailsFormProps) {
           <Text style={styles.label}>Tissue Type *</Text>
           <CustomPicker
             selectedValue={props.requestedTissue}
-            onValueChange={props.setRequestedTissue}
+            onValueChange={props.setRequestedTissue as (value: string) => void}
             items={[
               { label: 'Select Tissue', value: '' },
               ...TISSUE_TYPES.map(tissue => ({ label: formatLabel(tissue), value: tissue }))
@@ -100,7 +100,7 @@ export function RequestDetailsForm(props: RequestDetailsFormProps) {
           <Text style={styles.label}>Stem Cell Type *</Text>
           <CustomPicker
             selectedValue={props.requestedStemCellType}
-            onValueChange={props.setRequestedStemCellType}
+            onValueChange={props.setRequestedStemCellType as (value: string) => void}
             items={[
               { label: 'Select Stem Cell Type', value: '' },
               ...STEM_CELL_TYPES.map(type => ({ label: formatLabel(type), value: type }))
@@ -114,7 +114,7 @@ export function RequestDetailsForm(props: RequestDetailsFormProps) {
         <Text style={styles.label}>Urgency Level *</Text>
         <CustomPicker
           selectedValue={props.urgencyLevel}
-          onValueChange={props.setUrgencyLevel}
+          onValueChange={props.setUrgencyLevel as (value: string) => void}
           items={URGENCY_LEVELS.map(level => ({ label: formatLabel(level), value: level }))}
           placeholder="Select Urgency Level"
         />

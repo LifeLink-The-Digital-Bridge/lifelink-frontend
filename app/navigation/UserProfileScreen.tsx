@@ -10,6 +10,8 @@ import { formatDonorDetails, formatRecipientDetails } from '../../utils/detailsF
 import { DetailsView } from '../../components/common/DetailsView';
 import { ValidationAlert } from '../../components/common/ValidationAlert';
 import AppLayout from '../../components/AppLayout';
+import * as SecureStore from "expo-secure-store";
+
 
 interface UserProfile {
   id: string;
@@ -106,7 +108,7 @@ const UserProfileScreen = () => {
 
   if (loading) {
     return (
-      <AppLayout hideHeader>
+      <AppLayout>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.primary} />
           <Text style={styles.loadingText}>Loading profile...</Text>
@@ -117,7 +119,7 @@ const UserProfileScreen = () => {
 
   if (!profile) {
     return (
-      <AppLayout hideHeader>
+      <AppLayout>
         <View style={styles.promptContainer}>
           <Text style={styles.promptTitle}>Profile Not Found</Text>
           <TouchableOpacity style={styles.registerButton} onPress={() => router.back()}>
@@ -130,7 +132,7 @@ const UserProfileScreen = () => {
   }
 
   return (
-    <AppLayout hideHeader>
+    <AppLayout>
       <View style={styles.container}>
         <View style={styles.headerContainer}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
