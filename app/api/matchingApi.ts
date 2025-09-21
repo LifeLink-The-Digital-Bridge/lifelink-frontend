@@ -563,3 +563,26 @@ export const fetchRecipientHistoryForDonor = async (recipientUserId: string): Pr
   return await response.json();
 };
 
+export const fetchDonorHistoryByMatchId = async (matchResultId: string): Promise<any> => {
+  const headers = await getAuthHeaders();
+  
+  const response = await fetch(`${BASE_URL}/donors/history/match/${matchResultId}`, {
+    method: "GET",
+    headers,
+  });
+
+  await handleResponse(response, "Failed to fetch donor history by match");
+  return response.json();
+};
+
+export const fetchRecipientHistoryByMatchId = async (matchResultId: string): Promise<any> => {
+  const headers = await getAuthHeaders();
+  
+  const response = await fetch(`${BASE_URL}/recipients/history/match/${matchResultId}`, {
+    method: "GET",
+    headers,
+  });
+
+  await handleResponse(response, "Failed to fetch recipient history by match");
+  return response.json();
+};

@@ -5,16 +5,17 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import * as SecureStore from "expo-secure-store";
+import * as Location from "expo-location";
 import { useTheme } from "../../utils/theme-context";
 import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
 import { createUnifiedStyles } from "../../constants/styles/unifiedStyles";
 import AppLayout from "@/components/AppLayout";
 import { ValidationAlert } from "../../components/common/ValidationAlert";
-
 import {
   fetchUserById,
   donorConfirmMatch,
@@ -26,13 +27,15 @@ import {
   fetchDonorHistoryForRecipient,
   fetchRecipientHistoryForDonor,
   getMatchConfirmationStatus,
+  fetchRecipientHistoryByMatchId,
+  fetchDonorHistoryByMatchId,
 } from "../api/matchingApi";
-
 import { InfoRow } from "../../components/match/InfoRow";
 import { ProfileCard } from "../../components/match/ProfileCard";
 import { MatchInfoCard } from "../../components/match/MatchInfoCard";
 import { YourDetailsCard } from "../../components/match/YourDetailsCard";
 import { HistorySection } from "../../components/match/HistorySection";
+import { MapSection } from "../../components/match/MapSection";
 
 interface MatchDetails {
   matchResultId: string;
@@ -64,6 +67,13 @@ interface UserProfile {
   gender?: string;
 }
 
+interface LocationCoordinates {
+  latitude: number;
+  longitude: number;
+  address?: string;
+  title: string;
+}
+
 const MatchDetailsScreen = () => {
   const { colorScheme } = useTheme();
   const { matchData } = useLocalSearchParams();
@@ -75,6 +85,7 @@ const MatchDetailsScreen = () => {
   const [match, setMatch] = useState<MatchDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [confirmingMatch, setConfirmingMatch] = useState(false);
+  const [navigatingToProfile, setNavigatingToProfile] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const [donorProfile, setDonorProfile] = useState<UserProfile | null>(null);
@@ -89,6 +100,12 @@ const MatchDetailsScreen = () => {
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [yourDetails, setYourDetails] = useState<any>(null);
   const [loadingYourDetails, setLoadingYourDetails] = useState(false);
+
+  const [currentLocation, setCurrentLocation] = useState<LocationCoordinates | null>(null);
+  const [destinationLocation, setDestinationLocation] = useState<LocationCoordinates | null>(null);
+  const [calculatedDistance, setCalculatedDistance] = useState<number | null>(null);
+  const [locationPermission, setLocationPermission] = useState<boolean>(false);
+  const [loadingLocation, setLoadingLocation] = useState(false);
 
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertTitle, setAlertTitle] = useState("");
@@ -106,31 +123,184 @@ const MatchDetailsScreen = () => {
     setAlertVisible(true);
   };
 
-  const loadHistoricalData = async (matchData: MatchDetails, userId: string | null) => {
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c;
+    return distance;
+  };
+
+  const getCurrentUserLocation = async () => {
+    setLoadingLocation(true);
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setLocationPermission(false);
+        Alert.alert(
+          'Permission Denied',
+          'Location permission is required to show distance and directions.'
+        );
+        return;
+      }
+
+      setLocationPermission(true);
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+
+      const userLocation: LocationCoordinates = {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        title: "Your Location",
+      };
+
+      setCurrentLocation(userLocation);
+    } catch (error) {
+      console.error('Error getting location:', error);
+      Alert.alert('Location Error', 'Could not get your current location.');
+    } finally {
+      setLoadingLocation(false);
+    }
+  };
+
+  const getDestinationLocation = (matchData: MatchDetails, userRole: string, otherPartyData: any) => {
+    let destinationCoords: LocationCoordinates | null = null;
+    let destinationTitle = '';
+
+    try {
+      if (userRole === 'donor') {
+        destinationTitle = `${recipientProfile?.name || 'Recipient'} Location`;
+        
+        if (matchData.isConfirmed && otherPartyData?.receiveRequestSnapshot) {
+          const requestSnapshot = otherPartyData.receiveRequestSnapshot;
+          if (requestSnapshot.usedLocationLatitude && requestSnapshot.usedLocationLongitude) {
+            destinationCoords = {
+              latitude: requestSnapshot.usedLocationLatitude,
+              longitude: requestSnapshot.usedLocationLongitude,
+              title: destinationTitle,
+              address: `${requestSnapshot.usedLocationAddressLine || ''}, ${requestSnapshot.usedLocationCity || ''}`
+            };
+          }
+        }
+        else if (!matchData.isConfirmed && yourDetails?.data) {
+          const requestData = yourDetails.data;
+          if (requestData.usedLocationLatitude && requestData.usedLocationLongitude) {
+            destinationCoords = {
+              latitude: requestData.usedLocationLatitude,
+              longitude: requestData.usedLocationLongitude,
+              title: destinationTitle,
+              address: `${requestData.usedLocationAddressLine || ''}, ${requestData.usedLocationCity || ''}`
+            };
+          }
+        }
+      } else if (userRole === 'recipient') {
+        destinationTitle = `${donorProfile?.name || 'Donor'} Location`;
+        
+        if (matchData.isConfirmed && otherPartyData?.donationSnapshot) {
+          const donationSnapshot = otherPartyData.donationSnapshot;
+          if (donationSnapshot.usedLocationLatitude && donationSnapshot.usedLocationLongitude) {
+            destinationCoords = {
+              latitude: donationSnapshot.usedLocationLatitude,
+              longitude: donationSnapshot.usedLocationLongitude,
+              title: destinationTitle,
+              address: `${donationSnapshot.usedLocationAddressLine || ''}, ${donationSnapshot.usedLocationCity || ''}`
+            };
+          }
+        }
+        else if (!matchData.isConfirmed && yourDetails?.data) {
+          const donationData = yourDetails.data;
+          if (donationData.usedLocationLatitude && donationData.usedLocationLongitude) {
+            destinationCoords = {
+              latitude: donationData.usedLocationLatitude,
+              longitude: donationData.usedLocationLongitude,
+              title: destinationTitle,
+              address: `${donationData.usedLocationAddressLine || ''}, ${donationData.usedLocationCity || ''}`
+            };
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error extracting destination location:', error);
+    }
+
+    return destinationCoords;
+  };
+
+  const updateLocationData = () => {
+    if (!match || !currentUserId) return;
+
+    const userRole = getUserRoleInMatch();
+    const otherPartyData = userRole === 'donor' ? recipientHistoryData || recipientCurrentData : donorHistoryData || donorCurrentData;
+    
+    const destination = getDestinationLocation(match, userRole, otherPartyData);
+    setDestinationLocation(destination);
+
+    if (currentLocation && destination) {
+      const distance = calculateDistance(
+        currentLocation.latitude,
+        currentLocation.longitude,
+        destination.latitude,
+        destination.longitude
+      );
+      setCalculatedDistance(distance);
+    }
+  };
+
+  const loadHistoricalData = async (
+    matchData: MatchDetails,
+    userId: string | null
+  ) => {
     if (!matchData?.isConfirmed || !userId) return;
 
     setLoadingHistory(true);
     try {
-      const userRole = matchData.donorUserId === userId ? "donor" : 
-                       matchData.recipientUserId === userId ? "recipient" : "unknown";
+      const userRole =
+        matchData.donorUserId === userId ? "donor" : 
+        matchData.recipientUserId === userId ? "recipient" : "unknown";
 
       if (userRole === "donor") {
-        const recipientHistory = await fetchRecipientHistoryForDonor(matchData.recipientUserId);
-        if (recipientHistory.length > 0) {
-          setRecipientHistoryData(recipientHistory[0]);
+        const recipientHistory = await fetchRecipientHistoryByMatchId(matchData.matchResultId);
+        if (recipientHistory && recipientHistory.length > 0) {
+          const structuredData = {
+            ...recipientHistory[0],
+            isHistoricalData: true,
+            matchSpecific: true,
+          };
+          setRecipientHistoryData(structuredData);
         }
       } else if (userRole === "recipient") {
-        const donorHistory = await fetchDonorHistoryForRecipient(matchData.donorUserId);
-        if (donorHistory.length > 0) {
-          setDonorHistoryData(donorHistory[0]);
+        const donorHistory = await fetchDonorHistoryByMatchId(matchData.matchResultId);
+        if (donorHistory && donorHistory.length > 0) {
+          const structuredData = {
+            ...donorHistory[0],
+            isHistoricalData: true,
+            matchSpecific: true,
+          };
+          setDonorHistoryData(structuredData);
         }
       }
     } catch (error: any) {
-      showAlert("History Error", "Could not load historical data: " + error.message, "warning");
+      console.log("Could not load match-specific historical data:", error.message);
     } finally {
       setLoadingHistory(false);
     }
   };
+
+  useEffect(() => {
+    if (match && currentUserId && (donorProfile && recipientProfile) && 
+        (yourDetails || (match.isConfirmed && (donorHistoryData || recipientHistoryData)))) {
+      updateLocationData();
+    }
+  }, [match, currentUserId, donorProfile, recipientProfile, yourDetails, donorHistoryData, recipientHistoryData, currentLocation]);
+
+  useEffect(() => {
+    getCurrentUserLocation();
+  }, []);
 
   const loadCurrentData = async (matchData: MatchDetails) => {
     if (matchData.isConfirmed) return;
@@ -309,19 +479,29 @@ const MatchDetailsScreen = () => {
     return null;
   };
 
-  const viewUserProfile = (userId: string, userName: string) => {
-    const otherPartyInfo = getOtherPartyInfo();
+  const viewUserProfile = async (userId: string, userName: string) => {
+    setNavigatingToProfile(true);
+    
+    try {
+      const otherPartyInfo = getOtherPartyInfo();
 
-    router.push({
-      pathname: "/navigation/detailedProfile",
-      params: {
-        userProfile: JSON.stringify(otherPartyInfo?.profile),
-        historicalData: JSON.stringify(otherPartyInfo?.data),
-        userRole: otherPartyInfo?.role,
-        isHistorical: match?.isConfirmed.toString(),
-        matchId: match?.matchResultId,
-      },
-    });
+      setTimeout(() => {
+        router.push({
+          pathname: "/navigation/detailedProfile",
+          params: {
+            userProfile: JSON.stringify(otherPartyInfo?.profile),
+            historicalData: JSON.stringify(otherPartyInfo?.data),
+            matchData: JSON.stringify(yourDetails?.data),
+            userRole: otherPartyInfo?.role,
+            isHistorical: match?.isConfirmed.toString(),
+            matchId: match?.matchResultId,
+          },
+        });
+      }, 100);
+    } catch (error) {
+      console.error('Error navigating to profile:', error);
+      setNavigatingToProfile(false);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -375,14 +555,20 @@ const MatchDetailsScreen = () => {
           </View>
           <View style={styles.headerTextContainer}>
             <Text style={styles.headerTitle}>Match Details</Text>
-            <Text style={styles.headerSubtitle}>#{match.matchResultId.slice(0, 8)}</Text>
+            <Text style={styles.headerSubtitle}>
+              #{match.matchResultId.slice(0, 8)}
+            </Text>
           </View>
           <View
             style={[
               styles.statusBadge,
               {
-                backgroundColor: match.isConfirmed ? theme.success + "20" : theme.error + "20",
-                borderColor: match.isConfirmed ? theme.success + "40" : theme.error + "40",
+                backgroundColor: match.isConfirmed
+                  ? theme.success + "20"
+                  : theme.error + "20",
+                borderColor: match.isConfirmed
+                  ? theme.success + "40"
+                  : theme.error + "40",
               },
             ]}
           >
@@ -397,7 +583,10 @@ const MatchDetailsScreen = () => {
           </View>
         </View>
 
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
           <MatchInfoCard
             match={match}
             currentUserRole={getCurrentUserRole()}
@@ -405,12 +594,6 @@ const MatchDetailsScreen = () => {
             getOtherPartyStatus={getOtherPartyStatus}
             otherPartyRole={otherPartyInfo?.role || "Other Party"}
             formatDate={formatDate}
-          />
-
-          <YourDetailsCard
-            yourDetails={yourDetails}
-            loadingYourDetails={loadingYourDetails}
-            userRole={userRole}
           />
 
           {otherPartyInfo?.profile && (
@@ -423,6 +606,21 @@ const MatchDetailsScreen = () => {
               isHistorical={match.isConfirmed}
             />
           )}
+
+          <YourDetailsCard
+            yourDetails={yourDetails}
+            loadingYourDetails={loadingYourDetails}
+            userRole={userRole}
+          />
+
+          <MapSection
+            currentLocation={currentLocation}
+            destinationLocation={destinationLocation}
+            calculatedDistance={calculatedDistance}
+            locationPermission={locationPermission}
+            loadingLocation={loadingLocation}
+            onRequestLocation={getCurrentUserLocation}
+          />
 
           {!match.isConfirmed && (
             <HistorySection
@@ -450,9 +648,43 @@ const MatchDetailsScreen = () => {
               {confirmingMatch ? (
                 <ActivityIndicator color="#fff" size="small" />
               ) : (
-                <Text style={styles.submitButtonText}>{getConfirmationButtonText()}</Text>
+                <Text style={styles.submitButtonText}>
+                  {getConfirmationButtonText()}
+                </Text>
               )}
             </TouchableOpacity>
+          </View>
+        )}
+
+        {navigatingToProfile && (
+          <View style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000
+          }}>
+            <View style={{
+              backgroundColor: theme.background,
+              padding: 24,
+              borderRadius: 12,
+              alignItems: 'center',
+              minWidth: 200
+            }}>
+              <ActivityIndicator size="large" color={theme.primary} />
+              <Text style={{ 
+                color: theme.text, 
+                marginTop: 12, 
+                fontSize: 16,
+                fontWeight: '500'
+              }}>
+                Loading Profile...
+              </Text>
+            </View>
           </View>
         )}
 

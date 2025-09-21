@@ -9,14 +9,14 @@ import { RequestType, BloodType, OrganType, TissueType, StemCellType, UrgencyLev
 
 interface RequestDetailsFormProps {
   requestType: RequestType;
-  requestedBloodType: BloodType | '';
-  setRequestedBloodType: (type: BloodType | '') => void;
-  requestedOrgan: OrganType | '';
-  setRequestedOrgan: (organ: OrganType | '') => void;
-  requestedTissue: TissueType | '';
-  setRequestedTissue: (tissue: TissueType | '') => void;
-  requestedStemCellType: StemCellType | '';
-  setRequestedStemCellType: (type: StemCellType | '') => void;
+  requestedBloodType: BloodType | "";
+  setRequestedBloodType: (type: BloodType | "") => void;
+  requestedOrgan: OrganType | "";
+  setRequestedOrgan: (organ: OrganType | "") => void;
+  requestedTissue: TissueType | "";
+  setRequestedTissue: (tissue: TissueType | "") => void;
+  requestedStemCellType: StemCellType | "";
+  setRequestedStemCellType: (type: StemCellType | "") => void;
   urgencyLevel: UrgencyLevel;
   setUrgencyLevel: (level: UrgencyLevel) => void;
   quantity: string;
@@ -50,20 +50,18 @@ export function RequestDetailsForm(props: RequestDetailsFormProps) {
         <Text style={styles.sectionTitle}>Request Details</Text>
       </View>
 
-      {props.requestType === 'BLOOD' && (
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Blood Type *</Text>
-          <CustomPicker
-            selectedValue={props.requestedBloodType}
-            onValueChange={props.setRequestedBloodType as (value: string) => void}
-            items={[
-              { label: 'Select Blood Type', value: '' },
-              ...BLOOD_TYPES.map(type => ({ label: formatLabel(type), value: type }))
-            ]}
-            placeholder="Select Blood Type"
-          />
-        </View>
-      )}
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Blood Type *</Text>
+        <CustomPicker
+          selectedValue={props.requestedBloodType}
+          onValueChange={props.setRequestedBloodType as (value: string) => void}
+          items={[
+            { label: 'Select Blood Type', value: '' },
+            ...BLOOD_TYPES.map(type => ({ label: formatLabel(type), value: type }))
+          ]}
+          placeholder="Select Blood Type"
+        />
+      </View>
 
       {props.requestType === 'ORGAN' && (
         <View style={styles.inputContainer}>
