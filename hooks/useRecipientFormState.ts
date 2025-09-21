@@ -206,7 +206,10 @@ export function useRecipientFormState(): RecipientFormState {
         setUserId(userIdFromStore);
 
         const data = await SecureStore.getItemAsync("recipientData");
-        if (data) {
+        const hasManualLocation = latitude !== null || longitude !== null;
+        const hasFormData = addressLine || hemoglobinLevel;
+        if (data && !hasManualLocation && !hasFormData) {
+          console.log("📂 Loading existing recipient data from storage");
           const recipient = JSON.parse(data);
           setAvailability(recipient.availability || "AVAILABLE");
 
@@ -308,6 +311,10 @@ export function useRecipientFormState(): RecipientFormState {
             setIsConsented(recipient.consentForm.isConsented || false);
             setConsentedAt(recipient.consentForm.consentedAt || "");
           }
+        } else {
+          console.log(
+            "⚠️ RECIPIENT: Database load SKIPPED - manual location or form data exists"
+          );
         }
       } catch (e) {
         console.error("Error loading recipient data:", e);

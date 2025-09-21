@@ -102,12 +102,15 @@ export function useDonorFormState() {
   const [laboratoryName, setLaboratoryName] = useState<string>("");
   const [certificationNumber, setCertificationNumber] = useState<string>("");
   const [addressId, setAddressId] = useState<string | null>(null);
-  
+
   useEffect(() => {
     const loadDonorData = async () => {
       try {
         const storedData = await SecureStore.getItemAsync("donorData");
-        if (storedData) {
+        const hasManualLocation = location !== null;
+        const hasFormData = addressLine || hemoglobinLevel || bloodPressure;
+        if (storedData && !hasManualLocation && !hasFormData) {
+          console.log("📂 Loading existing donor data from storage");
           const donor = JSON.parse(storedData);
           if (donor.medicalDetails) {
             setHemoglobinLevel(
@@ -233,6 +236,10 @@ export function useDonorFormState() {
             setLaboratoryName(donor.hlaProfile.laboratoryName || "");
             setCertificationNumber(donor.hlaProfile.certificationNumber || "");
           }
+        } else {
+          console.log(
+            "⚠️ DONOR: Database load SKIPPED - manual location or form data exists"
+          );
         }
       } catch (error) {
         console.error("Error loading donor data:", error);

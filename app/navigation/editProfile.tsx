@@ -29,7 +29,9 @@ const validateForm = (form: any, requiredFields: string[]) => {
   const errors: { [key: string]: string } = {};
   requiredFields.forEach((field) => {
     if (!form[field]) {
-      errors[field] = `${field.charAt(0).toUpperCase() + field.slice(1)} is required`;
+      errors[field] = `${
+        field.charAt(0).toUpperCase() + field.slice(1)
+      } is required`;
     }
   });
   if (form.phone && !/^\d{10}$/.test(form.phone)) {
@@ -44,7 +46,10 @@ const validateForm = (form: any, requiredFields: string[]) => {
 const pickImage = async (callback: (uri: string) => void) => {
   const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
   if (status !== "granted") {
-    Alert.alert("Permission denied", "We need camera roll permissions to select a profile image.");
+    Alert.alert(
+      "Permission denied",
+      "We need camera roll permissions to select a profile image."
+    );
     return;
   }
   const result = await ImagePicker.launchImageLibraryAsync({
@@ -147,7 +152,7 @@ const EditProfile: React.FC = () => {
 
   if (profileLoading) {
     return (
-      <AppLayout hideHeader={true}>
+      <AppLayout>
         <View style={styles.linkContainer}>
           <ActivityIndicator size="large" color="#0984e3" />
           <Text style={styles.errorText}>Loading profile...</Text>
@@ -157,7 +162,7 @@ const EditProfile: React.FC = () => {
   }
 
   return (
-    <AppLayout hideHeader={true}>
+    <AppLayout>
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>Edit Profile</Text>
         <TextInput

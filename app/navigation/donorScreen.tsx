@@ -1,22 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { useAuth } from "../../utils/auth-context";
-import {
-  View,
-  ScrollView,
-  TouchableOpacity,
-  Text,
-  ActivityIndicator,
-} from "react-native";
+import { View, ScrollView, TouchableOpacity, Text, ActivityIndicator } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as SecureStore from "expo-secure-store";
-import { registerDonor } from "../api/donorApi";
-import { addDonorRole } from "../api/donorApi";
+import { registerDonor, addDonorRole } from "../api/donorApi";
 import { refreshAuthTokens } from "../api/roleApi";
 import { useTheme } from "../../utils/theme-context";
 import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
 import { createUnifiedStyles } from "../../constants/styles/unifiedStyles";
-
 import { DonorForm } from "../../components/donor/DonorForm";
 import { ValidationAlert } from "../../components/common/ValidationAlert";
 import { useDonorFormState } from "../../hooks/useDonorFormState";
@@ -27,6 +19,7 @@ const DonorScreen: React.FC = () => {
   const { colorScheme } = useTheme();
   const { isAuthenticated } = useAuth();
   const router = useRouter();
+  const params = useLocalSearchParams();
   const isDark = colorScheme === "dark";
   const theme = isDark ? darkTheme : lightTheme;
   const styles = createUnifiedStyles(theme);
@@ -36,16 +29,16 @@ const DonorScreen: React.FC = () => {
   const [roleLoading, setRoleLoading] = useState<boolean>(true);
   const [loading, setLoading] = useState<boolean>(false);
   const [canGoBack, setCanGoBack] = useState<boolean>(false);
-
-  const [locationLoading, setLocationLoading] = useState<boolean>(true);
+  const [locationLoading, setLocationLoading] = useState<boolean>(false);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [manualLocationSet, setManualLocationSet] = useState<boolean>(false);
+  const [hasExistingData, setHasExistingData] = useState<boolean>(false);
+  const [locationInitialized, setLocationInitialized] = useState<boolean>(false);
 
   const [alertVisible, setAlertVisible] = useState<boolean>(false);
   const [alertTitle, setAlertTitle] = useState<string>("");
   const [alertMessage, setAlertMessage] = useState<string>("");
-  const [alertType, setAlertType] = useState<
-    "success" | "error" | "warning" | "info"
-  >("info");
+  const [alertType, setAlertType] = useState<"success" | "error" | "warning" | "info">("info");
 
   const showAlert = (
     title: string,
@@ -59,6 +52,50 @@ const DonorScreen: React.FC = () => {
   };
 
   useEffect(() => {
+    const checkExistingData = async () => {
+      try {
+        const donorData = await SecureStore.getItemAsync("donorData");
+        setHasExistingData(!!donorData);
+      } catch (error) {
+        setHasExistingData(false);
+      }
+    };
+    checkExistingData();
+  }, []);
+
+  useEffect(() => {
+    if (params.fromMap === 'true' && params.selectedLatitude && params.selectedLongitude) {
+      const lat = parseFloat(params.selectedLatitude as string);
+      const lng = parseFloat(params.selectedLongitude as string);
+      if (!isNaN(lat) && !isNaN(lng)) {
+        setManualLocationSet(true);
+        setLocationInitialized(true);
+        formState.setLocation({ latitude: lat, longitude: lng });
+      }
+    }
+  }, [params.fromMap, params.selectedLatitude, params.selectedLongitude]);
+
+  useEffect(() => {
+    if (manualLocationSet && params.selectedLatitude && params.selectedLongitude) {
+      const expectedLat = parseFloat(params.selectedLatitude as string);
+      const expectedLng = parseFloat(params.selectedLongitude as string);
+      
+      const protectionInterval = setInterval(() => {
+        const currentLat = formState.location?.latitude;
+        const currentLng = formState.location?.longitude;
+        
+        if (currentLat !== expectedLat || currentLng !== expectedLng) {
+          console.log("🔧 Database override detected - restoring manual coordinates");
+          formState.setLocation({ latitude: expectedLat, longitude: expectedLng });
+        }
+      }, 100);
+      
+      setTimeout(() => clearInterval(protectionInterval), 5000);
+      return () => clearInterval(protectionInterval);
+    }
+  }, [manualLocationSet, params.selectedLatitude, params.selectedLongitude, formState.location]);
+
+  useEffect(() => {
     const checkNavigation = () => {
       try {
         const navigationState = router.canGoBack?.();
@@ -67,7 +104,6 @@ const DonorScreen: React.FC = () => {
         setCanGoBack(false);
       }
     };
-
     checkNavigation();
   }, [router]);
 
@@ -88,11 +124,12 @@ const DonorScreen: React.FC = () => {
         } catch {
           roles = [];
         }
+
         if (!roles.includes("DONOR")) {
           await addDonorRole();
           const newTokens = await refreshAuthTokens();
           await Promise.all([
-            SecureStore.setItemAsync("jwt", newTokens.accessToken),
+            SecureStore.setItemAsync("accessToken", newTokens.accessToken),
             SecureStore.setItemAsync("refreshToken", newTokens.refreshToken),
             SecureStore.setItemAsync("email", newTokens.email),
             SecureStore.setItemAsync("username", newTokens.username),
@@ -103,12 +140,7 @@ const DonorScreen: React.FC = () => {
           ]);
         }
       } catch (error: any) {
-        showAlert(
-          "Role Error",
-          error.message ||
-            "Failed to assign donor role. Please try logging in again.",
-          "error"
-        );
+        showAlert("Role Error", error.message || "Failed to assign donor role.", "error");
         router.replace("/(auth)/loginScreen");
         return;
       } finally {
@@ -119,63 +151,48 @@ const DonorScreen: React.FC = () => {
   }, [router]);
 
   useEffect(() => {
-    const initializeLocation = async () => {
+    const initializeLocationOnce = async () => {
+      if (locationInitialized || manualLocationSet || hasExistingData || formState.location) {
+        return;
+      }
+
+      setLocationLoading(true);
+      setLocationInitialized(true);
+
       try {
         let { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== "granted") {
-          setLocationError("Location permission denied. Please enable location permissions in settings.");
-          showAlert(
-            "Location Permission Denied",
-            "Location access is required for registration. Please enable location permissions in settings.",
-            "warning"
-          );
-          setLocationLoading(false);
+          setLocationError("Location permission denied.");
+          showAlert("Location Permission Denied", "Location access is required for registration.", "warning");
           return;
         }
 
-        if (!formState.location) {
-          const getLocationWithTimeout = (
-            timeoutMs = 10000
-          ): Promise<Location.LocationObject> => {
-            return Promise.race([
-              Location.getCurrentPositionAsync({
-                accuracy: Location.Accuracy.Balanced,
-              }),
-              new Promise<never>((_, reject) =>
-                setTimeout(
-                  () => reject(new Error("Location request timeout")),
-                  timeoutMs
-                )
-              ),
-            ]);
-          };
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
 
-          let location = await getLocationWithTimeout();
+        if (!manualLocationSet && !hasExistingData && !formState.location) {
           formState.setLocation({
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
-          });
-
-          console.log("✅ Location auto-fetched for donor:", {
             latitude: location.coords.latitude,
             longitude: location.coords.longitude,
           });
         }
       } catch (error: any) {
-        console.error("Location error:", error);
-        setLocationError("Unable to get your current location. You can still set it manually using the map.");
-        showAlert(
-          "Location Error",
-          "Unable to get your current location. You can still set it manually using the map.",
-          "warning"
-        );
+        setLocationError("Unable to get current location.");
+        showAlert("Location Error", "Unable to get current location. You can set it manually.", "warning");
       } finally {
         setLocationLoading(false);
       }
     };
 
-    initializeLocation();
-  }, [formState.location]);
+    initializeLocationOnce();
+  }, [hasExistingData, manualLocationSet, formState.location, locationInitialized]);
+
+  const handleResetLocation = async () => {
+    formState.setLocation(null);
+    setManualLocationSet(false);
+    setLocationInitialized(false);
+  };
 
   const handleBackPress = () => {
     if (canGoBack) {
@@ -187,11 +204,7 @@ const DonorScreen: React.FC = () => {
 
   const handleSubmit = async (): Promise<void> => {
     if (!formState.isFormValid()) {
-      showAlert(
-        "Incomplete Form",
-        "Please fill all required fields to continue.",
-        "warning"
-      );
+      showAlert("Incomplete Form", "Please fill all required fields.", "warning");
       return;
     }
 
@@ -212,9 +225,6 @@ const DonorScreen: React.FC = () => {
 
       if (formState.addressId) {
         addressData.id = formState.addressId;
-        console.log('✅ Including existing address ID:', formState.addressId);
-      } else {
-        console.log('➕ Creating new address (no existing ID)');
       }
 
       const payload = {
@@ -225,18 +235,12 @@ const DonorScreen: React.FC = () => {
           bloodPressure: formState.bloodPressure,
           hasDiseases: formState.hasDiseases,
           takingMedication: formState.takingMedication,
-          diseaseDescription: formState.hasDiseases
-            ? formState.diseaseDescription
-            : null,
-          currentMedications: formState.takingMedication
-            ? formState.currentMedications
-            : null,
+          diseaseDescription: formState.hasDiseases ? formState.diseaseDescription : null,
+          currentMedications: formState.takingMedication ? formState.currentMedications : null,
           lastMedicalCheckup: formState.lastMedicalCheckup,
           medicalHistory: formState.medicalHistory,
           hasInfectiousDiseases: formState.hasInfectiousDiseases,
-          infectiousDiseaseDetails: formState.hasInfectiousDiseases
-            ? formState.infectiousDiseaseDetails
-            : null,
+          infectiousDiseaseDetails: formState.hasInfectiousDiseases ? formState.infectiousDiseaseDetails : null,
           creatinineLevel: Number(formState.creatinineLevel),
           liverFunctionTests: formState.liverFunctionTests,
           cardiacStatus: formState.cardiacStatus,
@@ -290,49 +294,37 @@ const DonorScreen: React.FC = () => {
         },
       };
 
-      console.log('📤 Sending payload with address:', JSON.stringify(addressData, null, 2));
-
       const response = await registerDonor(payload);
       if (response?.id) {
         await SecureStore.setItemAsync("donorId", response.id);
         await SecureStore.setItemAsync("donorData", JSON.stringify(response));
-        
+
         if (response.addresses && response.addresses.length > 0 && !formState.addressId) {
           formState.setAddressId(response.addresses[0].id);
-          console.log('✅ New address ID saved:', response.addresses[0].id);
         }
-        
-        showAlert(
-          "Registration Successful!",
-          "Your donor registration has been completed successfully. HLA typing will be conducted during your first medical screening.",
-          "success"
-        );
+
+        showAlert("Registration Successful!", "Your donor registration has been completed successfully.", "success");
 
         setTimeout(() => {
           router.replace("/(tabs)/donate");
         }, 2000);
       } else {
-        throw new Error(
-          "Registration succeeded but donorId missing in response."
-        );
+        throw new Error("Registration succeeded but donorId missing in response.");
       }
     } catch (error: any) {
-      showAlert(
-        "Registration Failed",
-        error.message ||
-          "Something went wrong during registration. Please try again.",
-        "error"
-      );
+      showAlert("Registration Failed", error.message || "Something went wrong during registration.", "error");
     } finally {
       setLoading(false);
     }
   };
 
-  if (roleLoading) {
+  if (roleLoading || locationLoading) {
+    const loadingMessage = roleLoading ? "Setting up donor role..." : "Getting your location...";
+
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={theme.primary} />
-        <Text style={styles.loadingText}>Setting up donor role...</Text>
+        <Text style={styles.loadingText}>{loadingMessage}</Text>
       </View>
     );
   }
@@ -340,15 +332,9 @@ const DonorScreen: React.FC = () => {
   return (
     <AppLayout>
       <View style={styles.container}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           <View style={styles.headerContainer}>
-            <TouchableOpacity
-              onPress={handleBackPress}
-              style={styles.backButton}
-            >
+            <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
               <Feather name="arrow-left" size={20} color={theme.text} />
             </TouchableOpacity>
 
@@ -357,9 +343,7 @@ const DonorScreen: React.FC = () => {
             </View>
             <View style={styles.headerTextContainer}>
               <Text style={styles.headerTitle}>Donor Registration</Text>
-              <Text style={styles.headerSubtitle}>
-                Complete your profile to help save lives
-              </Text>
+              <Text style={styles.headerSubtitle}>Complete your profile to help save lives</Text>
             </View>
             <View style={styles.statusBadge}>
               <Text style={styles.statusText}>
@@ -370,9 +354,20 @@ const DonorScreen: React.FC = () => {
 
           <DonorForm
             {...formState}
-            onLocationPress={() => router.push("/navigation/mapScreen")}
+            onLocationPress={() =>
+              router.push({
+                pathname: "/navigation/mapScreen",
+                params: {
+                  latitude: formState.location?.latitude?.toString() || "",
+                  longitude: formState.location?.longitude?.toString() || "",
+                  returnScreen: "donor",
+                },
+              })
+            }
             locationLoading={locationLoading}
             locationError={locationError}
+            onResetLocation={handleResetLocation}
+            manualLocationSet={manualLocationSet}
           />
         </ScrollView>
 
@@ -380,9 +375,7 @@ const DonorScreen: React.FC = () => {
           <TouchableOpacity
             style={[
               styles.submitButton,
-              !formState.isFormValid() || loading
-                ? styles.submitButtonDisabled
-                : null,
+              !formState.isFormValid() || loading ? styles.submitButtonDisabled : null,
             ]}
             onPress={handleSubmit}
             disabled={!formState.isFormValid() || loading}
