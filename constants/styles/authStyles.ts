@@ -253,7 +253,6 @@ export const createAuthStyles = (theme: typeof lightTheme) =>
       marginTop: 12,
     },
 
-
     formSection: {
       marginBottom: 24,
     },
@@ -286,6 +285,143 @@ export const createAuthStyles = (theme: typeof lightTheme) =>
       shadowRadius: 4,
       elevation: 3,
       zIndex: 1000,
+    },
+
+    mapContainer: {
+      flex: 1,
+    },
+
+    mapHeader: {
+      backgroundColor: theme.card,
+      paddingTop: 50,
+      paddingBottom: 16,
+      paddingHorizontal: 24,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.border,
+      shadowColor: theme.shadow,
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+
+    mapHeaderContent: {
+      flexDirection: "row",
+      alignItems: "center",
+    },
+
+    mapBackButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: theme.background,
+      borderWidth: 1,
+      borderColor: theme.border,
+      justifyContent: "center",
+      alignItems: "center",
+      marginRight: 16,
+    },
+
+    mapHeaderTextContainer: {
+      flex: 1,
+    },
+
+    mapHeaderTitle: {
+      fontSize: 20,
+      fontWeight: "700",
+      color: theme.text,
+    },
+
+    mapHeaderSubtitle: {
+      fontSize: 14,
+      color: theme.textSecondary,
+      marginTop: 2,
+    },
+
+    coordinatesOverlay: {
+      position: "absolute",
+      top: 20,
+      left: 20,
+      right: 20,
+      backgroundColor: theme.card,
+      padding: 16,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: theme.border,
+      shadowColor: theme.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.15,
+      shadowRadius: 8,
+      elevation: 5,
+    },
+
+    coordinatesLabel: {
+      fontSize: 14,
+      fontWeight: "600",
+      color: theme.textSecondary,
+      marginBottom: 4,
+    },
+
+    coordinatesText: {
+      fontSize: 16,
+      fontWeight: "500",
+      color: theme.text,
+      fontFamily: "monospace",
+    },
+
+    actionButtonsContainer: {
+      position: "absolute",
+      bottom: 30,
+      left: 20,
+      right: 20,
+    },
+
+    buttonRow: {
+      flexDirection: "row",
+      gap: 12,
+    },
+
+    mapButton: {
+      paddingVertical: 14,
+      paddingHorizontal: 20,
+      borderRadius: 12,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      shadowColor: theme.shadow,
+      shadowOffset: {
+        width: 0,
+        height: 4,
+      },
+      shadowOpacity: 0.2,
+      shadowRadius: 8,
+      elevation: 4,
+    },
+
+    currentLocationButton: {
+      backgroundColor: theme.textSecondary,
+      flex: 1,
+    },
+
+    confirmButton: {
+      backgroundColor: theme.primary,
+      flex: 2,
+    },
+
+    confirmButtonDisabled: {
+      backgroundColor: theme.border,
+      shadowOpacity: 0,
+      elevation: 0,
+    },
+
+    mapButtonText: {
+      color: "#ffffff",
+      fontSize: 16,
+      fontWeight: "600",
+      marginLeft: 8,
     },
   });
 

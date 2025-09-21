@@ -24,8 +24,6 @@ import {
   fetchRequestByIdWithAccess,
   getDonorByUserId,
   getRecipientByUserId,
-  fetchDonorHistoryForRecipient,
-  fetchRecipientHistoryForDonor,
   getMatchConfirmationStatus,
   fetchRecipientHistoryByMatchId,
   fetchDonorHistoryByMatchId,
@@ -89,7 +87,9 @@ const MatchDetailsScreen = () => {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const [donorProfile, setDonorProfile] = useState<UserProfile | null>(null);
-  const [recipientProfile, setRecipientProfile] = useState<UserProfile | null>(null);
+  const [recipientProfile, setRecipientProfile] = useState<UserProfile | null>(
+    null
+  );
 
   const [donorCurrentData, setDonorCurrentData] = useState<any>(null);
   const [recipientCurrentData, setRecipientCurrentData] = useState<any>(null);
@@ -101,16 +101,22 @@ const MatchDetailsScreen = () => {
   const [yourDetails, setYourDetails] = useState<any>(null);
   const [loadingYourDetails, setLoadingYourDetails] = useState(false);
 
-  const [currentLocation, setCurrentLocation] = useState<LocationCoordinates | null>(null);
-  const [destinationLocation, setDestinationLocation] = useState<LocationCoordinates | null>(null);
-  const [calculatedDistance, setCalculatedDistance] = useState<number | null>(null);
+  const [currentLocation, setCurrentLocation] =
+    useState<LocationCoordinates | null>(null);
+  const [destinationLocation, setDestinationLocation] =
+    useState<LocationCoordinates | null>(null);
+  const [calculatedDistance, setCalculatedDistance] = useState<number | null>(
+    null
+  );
   const [locationPermission, setLocationPermission] = useState<boolean>(false);
   const [loadingLocation, setLoadingLocation] = useState(false);
 
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
-  const [alertType, setAlertType] = useState<"success" | "error" | "warning" | "info">("info");
+  const [alertType, setAlertType] = useState<
+    "success" | "error" | "warning" | "info"
+  >("info");
 
   const showAlert = (
     title: string,
@@ -123,13 +129,21 @@ const MatchDetailsScreen = () => {
     setAlertVisible(true);
   };
 
-  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+  const calculateDistance = (
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number
+  ): number => {
     const R = 6371;
     const dLat = (lat2 - lat1) * (Math.PI / 180);
     const dLon = (lon2 - lon1) * (Math.PI / 180);
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      Math.cos(lat1 * (Math.PI / 180)) *
+        Math.cos(lat2 * (Math.PI / 180)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     const distance = R * c;
     return distance;
@@ -139,11 +153,11 @@ const MatchDetailsScreen = () => {
     setLoadingLocation(true);
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
+      if (status !== "granted") {
         setLocationPermission(false);
         Alert.alert(
-          'Permission Denied',
-          'Location permission is required to show distance and directions.'
+          "Permission Denied",
+          "Location permission is required to show distance and directions."
         );
         return;
       }
@@ -161,82 +175,225 @@ const MatchDetailsScreen = () => {
 
       setCurrentLocation(userLocation);
     } catch (error) {
-      console.error('Error getting location:', error);
-      Alert.alert('Location Error', 'Could not get your current location.');
+      console.error("Error getting location:", error);
+      Alert.alert("Location Error", "Could not get your current location.");
     } finally {
       setLoadingLocation(false);
     }
   };
 
-  const getDestinationLocation = (matchData: MatchDetails, userRole: string, otherPartyData: any) => {
+  const getDestinationLocation = (
+    matchData: MatchDetails,
+    userRole: string,
+    otherPartyData: any
+  ) => {
     let destinationCoords: LocationCoordinates | null = null;
-    let destinationTitle = '';
+    let destinationTitle = "";
+
+    console.log("🎯 DEBUG - getDestinationLocation called:", {
+      userRole,
+      isConfirmed: matchData.isConfirmed,
+      hasOtherPartyData: !!otherPartyData,
+      hasYourDetails: !!yourDetails,
+      yourDetailsType: yourDetails?.type,
+    });
 
     try {
-      if (userRole === 'donor') {
-        destinationTitle = `${recipientProfile?.name || 'Recipient'} Location`;
-        
-        if (matchData.isConfirmed && otherPartyData?.receiveRequestSnapshot) {
-          const requestSnapshot = otherPartyData.receiveRequestSnapshot;
-          if (requestSnapshot.usedLocationLatitude && requestSnapshot.usedLocationLongitude) {
+      if (userRole === "donor") {
+        destinationTitle = `${recipientProfile?.name || "Recipient"} Location`;
+
+        if (matchData.isConfirmed && otherPartyData) {
+          console.log("📍 Checking historical recipient data:", {
+            hasReceiveRequestSnapshot: !!otherPartyData.receiveRequestSnapshot,
+            otherPartyDataKeys: Object.keys(otherPartyData),
+          });
+
+          let coords = null;
+
+          if (otherPartyData.receiveRequestSnapshot) {
+            const snapshot = otherPartyData.receiveRequestSnapshot;
+            if (
+              snapshot.usedLocationLatitude &&
+              snapshot.usedLocationLongitude
+            ) {
+              coords = {
+                latitude: parseFloat(snapshot.usedLocationLatitude),
+                longitude: parseFloat(snapshot.usedLocationLongitude),
+                address: `${snapshot.usedLocationAddressLine || ""}, ${
+                  snapshot.usedLocationCity || ""
+                }`
+                  .trim()
+                  .replace(/^,\s*/, ""),
+              };
+            }
+          }
+
+          if (
+            !coords &&
+            otherPartyData.usedLocationLatitude &&
+            otherPartyData.usedLocationLongitude
+          ) {
+            coords = {
+              latitude: parseFloat(otherPartyData.usedLocationLatitude),
+              longitude: parseFloat(otherPartyData.usedLocationLongitude),
+              address: `${otherPartyData.usedLocationAddressLine || ""}, ${
+                otherPartyData.usedLocationCity || ""
+              }`
+                .trim()
+                .replace(/^,\s*/, ""),
+            };
+          }
+
+          if (coords && !isNaN(coords.latitude) && !isNaN(coords.longitude)) {
             destinationCoords = {
-              latitude: requestSnapshot.usedLocationLatitude,
-              longitude: requestSnapshot.usedLocationLongitude,
+              latitude: coords.latitude,
+              longitude: coords.longitude,
               title: destinationTitle,
-              address: `${requestSnapshot.usedLocationAddressLine || ''}, ${requestSnapshot.usedLocationCity || ''}`
+              address: coords.address,
+            };
+          }
+        } else if (!matchData.isConfirmed && yourDetails?.data) {
+          console.log("📍 Checking current recipient data from yourDetails:", {
+            yourDetailsType: yourDetails.type,
+            hasLatLng: !!(
+              yourDetails.data.usedLocationLatitude &&
+              yourDetails.data.usedLocationLongitude
+            ),
+          });
+
+          if (
+            yourDetails.data.usedLocationLatitude &&
+            yourDetails.data.usedLocationLongitude
+          ) {
+            destinationCoords = {
+              latitude: parseFloat(yourDetails.data.usedLocationLatitude),
+              longitude: parseFloat(yourDetails.data.usedLocationLongitude),
+              title: destinationTitle,
+              address: `${yourDetails.data.usedLocationAddressLine || ""}, ${
+                yourDetails.data.usedLocationCity || ""
+              }`
+                .trim()
+                .replace(/^,\s*/, ""),
             };
           }
         }
-        else if (!matchData.isConfirmed && yourDetails?.data) {
-          const requestData = yourDetails.data;
-          if (requestData.usedLocationLatitude && requestData.usedLocationLongitude) {
-            destinationCoords = {
-              latitude: requestData.usedLocationLatitude,
-              longitude: requestData.usedLocationLongitude,
-              title: destinationTitle,
-              address: `${requestData.usedLocationAddressLine || ''}, ${requestData.usedLocationCity || ''}`
+      } else if (userRole === "recipient") {
+        destinationTitle = `${donorProfile?.name || "Donor"} Location`;
+
+        if (matchData.isConfirmed && otherPartyData) {
+          console.log("📍 Checking historical donor data:", {
+            hasDonationSnapshot: !!otherPartyData.donationSnapshot,
+            otherPartyDataKeys: Object.keys(otherPartyData),
+          });
+
+          let coords = null;
+
+          if (otherPartyData.donationSnapshot) {
+            const snapshot = otherPartyData.donationSnapshot;
+            if (
+              snapshot.usedLocationLatitude &&
+              snapshot.usedLocationLongitude
+            ) {
+              coords = {
+                latitude: parseFloat(snapshot.usedLocationLatitude),
+                longitude: parseFloat(snapshot.usedLocationLongitude),
+                address: `${snapshot.usedLocationAddressLine || ""}, ${
+                  snapshot.usedLocationCity || ""
+                }`
+                  .trim()
+                  .replace(/^,\s*/, ""),
+              };
+            }
+          }
+
+          if (
+            !coords &&
+            otherPartyData.usedLocationLatitude &&
+            otherPartyData.usedLocationLongitude
+          ) {
+            coords = {
+              latitude: parseFloat(otherPartyData.usedLocationLatitude),
+              longitude: parseFloat(otherPartyData.usedLocationLongitude),
+              address: `${otherPartyData.usedLocationAddressLine || ""}, ${
+                otherPartyData.usedLocationCity || ""
+              }`
+                .trim()
+                .replace(/^,\s*/, ""),
             };
           }
-        }
-      } else if (userRole === 'recipient') {
-        destinationTitle = `${donorProfile?.name || 'Donor'} Location`;
-        
-        if (matchData.isConfirmed && otherPartyData?.donationSnapshot) {
-          const donationSnapshot = otherPartyData.donationSnapshot;
-          if (donationSnapshot.usedLocationLatitude && donationSnapshot.usedLocationLongitude) {
+
+          if (coords && !isNaN(coords.latitude) && !isNaN(coords.longitude)) {
             destinationCoords = {
-              latitude: donationSnapshot.usedLocationLatitude,
-              longitude: donationSnapshot.usedLocationLongitude,
+              latitude: coords.latitude,
+              longitude: coords.longitude,
               title: destinationTitle,
-              address: `${donationSnapshot.usedLocationAddressLine || ''}, ${donationSnapshot.usedLocationCity || ''}`
+              address: coords.address,
             };
           }
-        }
-        else if (!matchData.isConfirmed && yourDetails?.data) {
-          const donationData = yourDetails.data;
-          if (donationData.usedLocationLatitude && donationData.usedLocationLongitude) {
+        } else if (!matchData.isConfirmed && yourDetails?.data) {
+          console.log("📍 Checking current donor data from yourDetails:", {
+            yourDetailsType: yourDetails.type,
+            hasLatLng: !!(
+              yourDetails.data.usedLocationLatitude &&
+              yourDetails.data.usedLocationLongitude
+            ),
+          });
+
+          if (
+            yourDetails.data.usedLocationLatitude &&
+            yourDetails.data.usedLocationLongitude
+          ) {
             destinationCoords = {
-              latitude: donationData.usedLocationLatitude,
-              longitude: donationData.usedLocationLongitude,
+              latitude: parseFloat(yourDetails.data.usedLocationLatitude),
+              longitude: parseFloat(yourDetails.data.usedLocationLongitude),
               title: destinationTitle,
-              address: `${donationData.usedLocationAddressLine || ''}, ${donationData.usedLocationCity || ''}`
+              address: `${yourDetails.data.usedLocationAddressLine || ""}, ${
+                yourDetails.data.usedLocationCity || ""
+              }`
+                .trim()
+                .replace(/^,\s*/, ""),
             };
           }
         }
       }
+
+      console.log("🗺️ Final destination coordinates:", {
+        found: !!destinationCoords,
+        coordinates: destinationCoords,
+        title: destinationTitle,
+      });
     } catch (error) {
-      console.error('Error extracting destination location:', error);
+      console.error("❌ Error extracting destination location:", error);
     }
 
     return destinationCoords;
   };
 
   const updateLocationData = () => {
+    console.log("🔄 updateLocationData called:", {
+      hasMatch: !!match,
+      hasCurrentUserId: !!currentUserId,
+      hasProfiles: !!(donorProfile && recipientProfile),
+      hasYourDetails: !!yourDetails,
+      hasHistoricalData: !!(donorHistoryData || recipientHistoryData),
+      hasCurrentLocation: !!currentLocation,
+    });
+
     if (!match || !currentUserId) return;
 
     const userRole = getUserRoleInMatch();
-    const otherPartyData = userRole === 'donor' ? recipientHistoryData || recipientCurrentData : donorHistoryData || donorCurrentData;
-    
+    const otherPartyData =
+      userRole === "donor"
+        ? recipientHistoryData || recipientCurrentData
+        : donorHistoryData || donorCurrentData;
+
+    console.log("📊 updateLocationData details:", {
+      userRole,
+      hasOtherPartyData: !!otherPartyData,
+      otherPartyDataKeys: otherPartyData ? Object.keys(otherPartyData) : [],
+      isConfirmed: match.isConfirmed,
+    });
+
     const destination = getDestinationLocation(match, userRole, otherPartyData);
     setDestinationLocation(destination);
 
@@ -248,6 +405,12 @@ const MatchDetailsScreen = () => {
         destination.longitude
       );
       setCalculatedDistance(distance);
+      console.log("✅ Distance calculated:", distance.toFixed(2), "km");
+    } else {
+      console.log("❌ Cannot calculate distance:", {
+        hasCurrentLocation: !!currentLocation,
+        hasDestination: !!destination,
+      });
     }
   };
 
@@ -260,11 +423,17 @@ const MatchDetailsScreen = () => {
     setLoadingHistory(true);
     try {
       const userRole =
-        matchData.donorUserId === userId ? "donor" : 
-        matchData.recipientUserId === userId ? "recipient" : "unknown";
+        matchData.donorUserId === userId
+          ? "donor"
+          : matchData.recipientUserId === userId
+          ? "recipient"
+          : "unknown";
 
       if (userRole === "donor") {
-        const recipientHistory = await fetchRecipientHistoryByMatchId(matchData.matchResultId);
+        const recipientHistory = await fetchRecipientHistoryByMatchId(
+          matchData.matchResultId
+        );
+        console.log("📜 Recipient history loaded:", recipientHistory);
         if (recipientHistory && recipientHistory.length > 0) {
           const structuredData = {
             ...recipientHistory[0],
@@ -274,7 +443,10 @@ const MatchDetailsScreen = () => {
           setRecipientHistoryData(structuredData);
         }
       } else if (userRole === "recipient") {
-        const donorHistory = await fetchDonorHistoryByMatchId(matchData.matchResultId);
+        const donorHistory = await fetchDonorHistoryByMatchId(
+          matchData.matchResultId
+        );
+        console.log("📜 Donor history loaded:", donorHistory);
         if (donorHistory && donorHistory.length > 0) {
           const structuredData = {
             ...donorHistory[0],
@@ -285,18 +457,36 @@ const MatchDetailsScreen = () => {
         }
       }
     } catch (error: any) {
-      console.log("Could not load match-specific historical data:", error.message);
+      console.log(
+        "Could not load match-specific historical data:",
+        error.message
+      );
     } finally {
       setLoadingHistory(false);
     }
   };
 
   useEffect(() => {
-    if (match && currentUserId && (donorProfile && recipientProfile) && 
-        (yourDetails || (match.isConfirmed && (donorHistoryData || recipientHistoryData)))) {
+    if (
+      match &&
+      currentUserId &&
+      donorProfile &&
+      recipientProfile &&
+      (yourDetails ||
+        (match.isConfirmed && (donorHistoryData || recipientHistoryData)))
+    ) {
       updateLocationData();
     }
-  }, [match, currentUserId, donorProfile, recipientProfile, yourDetails, donorHistoryData, recipientHistoryData, currentLocation]);
+  }, [
+    match,
+    currentUserId,
+    donorProfile,
+    recipientProfile,
+    yourDetails,
+    donorHistoryData,
+    recipientHistoryData,
+    currentLocation,
+  ]);
 
   useEffect(() => {
     getCurrentUserLocation();
@@ -312,6 +502,10 @@ const MatchDetailsScreen = () => {
       ]);
       setDonorCurrentData(donorDetails);
       setRecipientCurrentData(recipientDetails);
+      console.log("🔄 Current data loaded:", {
+        donorDetails,
+        recipientDetails,
+      });
     } catch (error) {
       console.log("Could not fetch current donor/recipient details:", error);
     }
@@ -369,7 +563,9 @@ const MatchDetailsScreen = () => {
         const parsedMatch = JSON.parse(matchData as string);
 
         try {
-          const confirmed = await getMatchConfirmationStatus(parsedMatch.matchResultId);
+          const confirmed = await getMatchConfirmationStatus(
+            parsedMatch.matchResultId
+          );
           parsedMatch.isConfirmed = confirmed;
         } catch (error) {
           console.log("Could not verify match status, using passed data");
@@ -394,7 +590,11 @@ const MatchDetailsScreen = () => {
 
         await loadYourDetails(parsedMatch, userId);
       } catch (error: any) {
-        showAlert("Error", error.message || "Failed to load match details", "error");
+        showAlert(
+          "Error",
+          error.message || "Failed to load match details",
+          "error"
+        );
       } finally {
         setLoading(false);
       }
@@ -403,17 +603,26 @@ const MatchDetailsScreen = () => {
     loadMatchDetails();
   }, [matchData]);
 
-  const loadYourDetails = async (match: MatchDetails, userId: string | null) => {
+  const loadYourDetails = async (
+    match: MatchDetails,
+    userId: string | null
+  ) => {
     if (!userId) return;
 
     setLoadingYourDetails(true);
     try {
       if (match.donorUserId === userId) {
-        const requestDetails = await fetchRequestByIdWithAccess(match.receiveRequestId);
+        const requestDetails = await fetchRequestByIdWithAccess(
+          match.receiveRequestId
+        );
         setYourDetails({ type: "request", data: requestDetails });
+        console.log("📝 Your details loaded (request):", requestDetails);
       } else if (match.recipientUserId === userId) {
-        const donationDetails = await fetchDonationByIdWithAccess(match.donationId);
+        const donationDetails = await fetchDonationByIdWithAccess(
+          match.donationId
+        );
         setYourDetails({ type: "donation", data: donationDetails });
+        console.log("📝 Your details loaded (donation):", donationDetails);
       }
     } catch (error: any) {
       setYourDetails(null);
@@ -431,7 +640,11 @@ const MatchDetailsScreen = () => {
 
   const getCurrentUserRole = (): string => {
     const role = getUserRoleInMatch();
-    return role === "donor" ? "Donor" : role === "recipient" ? "Recipient" : "Unknown";
+    return role === "donor"
+      ? "Donor"
+      : role === "recipient"
+      ? "Recipient"
+      : "Unknown";
   };
 
   const getCurrentUserStatus = (): boolean => {
@@ -481,7 +694,7 @@ const MatchDetailsScreen = () => {
 
   const viewUserProfile = async (userId: string, userName: string) => {
     setNavigatingToProfile(true);
-    
+
     try {
       const otherPartyInfo = getOtherPartyInfo();
 
@@ -499,7 +712,7 @@ const MatchDetailsScreen = () => {
         });
       }, 100);
     } catch (error) {
-      console.error('Error navigating to profile:', error);
+      console.error("Error navigating to profile:", error);
       setNavigatingToProfile(false);
     }
   };
@@ -530,7 +743,10 @@ const MatchDetailsScreen = () => {
       <AppLayout>
         <View style={styles.promptContainer}>
           <Text style={styles.promptTitle}>Match Not Found</Text>
-          <TouchableOpacity style={styles.registerButton} onPress={() => router.back()}>
+          <TouchableOpacity
+            style={styles.registerButton}
+            onPress={() => router.back()}
+          >
             <Feather name="arrow-left" size={16} color="#fff" />
             <Text style={styles.registerButtonText}>Go Back</Text>
           </TouchableOpacity>
@@ -546,7 +762,10 @@ const MatchDetailsScreen = () => {
     <AppLayout>
       <View style={styles.container}>
         <View style={[styles.headerContainer, { paddingHorizontal: 24 }]}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            style={styles.backButton}
+          >
             <Feather name="arrow-left" size={20} color={theme.text} />
           </TouchableOpacity>
 
@@ -635,7 +854,9 @@ const MatchDetailsScreen = () => {
         </ScrollView>
 
         {canConfirmMatch() && (
-          <View style={[styles.submitButtonContainer, { paddingHorizontal: 24 }]}>
+          <View
+            style={[styles.submitButtonContainer, { paddingHorizontal: 24 }]}
+          >
             <TouchableOpacity
               style={[
                 styles.submitButton,
@@ -657,31 +878,37 @@ const MatchDetailsScreen = () => {
         )}
 
         {navigatingToProfile && (
-          <View style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 1000
-          }}>
-            <View style={{
-              backgroundColor: theme.background,
-              padding: 24,
-              borderRadius: 12,
-              alignItems: 'center',
-              minWidth: 200
-            }}>
+          <View
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(0,0,0,0.5)",
+              justifyContent: "center",
+              alignItems: "center",
+              zIndex: 1000,
+            }}
+          >
+            <View
+              style={{
+                backgroundColor: theme.background,
+                padding: 24,
+                borderRadius: 12,
+                alignItems: "center",
+                minWidth: 200,
+              }}
+            >
               <ActivityIndicator size="large" color={theme.primary} />
-              <Text style={{ 
-                color: theme.text, 
-                marginTop: 12, 
-                fontSize: 16,
-                fontWeight: '500'
-              }}>
+              <Text
+                style={{
+                  color: theme.text,
+                  marginTop: 12,
+                  fontSize: 16,
+                  fontWeight: "500",
+                }}
+              >
                 Loading Profile...
               </Text>
             </View>
