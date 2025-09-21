@@ -26,6 +26,8 @@ interface LocationDetailsProps {
   onLocationPress: () => void;
   locationLoading?: boolean;
   locationError?: string | null;
+  onResetLocation?: () => void;
+  manualLocationSet?: boolean;
 }
 
 export function LocationDetails({
@@ -49,11 +51,20 @@ export function LocationDetails({
   onLocationPress,
   locationLoading = false,
   locationError = null,
+  onResetLocation,
+  manualLocationSet = false,
 }: LocationDetailsProps) {
   const { colorScheme } = useTheme();
   const isDark = colorScheme === 'dark';
   const theme = isDark ? darkTheme : lightTheme;
   const styles = createUnifiedStyles(theme);
+
+  console.log('🗺️ DonorForm LocationDetails render:', {
+    hasLocation: !!location,
+    coordinates: location,
+    manualLocationSet,
+    locationLoading
+  });
 
   return (
     <View style={styles.sectionContainer}>
@@ -171,9 +182,26 @@ export function LocationDetails({
         >
           <Feather name="map" size={20} color="#fff" />
           <Text style={styles.locationButtonText}>
-            {location ? "Change Location" : "Pick Location on Map"}
+            {location ? "Update Location" : "Pick Location on Map"}
           </Text>
         </TouchableOpacity>
+        
+        {location && manualLocationSet && onResetLocation && (
+          <TouchableOpacity
+            style={[styles.locationButton, { 
+              backgroundColor: theme.textSecondary + '40',
+              marginLeft: 8,
+              flex: 0.4
+            }]}
+            onPress={onResetLocation}
+            activeOpacity={0.8}
+          >
+            <Feather name="rotate-ccw" size={16} color="#fff" />
+            <Text style={[styles.locationButtonText, { fontSize: 12 }]}>
+              Reset
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
       
       {location && (
@@ -182,6 +210,23 @@ export function LocationDetails({
           <Text style={styles.coordinatesText}>
             Location: {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
           </Text>
+          {manualLocationSet && (
+            <View style={{
+              backgroundColor: theme.primary + '20',
+              paddingHorizontal: 8,
+              paddingVertical: 2,
+              borderRadius: 12,
+              marginLeft: 8
+            }}>
+              <Text style={{
+                color: theme.primary,
+                fontSize: 10,
+                fontWeight: '600'
+              }}>
+                MANUAL
+              </Text>
+            </View>
+          )}
         </View>
       )}
     </View>

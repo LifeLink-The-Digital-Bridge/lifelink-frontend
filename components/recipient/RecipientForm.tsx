@@ -1,17 +1,16 @@
-import React from 'react';
-import { ScrollView } from 'react-native';
-import { useTheme } from '../../utils/theme-context';
-import { lightTheme, darkTheme } from '../../constants/styles/authStyles';
-import { createUnifiedStyles } from '../../constants/styles/unifiedStyles';
+import React from "react";
+import { ScrollView } from "react-native";
+import { useTheme } from "../../utils/theme-context";
+import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
+import { createUnifiedStyles } from "../../constants/styles/unifiedStyles";
 
-import { MedicalDetails } from './MedicalDetails';
-import { EligibilityCriteria } from './EligibilityCriteria';
-import { LocationDetails } from './LocationDetails';
-import { HlaProfile } from './HlaProfile';
-import { ConsentForm } from './ConsentForm';
+import { MedicalDetails } from "./MedicalDetails";
+import { EligibilityCriteria } from "./EligibilityCriteria";
+import { LocationDetails } from "./LocationDetails";
+import { HlaProfile } from "./HlaProfile";
+import { ConsentForm } from "./ConsentForm";
 
 export interface RecipientFormProps {
-  // Medical Details
   hemoglobinLevel: string;
   setHemoglobinLevel: (value: string) => void;
   bloodPressure: string;
@@ -39,7 +38,6 @@ export interface RecipientFormProps {
   overallHealthStatus: string;
   setOverallHealthStatus: (value: string) => void;
 
-  // Eligibility Criteria
   age: string;
   setAge: (value: string) => void;
   weight: string;
@@ -60,13 +58,11 @@ export interface RecipientFormProps {
   lastReviewed: string;
   setLastReviewed: (value: string) => void;
 
-  // Consent - Updated to include both props
   isConsented: boolean;
   setIsConsented: (value: boolean) => void;
   consentedAt: string;
   setConsentedAt: (consentedAt: string) => void;
-  
-  // Location
+
   addressLine: string;
   setAddressLine: (value: string) => void;
   landmark: string;
@@ -86,8 +82,9 @@ export interface RecipientFormProps {
   latitude: number | null;
   longitude: number | null;
   onLocationPress: () => void;
+  onResetLocation?: () => void;
+  manualLocationSet?: boolean;
 
-  // HLA Profile
   hlaA1: string;
   setHlaA1: (value: string) => void;
   hlaA2: string;
@@ -126,7 +123,7 @@ export interface RecipientFormProps {
 
 export const RecipientForm: React.FC<RecipientFormProps> = (props) => {
   const { colorScheme } = useTheme();
-  const isDark = colorScheme === 'dark';
+  const isDark = colorScheme === "dark";
   const theme = isDark ? darkTheme : lightTheme;
   const styles = createUnifiedStyles(theme);
 
@@ -202,6 +199,8 @@ export const RecipientForm: React.FC<RecipientFormProps> = (props) => {
         latitude={props.latitude}
         longitude={props.longitude}
         onLocationPress={props.onLocationPress}
+        onResetLocation={props.onResetLocation}
+        manualLocationSet={props.manualLocationSet}
       />
 
       <HlaProfile

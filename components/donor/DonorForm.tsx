@@ -126,7 +126,9 @@ export interface DonorFormProps {
   location: { latitude: number; longitude: number } | null;
   onLocationPress: () => void;
   locationLoading?: boolean;
-  locationError?: string | null; 
+  locationError?: string | null;
+  onResetLocation?: () => void;
+  manualLocationSet?: boolean;
 
   userId?: string;
   isFormValid: () => boolean;
@@ -205,7 +207,7 @@ export const DonorForm: React.FC<DonorFormProps> = (props) => {
         setLastDonationDate={props.setLastDonationDate}
       />
 
-      <LocationDetails
+<LocationDetails
         addressLine={props.addressLine}
         setAddressLine={props.setAddressLine}
         landmark={props.landmark}
@@ -224,6 +226,10 @@ export const DonorForm: React.FC<DonorFormProps> = (props) => {
         setPincode={props.setPincode}
         location={props.location}
         onLocationPress={props.onLocationPress}
+        locationLoading={props.locationLoading}
+        locationError={props.locationError}
+        onResetLocation={props.onResetLocation}
+        manualLocationSet={props.manualLocationSet}
       />
       
       <HlaProfile

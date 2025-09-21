@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, TextInput, TouchableOpacity } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../utils/theme-context";
 import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
@@ -25,6 +25,8 @@ interface LocationDetailsProps {
   latitude: number | null;
   longitude: number | null;
   onLocationPress: () => void;
+  onResetLocation?: () => void;
+  manualLocationSet?: boolean;
 }
 
 export function LocationDetails(props: LocationDetailsProps) {
@@ -32,6 +34,17 @@ export function LocationDetails(props: LocationDetailsProps) {
   const isDark = colorScheme === "dark";
   const theme = isDark ? darkTheme : lightTheme;
   const styles = createUnifiedStyles(theme);
+
+  const hasValidCoordinates = props.latitude !== null && props.longitude !== null && 
+                              !isNaN(props.latitude) && !isNaN(props.longitude);
+
+  console.log('🗺️ RecipientForm LocationDetails render:', {
+    latitude: props.latitude,
+    longitude: props.longitude,
+    hasValidCoordinates,
+    manualLocationSet: props.manualLocationSet,
+    type: typeof props.latitude
+  });
 
   return (
     <View style={styles.sectionContainer}>
@@ -135,25 +148,59 @@ export function LocationDetails(props: LocationDetailsProps) {
         </View>
       </View>
 
-      <TouchableOpacity
-        style={styles.locationButton}
-        onPress={props.onLocationPress}
-        activeOpacity={0.8}
-      >
-        <Feather name="map" size={20} color="#fff" />
-        <Text style={styles.locationButtonText}>
-          {props.latitude && props.longitude
-            ? "Update Location"
-            : "Pick Location on Map"}
-        </Text>
-      </TouchableOpacity>
-
-      {props.latitude !== null && props.longitude !== null && (
-        <View style={styles.coordinatesContainer}>
-          <Feather name="navigation" size={16} color={theme.success} />
-          <Text style={styles.coordinatesText}>
-            Location: {props.latitude.toFixed(4)}, {props.longitude.toFixed(4)}
+      <View style={styles.locationButtonContainer}>
+        <TouchableOpacity
+          style={styles.locationButton}
+          onPress={props.onLocationPress}
+          activeOpacity={0.8}
+        >
+          <Feather name="map" size={20} color="#fff" />
+          <Text style={styles.locationButtonText}>
+            {hasValidCoordinates ? "Update Location" : "Pick Location on Map"}
           </Text>
+        </TouchableOpacity>
+        
+        {hasValidCoordinates && props.manualLocationSet && props.onResetLocation && (
+          <TouchableOpacity
+            style={[styles.locationButton, { 
+              backgroundColor: theme.textSecondary + '40',
+              marginLeft: 8,
+              flex: 0.4
+            }]}
+            onPress={props.onResetLocation}
+            activeOpacity={0.8}
+          >
+            <Feather name="rotate-ccw" size={16} color="#fff" />
+            <Text style={[styles.locationButtonText, { fontSize: 12 }]}>
+              Reset
+            </Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {hasValidCoordinates && (
+        <View style={styles.coordinatesContainer}>
+          <Feather name="check-circle" size={16} color={theme.success} />
+          <Text style={styles.coordinatesText}>
+            Location: {props.latitude!.toFixed(6)}, {props.longitude!.toFixed(6)}
+          </Text>
+          {props.manualLocationSet && (
+            <View style={{
+              backgroundColor: theme.primary + '20',
+              paddingHorizontal: 8,
+              paddingVertical: 2,
+              borderRadius: 12,
+              marginLeft: 8
+            }}>
+              <Text style={{
+                color: theme.primary,
+                fontSize: 10,
+                fontWeight: '600'
+              }}>
+                MANUAL
+              </Text>
+            </View>
+          )}
         </View>
       )}
     </View>
