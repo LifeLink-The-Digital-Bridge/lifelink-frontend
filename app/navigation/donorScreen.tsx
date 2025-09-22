@@ -1,7 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { useAuth } from "../../utils/auth-context";
-import { View, ScrollView, TouchableOpacity, Text, ActivityIndicator } from "react-native";
+import {
+  View,
+  ScrollView,
+  TouchableOpacity,
+  Text,
+  ActivityIndicator,
+} from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as SecureStore from "expo-secure-store";
 import { registerDonor, addDonorRole } from "../api/donorApi";
@@ -33,12 +39,17 @@ const DonorScreen: React.FC = () => {
   const [locationError, setLocationError] = useState<string | null>(null);
   const [manualLocationSet, setManualLocationSet] = useState<boolean>(false);
   const [hasExistingData, setHasExistingData] = useState<boolean>(false);
-  const [locationInitialized, setLocationInitialized] = useState<boolean>(false);
+  const [hasLocationData, setHasLocationData] = useState<boolean>(false);
+
+  const locationFetchAttempted = useRef<boolean>(false);
+  const dataCheckCompleted = useRef<boolean>(false);
 
   const [alertVisible, setAlertVisible] = useState<boolean>(false);
   const [alertTitle, setAlertTitle] = useState<string>("");
   const [alertMessage, setAlertMessage] = useState<string>("");
-  const [alertType, setAlertType] = useState<"success" | "error" | "warning" | "info">("info");
+  const [alertType, setAlertType] = useState<
+    "success" | "error" | "warning" | "info"
+  >("info");
 
   const showAlert = (
     title: string,
@@ -52,48 +63,114 @@ const DonorScreen: React.FC = () => {
   };
 
   useEffect(() => {
+    if (dataCheckCompleted.current) return;
+
     const checkExistingData = async () => {
       try {
         const donorData = await SecureStore.getItemAsync("donorData");
-        setHasExistingData(!!donorData);
+        const hasData = !!donorData;
+        setHasExistingData(hasData);
+
+        if (donorData) {
+          const donor = JSON.parse(donorData);
+          const hasLocation = !!(
+            (donor.addresses?.[0]?.latitude &&
+              donor.addresses?.[0]?.longitude) ||
+            (donor.location?.latitude && donor.location?.longitude)
+          );
+          setHasLocationData(hasLocation);
+          console.log(
+            "📍 Donor data check complete - hasData:",
+            hasData,
+            "hasLocation:",
+            hasLocation
+          );
+        } else {
+          setHasLocationData(false);
+          console.log("📍 No existing donor data found");
+        }
+        dataCheckCompleted.current = true;
       } catch (error) {
         setHasExistingData(false);
+        setHasLocationData(false);
+        dataCheckCompleted.current = true;
       }
     };
     checkExistingData();
   }, []);
 
   useEffect(() => {
-    if (params.fromMap === 'true' && params.selectedLatitude && params.selectedLongitude) {
+    if (
+      params.fromMap === "true" &&
+      params.selectedLatitude &&
+      params.selectedLongitude
+    ) {
       const lat = parseFloat(params.selectedLatitude as string);
       const lng = parseFloat(params.selectedLongitude as string);
       if (!isNaN(lat) && !isNaN(lng)) {
+        console.log("🗺️ Donor manual location set from map");
         setManualLocationSet(true);
-        setLocationInitialized(true);
+        locationFetchAttempted.current = true;
         formState.setLocation({ latitude: lat, longitude: lng });
       }
     }
   }, [params.fromMap, params.selectedLatitude, params.selectedLongitude]);
 
   useEffect(() => {
-    if (manualLocationSet && params.selectedLatitude && params.selectedLongitude) {
+    if (
+      manualLocationSet &&
+      params.selectedLatitude &&
+      params.selectedLongitude
+    ) {
       const expectedLat = parseFloat(params.selectedLatitude as string);
       const expectedLng = parseFloat(params.selectedLongitude as string);
-      
+
+      const currentLat = formState.location?.latitude;
+      const currentLng = formState.location?.longitude;
+
+      if (currentLat !== expectedLat || currentLng !== expectedLng) {
+        console.log(
+          "🔧 Donor database override detected - restoring manual coordinates"
+        );
+        console.log(
+          "Expected:",
+          expectedLat,
+          expectedLng,
+          "Got:",
+          currentLat,
+          currentLng
+        );
+        formState.setLocation({
+          latitude: expectedLat,
+          longitude: expectedLng,
+        });
+      }
+
       const protectionInterval = setInterval(() => {
         const currentLat = formState.location?.latitude;
         const currentLng = formState.location?.longitude;
-        
+
         if (currentLat !== expectedLat || currentLng !== expectedLng) {
-          console.log("🔧 Database override detected - restoring manual coordinates");
-          formState.setLocation({ latitude: expectedLat, longitude: expectedLng });
+          console.log(
+            "🔧 Donor continuous protection: Database override detected"
+          );
+          formState.setLocation({
+            latitude: expectedLat,
+            longitude: expectedLng,
+          });
         }
       }, 100);
-      
+
       setTimeout(() => clearInterval(protectionInterval), 5000);
       return () => clearInterval(protectionInterval);
     }
-  }, [manualLocationSet, params.selectedLatitude, params.selectedLongitude, formState.location]);
+  }, [
+    manualLocationSet,
+    params.selectedLatitude,
+    params.selectedLongitude,
+    formState.location?.latitude,
+    formState.location?.longitude,
+  ]);
 
   useEffect(() => {
     const checkNavigation = () => {
@@ -140,7 +217,11 @@ const DonorScreen: React.FC = () => {
           ]);
         }
       } catch (error: any) {
-        showAlert("Role Error", error.message || "Failed to assign donor role.", "error");
+        showAlert(
+          "Role Error",
+          error.message || "Failed to assign donor role.",
+          "error"
+        );
         router.replace("/(auth)/loginScreen");
         return;
       } finally {
@@ -151,19 +232,43 @@ const DonorScreen: React.FC = () => {
   }, [router]);
 
   useEffect(() => {
-    const initializeLocationOnce = async () => {
-      if (locationInitialized || manualLocationSet || hasExistingData || formState.location) {
-        return;
-      }
+    if (locationFetchAttempted.current || !dataCheckCompleted.current) {
+      return;
+    }
 
+    const shouldBlockAutoFetch =
+      manualLocationSet ||
+      hasExistingData ||
+      hasLocationData ||
+      (formState.location?.latitude && formState.location?.longitude);
+
+    if (shouldBlockAutoFetch) {
+      console.log("🚫 Donor auto-fetch BLOCKED - using existing data:", {
+        manualLocationSet,
+        hasExistingData,
+        hasLocationData,
+        hasFormLocation: !!(
+          formState.location?.latitude && formState.location?.longitude
+        ),
+      });
+      locationFetchAttempted.current = true;
+      return;
+    }
+
+    const initializeLocation = async () => {
+      console.log("📍 Starting donor auto-fetch - no existing location data");
+      locationFetchAttempted.current = true;
       setLocationLoading(true);
-      setLocationInitialized(true);
 
       try {
         let { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== "granted") {
           setLocationError("Location permission denied.");
-          showAlert("Location Permission Denied", "Location access is required for registration.", "warning");
+          showAlert(
+            "Location Permission Denied",
+            "Location access is required for registration.",
+            "warning"
+          );
           return;
         }
 
@@ -171,27 +276,45 @@ const DonorScreen: React.FC = () => {
           accuracy: Location.Accuracy.Balanced,
         });
 
-        if (!manualLocationSet && !hasExistingData && !formState.location) {
+        if (!manualLocationSet && !hasExistingData && !hasLocationData) {
           formState.setLocation({
             latitude: location.coords.latitude,
             longitude: location.coords.longitude,
           });
+          console.log("✅ Donor auto-fetch completed and coordinates set");
+        } else {
+          console.log(
+            "⚠️ Donor auto-fetch completed but coordinates not set due to existing data"
+          );
         }
       } catch (error: any) {
         setLocationError("Unable to get current location.");
-        showAlert("Location Error", "Unable to get current location. You can set it manually.", "warning");
+        showAlert(
+          "Location Error",
+          "Unable to get current location. You can set it manually.",
+          "warning"
+        );
       } finally {
         setLocationLoading(false);
       }
     };
 
-    initializeLocationOnce();
-  }, [hasExistingData, manualLocationSet, formState.location, locationInitialized]);
+    initializeLocation();
+  }, [
+    dataCheckCompleted.current,
+    hasExistingData,
+    hasLocationData,
+    manualLocationSet,
+    formState.location?.latitude,
+    formState.location?.longitude,
+  ]);
 
-  const handleResetLocation = async () => {
+  const handleResetLocation = () => {
     formState.setLocation(null);
     setManualLocationSet(false);
-    setLocationInitialized(false);
+    setHasLocationData(false);
+    locationFetchAttempted.current = false;
+    dataCheckCompleted.current = false;
   };
 
   const handleBackPress = () => {
@@ -204,7 +327,11 @@ const DonorScreen: React.FC = () => {
 
   const handleSubmit = async (): Promise<void> => {
     if (!formState.isFormValid()) {
-      showAlert("Incomplete Form", "Please fill all required fields.", "warning");
+      showAlert(
+        "Incomplete Form",
+        "Please fill all required fields.",
+        "warning"
+      );
       return;
     }
 
@@ -235,12 +362,18 @@ const DonorScreen: React.FC = () => {
           bloodPressure: formState.bloodPressure,
           hasDiseases: formState.hasDiseases,
           takingMedication: formState.takingMedication,
-          diseaseDescription: formState.hasDiseases ? formState.diseaseDescription : null,
-          currentMedications: formState.takingMedication ? formState.currentMedications : null,
+          diseaseDescription: formState.hasDiseases
+            ? formState.diseaseDescription
+            : null,
+          currentMedications: formState.takingMedication
+            ? formState.currentMedications
+            : null,
           lastMedicalCheckup: formState.lastMedicalCheckup,
           medicalHistory: formState.medicalHistory,
           hasInfectiousDiseases: formState.hasInfectiousDiseases,
-          infectiousDiseaseDetails: formState.hasInfectiousDiseases ? formState.infectiousDiseaseDetails : null,
+          infectiousDiseaseDetails: formState.hasInfectiousDiseases
+            ? formState.infectiousDiseaseDetails
+            : null,
           creatinineLevel: Number(formState.creatinineLevel),
           liverFunctionTests: formState.liverFunctionTests,
           cardiacStatus: formState.cardiacStatus,
@@ -299,27 +432,43 @@ const DonorScreen: React.FC = () => {
         await SecureStore.setItemAsync("donorId", response.id);
         await SecureStore.setItemAsync("donorData", JSON.stringify(response));
 
-        if (response.addresses && response.addresses.length > 0 && !formState.addressId) {
+        if (
+          response.addresses &&
+          response.addresses.length > 0 &&
+          !formState.addressId
+        ) {
           formState.setAddressId(response.addresses[0].id);
         }
 
-        showAlert("Registration Successful!", "Your donor registration has been completed successfully.", "success");
+        showAlert(
+          "Registration Successful!",
+          "Your donor registration has been completed successfully.",
+          "success"
+        );
 
         setTimeout(() => {
           router.replace("/(tabs)/donate");
         }, 2000);
       } else {
-        throw new Error("Registration succeeded but donorId missing in response.");
+        throw new Error(
+          "Registration succeeded but donorId missing in response."
+        );
       }
     } catch (error: any) {
-      showAlert("Registration Failed", error.message || "Something went wrong during registration.", "error");
+      showAlert(
+        "Registration Failed",
+        error.message || "Something went wrong during registration.",
+        "error"
+      );
     } finally {
       setLoading(false);
     }
   };
 
   if (roleLoading || locationLoading) {
-    const loadingMessage = roleLoading ? "Setting up donor role..." : "Getting your location...";
+    const loadingMessage = roleLoading
+      ? "Setting up donor role..."
+      : "Getting your location...";
 
     return (
       <View style={styles.loadingContainer}>
@@ -332,9 +481,15 @@ const DonorScreen: React.FC = () => {
   return (
     <AppLayout>
       <View style={styles.container}>
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.headerContainer}>
-            <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
+            <TouchableOpacity
+              onPress={handleBackPress}
+              style={styles.backButton}
+            >
               <Feather name="arrow-left" size={20} color={theme.text} />
             </TouchableOpacity>
 
@@ -343,7 +498,9 @@ const DonorScreen: React.FC = () => {
             </View>
             <View style={styles.headerTextContainer}>
               <Text style={styles.headerTitle}>Donor Registration</Text>
-              <Text style={styles.headerSubtitle}>Complete your profile to help save lives</Text>
+              <Text style={styles.headerSubtitle}>
+                Complete your profile to help save lives
+              </Text>
             </View>
             <View style={styles.statusBadge}>
               <Text style={styles.statusText}>
@@ -375,7 +532,9 @@ const DonorScreen: React.FC = () => {
           <TouchableOpacity
             style={[
               styles.submitButton,
-              !formState.isFormValid() || loading ? styles.submitButtonDisabled : null,
+              !formState.isFormValid() || loading
+                ? styles.submitButtonDisabled
+                : null,
             ]}
             onPress={handleSubmit}
             disabled={!formState.isFormValid() || loading}

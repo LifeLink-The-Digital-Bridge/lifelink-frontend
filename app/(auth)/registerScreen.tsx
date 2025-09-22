@@ -104,7 +104,7 @@ export default function RegisterScreen() {
   };
 
   return (
-    <AppLayout hideHeader={true}>
+    <AppLayout>
       <ScrollView 
         style={styles.container}
         contentContainerStyle={styles.scrollContainer}
