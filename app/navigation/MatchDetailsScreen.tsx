@@ -70,6 +70,8 @@ interface LocationCoordinates {
   longitude: number;
   address?: string;
   title: string;
+  description?: string;
+  type?: "registered" | "current" | "other";
 }
 
 const MatchDetailsScreen = () => {
@@ -111,6 +113,14 @@ const MatchDetailsScreen = () => {
   const [locationPermission, setLocationPermission] = useState<boolean>(false);
   const [loadingLocation, setLoadingLocation] = useState(false);
 
+  const [currentGpsLocation, setCurrentGpsLocation] =
+    useState<LocationCoordinates | null>(null);
+  const [registeredLocation, setRegisteredLocation] =
+    useState<LocationCoordinates | null>(null);
+  const [otherPartyLocation, setOtherPartyLocation] =
+    useState<LocationCoordinates | null>(null);
+  const [allLocations, setAllLocations] = useState<LocationCoordinates[]>([]);
+
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
@@ -149,6 +159,20 @@ const MatchDetailsScreen = () => {
     return distance;
   };
 
+  const isSignificantlyDifferent = (
+    loc1: LocationCoordinates,
+    loc2: LocationCoordinates,
+    threshold = 0.1
+  ) => {
+    const distance = calculateDistance(
+      loc1.latitude,
+      loc1.longitude,
+      loc2.latitude,
+      loc2.longitude
+    );
+    return distance > threshold;
+  };
+
   const getCurrentUserLocation = async () => {
     setLoadingLocation(true);
     try {
@@ -167,19 +191,174 @@ const MatchDetailsScreen = () => {
         accuracy: Location.Accuracy.High,
       });
 
-      const userLocation: LocationCoordinates = {
+      const gpsLocation: LocationCoordinates = {
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
-        title: "Your Location",
+        title: "Your Current Location",
+        description: "Your live GPS location",
+        type: "current",
       };
 
-      setCurrentLocation(userLocation);
+      setCurrentGpsLocation(gpsLocation);
     } catch (error) {
       console.error("Error getting location:", error);
       Alert.alert("Location Error", "Could not get your current location.");
     } finally {
       setLoadingLocation(false);
     }
+  };
+
+  const extractRegisteredLocation = (userData: any, userRole: string) => {
+    if (!userData) return null;
+
+    let coords = null;
+    let address = "";
+
+    if (userData.addresses && userData.addresses.length > 0) {
+      const primaryAddress = userData.addresses[0];
+      if (primaryAddress.latitude && primaryAddress.longitude) {
+        coords = {
+          latitude: parseFloat(primaryAddress.latitude),
+          longitude: parseFloat(primaryAddress.longitude),
+        };
+        address = `${primaryAddress.addressLine || ""}, ${
+          primaryAddress.city || ""
+        }`
+          .trim()
+          .replace(/^,\s*/, "");
+      }
+    } else if (
+      userData.usedLocationLatitude &&
+      userData.usedLocationLongitude
+    ) {
+      coords = {
+        latitude: parseFloat(userData.usedLocationLatitude),
+        longitude: parseFloat(userData.usedLocationLongitude),
+      };
+      address = `${userData.usedLocationAddressLine || ""}, ${
+        userData.usedLocationCity || ""
+      }`
+        .trim()
+        .replace(/^,\s*/, "");
+    }
+
+    if (coords && !isNaN(coords.latitude) && !isNaN(coords.longitude)) {
+      return {
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        title: "Your Registered Location",
+        description: "Location from your profile",
+        address: address,
+        type: "registered" as const,
+      };
+    }
+
+    return null;
+  };
+
+  const getOtherPartyLocation = (
+    matchData: MatchDetails,
+    userRole: string,
+    otherPartyData: any
+  ): LocationCoordinates | null => {
+    let coords = null;
+    let title = "";
+    let address = "";
+
+    try {
+      if (userRole === "donor") {
+        title = `${recipientProfile?.name || "Recipient"}'s Location`;
+
+        if (matchData.isConfirmed && otherPartyData) {
+          if (otherPartyData.receiveRequestSnapshot) {
+            const snapshot = otherPartyData.receiveRequestSnapshot;
+            if (
+              snapshot.usedLocationLatitude &&
+              snapshot.usedLocationLongitude
+            ) {
+              coords = {
+                latitude: parseFloat(snapshot.usedLocationLatitude),
+                longitude: parseFloat(snapshot.usedLocationLongitude),
+              };
+              address = `${snapshot.usedLocationAddressLine || ""}, ${
+                snapshot.usedLocationCity || ""
+              }`
+                .trim()
+                .replace(/^,\s*/, "");
+            }
+          }
+        } else if (yourDetails?.data) {
+          if (
+            yourDetails.data.usedLocationLatitude &&
+            yourDetails.data.usedLocationLongitude
+          ) {
+            coords = {
+              latitude: parseFloat(yourDetails.data.usedLocationLatitude),
+              longitude: parseFloat(yourDetails.data.usedLocationLongitude),
+            };
+            address = `${yourDetails.data.usedLocationAddressLine || ""}, ${
+              yourDetails.data.usedLocationCity || ""
+            }`
+              .trim()
+              .replace(/^,\s*/, "");
+          }
+        }
+      } else if (userRole === "recipient") {
+        title = `${donorProfile?.name || "Donor"}'s Location`;
+
+        if (matchData.isConfirmed && otherPartyData) {
+          if (otherPartyData.donationSnapshot) {
+            const snapshot = otherPartyData.donationSnapshot;
+            if (
+              snapshot.usedLocationLatitude &&
+              snapshot.usedLocationLongitude
+            ) {
+              coords = {
+                latitude: parseFloat(snapshot.usedLocationLatitude),
+                longitude: parseFloat(snapshot.usedLocationLongitude),
+              };
+              address = `${snapshot.usedLocationAddressLine || ""}, ${
+                snapshot.usedLocationCity || ""
+              }`
+                .trim()
+                .replace(/^,\s*/, "");
+            }
+          }
+        } else if (yourDetails?.data) {
+          if (
+            yourDetails.data.usedLocationLatitude &&
+            yourDetails.data.usedLocationLongitude
+          ) {
+            coords = {
+              latitude: parseFloat(yourDetails.data.usedLocationLatitude),
+              longitude: parseFloat(yourDetails.data.usedLocationLongitude),
+            };
+            address = `${yourDetails.data.usedLocationAddressLine || ""}, ${
+              yourDetails.data.usedLocationCity || ""
+            }`
+              .trim()
+              .replace(/^,\s*/, "");
+          }
+        }
+      }
+
+      if (coords && !isNaN(coords.latitude) && !isNaN(coords.longitude)) {
+        return {
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+          title: title,
+          address: address,
+          description: matchData.isConfirmed
+            ? "Their registered location"
+            : "Their current location",
+          type: "other",
+        };
+      }
+    } catch (error) {
+      console.error("❌ Error extracting other party location:", error);
+    }
+
+    return null;
   };
 
   const getDestinationLocation = (
@@ -370,15 +549,6 @@ const MatchDetailsScreen = () => {
   };
 
   const updateLocationData = () => {
-    console.log("🔄 updateLocationData called:", {
-      hasMatch: !!match,
-      hasCurrentUserId: !!currentUserId,
-      hasProfiles: !!(donorProfile && recipientProfile),
-      hasYourDetails: !!yourDetails,
-      hasHistoricalData: !!(donorHistoryData || recipientHistoryData),
-      hasCurrentLocation: !!currentLocation,
-    });
-
     if (!match || !currentUserId) return;
 
     const userRole = getUserRoleInMatch();
@@ -387,29 +557,64 @@ const MatchDetailsScreen = () => {
         ? recipientHistoryData || recipientCurrentData
         : donorHistoryData || donorCurrentData;
 
-    console.log("📊 updateLocationData details:", {
+    const currentUserData =
+      userRole === "donor" ? donorCurrentData : recipientCurrentData;
+    const registered = extractRegisteredLocation(currentUserData, userRole);
+    setRegisteredLocation(registered);
+
+    const otherLocation = getOtherPartyLocation(
+      match,
       userRole,
-      hasOtherPartyData: !!otherPartyData,
-      otherPartyDataKeys: otherPartyData ? Object.keys(otherPartyData) : [],
-      isConfirmed: match.isConfirmed,
-    });
+      otherPartyData
+    );
+    setOtherPartyLocation(otherLocation);
 
-    const destination = getDestinationLocation(match, userRole, otherPartyData);
-    setDestinationLocation(destination);
+    const locations: LocationCoordinates[] = [];
 
-    if (currentLocation && destination) {
-      const distance = calculateDistance(
-        currentLocation.latitude,
-        currentLocation.longitude,
-        destination.latitude,
-        destination.longitude
+    if (otherLocation) {
+      locations.push(otherLocation);
+    }
+
+    if (registered) {
+      locations.push(registered);
+    }
+
+    if (currentGpsLocation) {
+      if (
+        !registered ||
+        isSignificantlyDifferent(registered, currentGpsLocation)
+      ) {
+        locations.push(currentGpsLocation);
+      }
+    }
+
+    setAllLocations(locations);
+
+    if (registered && otherLocation) {
+      const distanceFromRegistered = calculateDistance(
+        registered.latitude,
+        registered.longitude,
+        otherLocation.latitude,
+        otherLocation.longitude
       );
-      setCalculatedDistance(distance);
-      console.log("✅ Distance calculated:", distance.toFixed(2), "km");
-    } else {
-      console.log("❌ Cannot calculate distance:", {
-        hasCurrentLocation: !!currentLocation,
-        hasDestination: !!destination,
+
+      let distanceFromCurrent = null;
+      if (currentGpsLocation) {
+        distanceFromCurrent = calculateDistance(
+          currentGpsLocation.latitude,
+          currentGpsLocation.longitude,
+          otherLocation.latitude,
+          otherLocation.longitude
+        );
+      }
+
+      setCalculatedDistance(distanceFromRegistered);
+
+      console.log("📏 Distance calculations:", {
+        fromRegistered: distanceFromRegistered.toFixed(2) + "km",
+        fromCurrent: distanceFromCurrent
+          ? distanceFromCurrent.toFixed(2) + "km"
+          : "N/A",
       });
     }
   };
@@ -814,7 +1019,6 @@ const MatchDetailsScreen = () => {
             otherPartyRole={otherPartyInfo?.role || "Other Party"}
             formatDate={formatDate}
           />
-
           {otherPartyInfo?.profile && (
             <ProfileCard
               user={otherPartyInfo.profile}
@@ -825,7 +1029,6 @@ const MatchDetailsScreen = () => {
               isHistorical={match.isConfirmed}
             />
           )}
-
           <YourDetailsCard
             yourDetails={yourDetails}
             loadingYourDetails={loadingYourDetails}
@@ -833,12 +1036,20 @@ const MatchDetailsScreen = () => {
           />
 
           <MapSection
-            currentLocation={currentLocation}
-            destinationLocation={destinationLocation}
+            allLocations={allLocations}
+            registeredLocation={registeredLocation}
+            currentGpsLocation={currentGpsLocation}
+            otherPartyLocation={otherPartyLocation}
             calculatedDistance={calculatedDistance}
             locationPermission={locationPermission}
             loadingLocation={loadingLocation}
             onRequestLocation={getCurrentUserLocation}
+            calculateDistance={calculateDistance}
+            currentUserRole={getUserRoleInMatch()}
+            otherPartyRole={
+              otherPartyInfo?.role as "Donor" | "Recipient" | undefined
+            }
+            matchType={match?.matchType}
           />
 
           {!match.isConfirmed && (

@@ -12,24 +12,38 @@ interface LocationCoordinates {
   longitude: number;
   address?: string;
   title: string;
+  description?: string;
+  type?: 'registered' | 'current' | 'other';
 }
 
 interface MapSectionProps {
-  currentLocation: LocationCoordinates | null;
-  destinationLocation: LocationCoordinates | null;
+  allLocations: LocationCoordinates[];
+  registeredLocation: LocationCoordinates | null;
+  currentGpsLocation: LocationCoordinates | null;
+  otherPartyLocation: LocationCoordinates | null;
   calculatedDistance: number | null;
   locationPermission: boolean;
   loadingLocation: boolean;
   onRequestLocation: () => void;
+  calculateDistance: (lat1: number, lon1: number, lat2: number, lon2: number) => number;
+  currentUserRole?: 'donor' | 'recipient' | 'unknown';
+  otherPartyRole?: 'Donor' | 'Recipient';
+  matchType?: string;
 }
 
 export const MapSection: React.FC<MapSectionProps> = ({
-  currentLocation,
-  destinationLocation,
+  allLocations,
+  registeredLocation,
+  currentGpsLocation,
+  otherPartyLocation,
   calculatedDistance,
   locationPermission,
   loadingLocation,
-  onRequestLocation
+  onRequestLocation,
+  calculateDistance,
+  currentUserRole = 'unknown',
+  otherPartyRole = 'Other Party',
+  matchType
 }) => {
   const { colorScheme } = useTheme();
   const isDark = colorScheme === 'dark';
@@ -98,16 +112,45 @@ export const MapSection: React.FC<MapSectionProps> = ({
     }
   ];
 
+  const getMarkerConfig = (location: LocationCoordinates) => {
+    switch (location.type) {
+      case 'registered':
+        return {
+          color: '#4CAF50', 
+          icon: 'home',
+          backgroundColor: '#4CAF50'
+        };
+      case 'current':
+        return {
+          color: '#007AFF',
+          icon: 'navigation',
+          backgroundColor: '#007AFF'
+        };
+      case 'other':
+        return {
+          color: '#FF5722', 
+          icon: otherPartyRole === 'Donor' ? 'heart' : 'user',
+          backgroundColor: '#FF5722'
+        };
+      default:
+        return {
+          color: theme.primary,
+          icon: 'map-pin',
+          backgroundColor: theme.primary
+        };
+    }
+  };
+
   const generateRoute = () => {
-    if (!currentLocation || !destinationLocation) return [];
+    if (!registeredLocation || !otherPartyLocation) return [];
 
     const points = [];
     const steps = 10;
     
     for (let i = 0; i <= steps; i++) {
       const ratio = i / steps;
-      const lat = currentLocation.latitude + (destinationLocation.latitude - currentLocation.latitude) * ratio;
-      const lng = currentLocation.longitude + (destinationLocation.longitude - currentLocation.longitude) * ratio;
+      const lat = registeredLocation.latitude + (otherPartyLocation.latitude - registeredLocation.latitude) * ratio;
+      const lng = registeredLocation.longitude + (otherPartyLocation.longitude - registeredLocation.longitude) * ratio;
       
       const curveFactor = Math.sin(ratio * Math.PI) * 0.001;
       points.push({
@@ -120,13 +163,21 @@ export const MapSection: React.FC<MapSectionProps> = ({
   };
 
   const renderMap = (fullscreen = false) => {
-    if (!locationPermission || !currentLocation || !destinationLocation) return null;
+    if (!locationPermission || allLocations.length === 0) return null;
 
+    const latitudes = allLocations.map(loc => loc.latitude);
+    const longitudes = allLocations.map(loc => loc.longitude);
+    
+    const minLat = Math.min(...latitudes);
+    const maxLat = Math.max(...latitudes);
+    const minLng = Math.min(...longitudes);
+    const maxLng = Math.max(...longitudes);
+    
     const region = {
-      latitude: (currentLocation.latitude + destinationLocation.latitude) / 2,
-      longitude: (currentLocation.longitude + destinationLocation.longitude) / 2,
-      latitudeDelta: Math.abs(currentLocation.latitude - destinationLocation.latitude) * 1.5 + 0.01,
-      longitudeDelta: Math.abs(currentLocation.longitude - destinationLocation.longitude) * 1.5 + 0.01,
+      latitude: (minLat + maxLat) / 2,
+      longitude: (minLng + maxLng) / 2,
+      latitudeDelta: Math.max((maxLat - minLat) * 1.5, 0.01),
+      longitudeDelta: Math.max((maxLng - minLng) * 1.5, 0.01),
     };
 
     const route = generateRoute();
@@ -145,17 +196,17 @@ export const MapSection: React.FC<MapSectionProps> = ({
           provider={PROVIDER_GOOGLE}
           style={{ flex: 1 }}
           region={region}
+          customMapStyle={isDark ? appDarkBlueMapStyle : []}
           showsUserLocation={false}
           showsMyLocationButton={false}
           showsPointsOfInterest={true}
           showsBuildings={true}
-          customMapStyle={isDark ? appDarkBlueMapStyle : []}
           scrollEnabled={fullscreen}
           zoomEnabled={fullscreen}
           pitchEnabled={fullscreen}
           rotateEnabled={fullscreen}
+          mapType="standard"
         >
-          {/* ✅ Route Polyline */}
           {route.length > 0 && (
             <Polyline
               coordinates={route}
@@ -167,58 +218,61 @@ export const MapSection: React.FC<MapSectionProps> = ({
             />
           )}
 
-          {/* ✅ Current User Location */}
-          <Marker
-            coordinate={{
-              latitude: currentLocation.latitude,
-              longitude: currentLocation.longitude,
-            }}
-            title="Your Location"
-            description="Your current location"
-          >
-            <View style={{
-              backgroundColor: '#007AFF',
-              padding: 8,
-              borderRadius: 20,
-              borderWidth: 3,
-              borderColor: '#ffffff',
-              shadowColor: '#000',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.3,
-              shadowRadius: 4,
-              elevation: 5,
-            }}>
-              <Feather name="user" size={16} color="#ffffff" />
-            </View>
-          </Marker>
+          {otherPartyLocation && registeredLocation && (
+            <Polyline
+              coordinates={[
+                { latitude: registeredLocation.latitude, longitude: registeredLocation.longitude },
+                { latitude: otherPartyLocation.latitude, longitude: otherPartyLocation.longitude }
+              ]}
+              strokeColor={isDark ? "#66BB6A" : "#4CAF50"}
+              strokeWidth={3}
+              lineDashPattern={[5, 5]}
+            />
+          )}
+          
+          {otherPartyLocation && currentGpsLocation && (
+            <Polyline
+              coordinates={[
+                { latitude: currentGpsLocation.latitude, longitude: currentGpsLocation.longitude },
+                { latitude: otherPartyLocation.latitude, longitude: otherPartyLocation.longitude }
+              ]}
+              strokeColor={isDark ? "#4f8df5" : "#007AFF"} 
+              strokeWidth={3}
+              lineDashPattern={[10, 5]}
+            />
+          )}
 
-          {/* ✅ Destination Location */}
-          <Marker
-            coordinate={{
-              latitude: destinationLocation.latitude,
-              longitude: destinationLocation.longitude,
-            }}
-            title={destinationLocation.title}
-            description={destinationLocation.address}
-          >
-            <View style={{
-              backgroundColor: theme.primary,
-              padding: 8,
-              borderRadius: 20,
-              borderWidth: 3,
-              borderColor: '#ffffff',
-              shadowColor: theme.primary,
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.4,
-              shadowRadius: 4,
-              elevation: 5,
-            }}>
-              <Feather name="map-pin" size={16} color="#ffffff" />
-            </View>
-          </Marker>
+          {allLocations.map((location, index) => {
+            const config = getMarkerConfig(location);
+            return (
+              <Marker
+                key={`${location.type}-${index}`}
+                coordinate={{
+                  latitude: location.latitude,
+                  longitude: location.longitude,
+                }}
+                title={location.title}
+                description={location.description}
+              >
+                <View style={{
+                  backgroundColor: config.backgroundColor,
+                  padding: 8,
+                  borderRadius: 20,
+                  borderWidth: 3,
+                  borderColor: '#ffffff',
+                  shadowColor: isDark ? '#ffffff' : '#000000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: isDark ? 0.3 : 0.3,
+                  shadowRadius: 4,
+                  elevation: 5,
+                }}>
+                  <Feather name={config.icon as any} size={16} color="#ffffff" />
+                </View>
+              </Marker>
+            );
+          })}
         </MapView>
 
-        {/* ✅ Expand Icon (only on small map) */}
         {!fullscreen && (
           <View style={{
             position: 'absolute',
@@ -235,6 +289,42 @@ export const MapSection: React.FC<MapSectionProps> = ({
     );
   };
 
+  const getDistanceInfo = () => {
+    if (!otherPartyLocation) return null;
+
+    const info = [];
+    
+    if (registeredLocation) {
+      const distance = calculateDistance(
+        registeredLocation.latitude, 
+        registeredLocation.longitude,
+        otherPartyLocation.latitude, 
+        otherPartyLocation.longitude
+      );
+      info.push({
+        label: "From Registered Location",
+        value: `${distance.toFixed(2)} km`,
+        color: isDark ? '#66BB6A' : '#4CAF50'
+      });
+    }
+
+    if (currentGpsLocation && registeredLocation) {
+      const distance = calculateDistance(
+        currentGpsLocation.latitude, 
+        currentGpsLocation.longitude,
+        otherPartyLocation.latitude, 
+        otherPartyLocation.longitude
+      );
+      info.push({
+        label: "From Current Location", 
+        value: `${distance.toFixed(2)} km`,
+        color: isDark ? '#4f8df5' : '#007AFF'
+      });
+    }
+
+    return info;
+  };
+
   const renderFullscreenMap = () => (
     <Modal
       visible={isFullscreen}
@@ -242,7 +332,6 @@ export const MapSection: React.FC<MapSectionProps> = ({
       statusBarTranslucent
     >
       <View style={{ flex: 1, backgroundColor: theme.background }}>
-        {/* ✅ Header */}
         <View style={{
           flexDirection: 'row',
           alignItems: 'center',
@@ -265,11 +354,11 @@ export const MapSection: React.FC<MapSectionProps> = ({
           </TouchableOpacity>
           <View>
             <Text style={{
-              color: theme.text,
+              color: isDark ? '#8ea4c7' : theme.text,
               fontSize: 18,
               fontWeight: '700',
             }}>
-              Route to {destinationLocation?.title}
+              Route to {otherPartyRole} 
             </Text>
             <Text style={{
               color: theme.textSecondary,
@@ -280,12 +369,10 @@ export const MapSection: React.FC<MapSectionProps> = ({
           </View>
         </View>
 
-        {/* ✅ Fullscreen Map */}
         <View style={{ flex: 1 }}>
           {renderMap(true)}
         </View>
 
-        {/* ✅ Bottom Info */}
         {calculatedDistance && (
           <View style={{
             backgroundColor: isDark ? '#1a1f2e' : '#ffffff',
@@ -310,7 +397,7 @@ export const MapSection: React.FC<MapSectionProps> = ({
               </View>
               <View>
                 <Text style={{
-                  color: theme.text,
+                  color: isDark ? '#8ea4c7' : theme.text,
                   fontSize: 16,
                   fontWeight: '600',
                 }}>
@@ -330,27 +417,100 @@ export const MapSection: React.FC<MapSectionProps> = ({
     </Modal>
   );
 
-  if (locationPermission && currentLocation && destinationLocation) {
+  if (locationPermission && allLocations.length > 0) {
+    const distanceInfo = getDistanceInfo();
+    
     return (
       <View style={[styles.sectionContainer, { paddingHorizontal: 24 }]}>
         <View style={styles.sectionHeader}>
           <View style={styles.sectionIconContainer}>
             <Feather name="map-pin" size={18} color={theme.primary} />
           </View>
-          <Text style={styles.sectionTitle}>Location & Distance</Text>
+          <Text style={styles.sectionTitle}>Locations & Distance</Text>
         </View>
         
         <View style={{ marginBottom: 16 }}>
           {renderMap()}
         </View>
+
+        <View style={{ marginBottom: 16 }}>
+          {registeredLocation && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+              <View style={{
+                width: 24,
+                height: 24,
+                borderRadius: 12,
+                backgroundColor: isDark ? '#66BB6A' : '#4CAF50',
+                marginRight: 12,
+                justifyContent: 'center',
+                alignItems: 'center',
+                borderWidth: 2,
+                borderColor: '#ffffff',
+              }}>
+                <Feather name="home" size={12} color="#ffffff" />
+              </View>
+              <Text style={[styles.text, { fontSize: 14, color: theme.text, fontWeight: '500' }]}>
+                Your registered location
+              </Text>
+            </View>
+          )}
+          
+          {currentGpsLocation && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+              <View style={{
+                width: 24,
+                height: 24,
+                borderRadius: 12,
+                backgroundColor: isDark ? '#4f8df5' : '#007AFF',
+                marginRight: 12,
+                justifyContent: 'center',
+                alignItems: 'center',
+                borderWidth: 2,
+                borderColor: '#ffffff',
+              }}>
+                <Feather name="navigation" size={12} color="#ffffff" />
+              </View>
+              <Text style={[styles.text, { fontSize: 14, color: theme.text, fontWeight: '500' }]}>
+                Your current location
+              </Text>
+            </View>
+          )}
+          
+          {otherPartyLocation && (
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <View style={{
+                width: 24,
+                height: 24,
+                borderRadius: 12,
+                backgroundColor: isDark ? '#FF7043' : '#FF5722',
+                marginRight: 12,
+                justifyContent: 'center',
+                alignItems: 'center',
+                borderWidth: 2,
+                borderColor: '#ffffff',
+              }}>
+                <Feather 
+                  name={otherPartyRole === 'Donor' ? 'heart' : 'user'} 
+                  size={12} 
+                  color="#ffffff" 
+                />
+              </View>
+              <Text style={[styles.text, { fontSize: 14, color: theme.text, fontWeight: '500' }]}>
+                {otherPartyRole} location 
+              </Text>
+            </View>
+          )}
+        </View>
         
-        {calculatedDistance && (
+        {distanceInfo && distanceInfo.map((info, index) => (
           <InfoRow 
-            label="Distance" 
-            value={`${calculatedDistance.toFixed(2)} km`} 
-            isLast 
+            key={index}
+            label={info.label}
+            value={info.value}
+            isLast={index === distanceInfo.length - 1}
+            valueColor={info.color}
           />
-        )}
+        ))}
 
         {renderFullscreenMap()}
       </View>
@@ -368,7 +528,7 @@ export const MapSection: React.FC<MapSectionProps> = ({
       
       <View style={{ 
         height: 200, 
-        backgroundColor: theme.cardBackground, 
+        backgroundColor: theme.card,
         borderRadius: 12, 
         justifyContent: 'center', 
         alignItems: 'center',
@@ -377,12 +537,12 @@ export const MapSection: React.FC<MapSectionProps> = ({
         {loadingLocation ? (
           <>
             <ActivityIndicator color={theme.primary} size="large" />
-            <Text style={{ color: theme.text, marginTop: 8 }}>Getting your location...</Text>
+            <Text style={[styles.text, { color: theme.text, marginTop: 8 }]}>Getting your location...</Text>
           </>
         ) : !locationPermission ? (
           <>
             <Feather name="map-pin" size={32} color={theme.textSecondary} />
-            <Text style={{ color: theme.text, marginTop: 8, textAlign: 'center' }}>
+            <Text style={[styles.text, { color: theme.text, marginTop: 8, textAlign: 'center' }]}>
               Location permission required to show map and distance
             </Text>
             <TouchableOpacity 
@@ -398,17 +558,17 @@ export const MapSection: React.FC<MapSectionProps> = ({
               <Text style={{ color: '#fff' }}>Enable Location</Text>
             </TouchableOpacity>
           </>
-        ) : !destinationLocation ? (
+        ) : !otherPartyLocation ? (
           <>
             <Feather name="map-pin" size={32} color={theme.textSecondary} />
-            <Text style={{ color: theme.text, marginTop: 8, textAlign: 'center' }}>
-              Destination location not available
+            <Text style={[styles.text, { color: theme.text, marginTop: 8, textAlign: 'center' }]}>
+              {otherPartyRole} location not available 
             </Text>
           </>
         ) : (
           <>
             <Feather name="map-pin" size={32} color={theme.textSecondary} />
-            <Text style={{ color: theme.text, marginTop: 8, textAlign: 'center' }}>
+            <Text style={[styles.text, { color: theme.text, marginTop: 8, textAlign: 'center' }]}>
               Unable to load map
             </Text>
           </>
