@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { useTheme } from '../../utils/theme-context';
 import { lightTheme, darkTheme } from '../../constants/styles/authStyles';
 import { createUnifiedStyles } from '../../constants/styles/unifiedStyles';
-import { fetchAllMatches, getMyMatchesAsDonor, getMyMatchesAsRecipient, fetchUserById } from '../api/matchingApi';
+import { getMyMatchesAsDonor, getMyMatchesAsRecipient } from '../api/matchingApi';
 import * as SecureStore from 'expo-secure-store';
 import { ValidationAlert } from '../../components/common/ValidationAlert';
 import AppLayout from '../../components/AppLayout';
@@ -150,12 +150,12 @@ const MatchResultsScreen = () => {
   };
 
   const getStatusColor = (match: MatchResult) => {
-    const isConfirmed = match.isConfirmed || (match as any).confirmed;
+    const isConfirmed = match.isConfirmed;
     return isConfirmed ? theme.success : theme.error;
   };
 
   const getStatusText = (match: MatchResult) => {
-    const isConfirmed = match.isConfirmed || (match as any).confirmed;
+    const isConfirmed = match.isConfirmed;
     if (isConfirmed) return 'Fully Confirmed';
     if (match.donorConfirmed && match.recipientConfirmed) return 'Both Confirmed';
     if (match.donorConfirmed || match.recipientConfirmed) return 'Partially Confirmed';
@@ -166,13 +166,6 @@ const MatchResultsScreen = () => {
     if (currentUserId === match.donorUserId) return 'donor';
     if (currentUserId === match.recipientUserId) return 'recipient';
     return 'unknown';
-  };
-
-  const getOtherPartyUserId = (match: MatchResult) => {
-    const userRole = getUserRoleInMatch(match);
-    if (userRole === 'donor') return match.recipientUserId;
-    if (userRole === 'recipient') return match.donorUserId;
-    return null;
   };
 
   const getOtherPartyRole = (match: MatchResult) => {
@@ -235,7 +228,6 @@ const MatchResultsScreen = () => {
           </View>
         </View>
 
-        {/* Toggle Buttons */}
         {(isDonor || isRecipient) && (
           <View style={{ flexDirection: 'row', marginHorizontal: 20, marginBottom: 16, backgroundColor: theme.card, borderRadius: 12, padding: 4 }}>
             {isDonor && (

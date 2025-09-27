@@ -55,30 +55,6 @@ export interface UserProfile {
   gender?: string;
 }
 
-export interface DonationDetails {
-  id: string;
-  donationType: string;
-  bloodType?: string;
-  quantity: number;
-  donationDate: string;
-  status: string;
-  notes?: string;
-}
-
-export interface RequestDetails {
-  id: string;
-  requestType: string;
-  requestedBloodType?: string;
-  requestedOrgan?: string;
-  requestedTissue?: string;
-  requestedStemCellType?: string;
-  urgencyLevel: string;
-  quantity: number;
-  requestDate: string;
-  status: string;
-  notes?: string;
-}
-
 const getAuthHeaders = async (includeUserId: boolean = true) => {
   const token = await SecureStore.getItemAsync('jwt');
   const userId = await SecureStore.getItemAsync('userId');
@@ -167,39 +143,39 @@ export const getMyMatchesAsRecipient = async (): Promise<MatchResponse[]> => {
   return await response.json();
 };
 
-export const fetchAllMatches = async (): Promise<MatchResponse[]> => {
-  const headers = await getAuthHeaders(false);
+export const getActiveMatches = async (): Promise<MatchResponse[]> => {
+  const headers = await getAuthHeaders();
   
-  const response = await fetch(`${BASE_URL}/matching/admin/all-matches`, {
+  const response = await fetch(`${BASE_URL}/matching/my-matches/active`, {
     method: 'GET',
     headers,
   });
 
-  await handleResponse(response, 'Failed to fetch all matches');
+  await handleResponse(response, 'Failed to fetch active matches');
   return await response.json();
 };
 
-export const getMatchesByDonation = async (donationId: string): Promise<MatchResponse[]> => {
-  const headers = await getAuthHeaders(false);
+export const getPendingMatches = async (): Promise<MatchResponse[]> => {
+  const headers = await getAuthHeaders();
   
-  const response = await fetch(`${BASE_URL}/matching/donation/${donationId}/matches`, {
+  const response = await fetch(`${BASE_URL}/matching/my-matches/pending`, {
     method: 'GET',
     headers,
   });
 
-  await handleResponse(response, 'Failed to fetch matches by donation');
+  await handleResponse(response, 'Failed to fetch pending matches');
   return await response.json();
 };
 
-export const getMatchesByRequest = async (requestId: string): Promise<MatchResponse[]> => {
-  const headers = await getAuthHeaders(false);
+export const getConfirmedMatches = async (): Promise<MatchResponse[]> => {
+  const headers = await getAuthHeaders();
   
-  const response = await fetch(`${BASE_URL}/matching/request/${requestId}/matches`, {
+  const response = await fetch(`${BASE_URL}/matching/my-matches/confirmed`, {
     method: 'GET',
     headers,
   });
 
-  await handleResponse(response, 'Failed to fetch matches by request');
+  await handleResponse(response, 'Failed to fetch confirmed matches');
   return await response.json();
 };
 
@@ -227,22 +203,39 @@ export const recipientConfirmMatch = async (matchId: string): Promise<string> =>
   return await response.text();
 };
 
-export const fetchRequestByIdWithAccess = async (requestId: string): Promise<RequestDetails> => {
+export const getDonorDetailsByUserId = async (userId: string): Promise<any> => {
   const headers = await getAuthHeaders();
   
-  const response = await fetch(`${BASE_URL}/matching/requests/${requestId}`, {
+  const response = await fetch(`${BASE_URL}/matching/donor-details/${userId}`, {
+    method: 'GET',
     headers,
   });
-  
-  if (response.status === 403) {
-    throw new Error("Access denied - you are not authorized to view this request");
+
+  if (response.status === 404) {
+    return null;
   }
   
-  await handleResponse(response, "Failed to fetch request details");
+  await handleResponse(response, 'Failed to fetch donor details');
   return await response.json();
 };
 
-export const fetchDonationByIdWithAccess = async (donationId: string): Promise<DonationDetails> => {
+export const getRecipientDetailsByUserId = async (userId: string): Promise<any> => {
+  const headers = await getAuthHeaders();
+  
+  const response = await fetch(`${BASE_URL}/matching/recipient-details/${userId}`, {
+    method: 'GET',
+    headers,
+  });
+
+  if (response.status === 404) {
+    return null;
+  }
+  
+  await handleResponse(response, 'Failed to fetch recipient details');
+  return await response.json();
+};
+
+export const fetchDonationByIdWithAccess = async (donationId: string): Promise<any> => {
   const headers = await getAuthHeaders();
   
   const response = await fetch(`${BASE_URL}/matching/donations/${donationId}`, {
@@ -257,267 +250,18 @@ export const fetchDonationByIdWithAccess = async (donationId: string): Promise<D
   return await response.json();
 };
 
-export const fetchUserById = async (userId: string): Promise<UserProfile> => {
+export const fetchRequestByIdWithAccess = async (requestId: string): Promise<any> => {
   const headers = await getAuthHeaders();
   
-  const response = await fetch(`${BASE_URL}/users/profile/id/${userId}`, {
-    method: 'GET',
+  const response = await fetch(`${BASE_URL}/matching/requests/${requestId}`, {
     headers,
   });
-
-  await handleResponse(response, 'Failed to fetch user profile');
-  return await response.json();
-};
-
-export const fetchUserProfileByUsername = async (username: string): Promise<UserProfile> => {
-  const headers = await getAuthHeaders();
   
-  const response = await fetch(`${BASE_URL}/users/profile/${username}`, {
-    method: 'GET',
-    headers,
-  });
-
-  await handleResponse(response, 'Failed to fetch user profile');
-  return await response.json();
-};
-
-export const getDonorByUserId = async (userId: string) => {
-  const headers = await getAuthHeaders();
-  
-  const response = await fetch(`${BASE_URL}/donors/by-userId/${userId}`, {
-    method: 'GET',
-    headers,
-  });
-
-  if (response.status === 404) {
-    return null;
-  }
-  
-  await handleResponse(response, 'Failed to fetch donor data');
-  return await response.json();
-};
-
-export const fetchDonationById = async (donationId: string): Promise<DonationDetails> => {
-  const headers = await getAuthHeaders();
-  
-  const response = await fetch(`${BASE_URL}/donors/donations/${donationId}`, {
-    method: 'GET',
-    headers,
-  });
-
-  await handleResponse(response, 'Failed to fetch donation details');
-  return await response.json();
-};
-
-export const fetchDonationStatus = async (donationId: string): Promise<string> => {
-  const headers = await getAuthHeaders();
-  
-  const response = await fetch(`${BASE_URL}/donors/donations/${donationId}/status`, {
-    method: 'GET',
-    headers,
-  });
-
-  await handleResponse(response, 'Failed to fetch donation status');
-  return await response.text();
-};
-
-export const getMyDonations = async () => {
-  const headers = await getAuthHeaders();
-  
-  const response = await fetch(`${BASE_URL}/donors/my-donations`, {
-    method: 'GET',
-    headers,
-  });
-
   if (response.status === 403) {
-    throw new Error('NOT_REGISTERED_AS_DONOR');
+    throw new Error("Access denied - you are not authorized to view this request");
   }
   
-  await handleResponse(response, 'Failed to fetch my donations');
-  return await response.json();
-};
-
-export const fetchDonorHistory = async (userId: string) => {
-  const headers = await getAuthHeaders();
-  
-  const response = await fetch(`${BASE_URL}/donors/user/${userId}/history`, {
-    method: 'GET',
-    headers,
-  });
-
-  await handleResponse(response, 'Failed to fetch donor history');
-  return await response.json();
-};
-
-export const getRecipientByUserId = async (userId: string) => {
-  const headers = await getAuthHeaders();
-  
-  const response = await fetch(`${BASE_URL}/recipients/by-userId/${userId}`, {
-    method: 'GET',
-    headers,
-  });
-
-  if (response.status === 404) {
-    return null;
-  }
-  
-  await handleResponse(response, 'Failed to fetch recipient data');
-  return await response.json();
-};
-
-export const fetchRequestById = async (requestId: string): Promise<RequestDetails> => {
-  const headers = await getAuthHeaders();
-  
-  const response = await fetch(`${BASE_URL}/recipients/requests/${requestId}`, {
-    method: 'GET',
-    headers,
-  });
-
-  await handleResponse(response, 'Failed to fetch request details');
-  return await response.json();
-};
-
-export const fetchRequestStatus = async (requestId: string): Promise<string> => {
-  const headers = await getAuthHeaders();
-  
-  const response = await fetch(`${BASE_URL}/recipients/requests/${requestId}/status`, {
-    method: 'GET',
-    headers,
-  });
-
-  await handleResponse(response, 'Failed to fetch request status');
-  return await response.text();
-};
-
-export const getMyRequests = async () => {
-  const headers = await getAuthHeaders();
-  
-  const response = await fetch(`${BASE_URL}/recipients/my-requests`, {
-    method: 'GET',
-    headers,
-  });
-
-  if (response.status === 403) {
-    throw new Error('NOT_REGISTERED_AS_RECIPIENT');
-  }
-  
-  await handleResponse(response, 'Failed to fetch my requests');
-  return await response.json();
-};
-
-export const fetchRecipientHistory = async (userId: string) => {
-  const headers = await getAuthHeaders();
-  
-  const response = await fetch(`${BASE_URL}/recipients/user/${userId}/history`, {
-    method: 'GET',
-    headers,
-  });
-
-  await handleResponse(response, 'Failed to fetch recipient history');
-  return await response.json();
-};
-
-export const getMatchById = async (matchId: string): Promise<MatchResponse> => {
-  const headers = await getAuthHeaders();
-  
-  const response = await fetch(`${BASE_URL}/matching/match/${matchId}`, {
-    method: 'GET',
-    headers,
-  });
-
-  await handleResponse(response, 'Failed to fetch match details');
-  return await response.json();
-};
-
-export const cancelMatch = async (matchId: string): Promise<string> => {
-  const headers = await getAuthHeaders();
-  
-  const response = await fetch(`${BASE_URL}/matching/cancel/${matchId}`, {
-    method: 'DELETE',
-    headers,
-  });
-
-  await handleResponse(response, 'Failed to cancel match');
-  return await response.text();
-};
-
-export const updateDonationStatus = async (donationId: string, status: string): Promise<void> => {
-  const headers = await getAuthHeaders();
-  
-  const response = await fetch(`${BASE_URL}/donors/donations/${donationId}/status`, {
-    method: 'PUT',
-    headers,
-    body: JSON.stringify({ status }),
-  });
-  
-  await handleResponse(response, 'Failed to update donation status');
-};
-
-export const updateRequestStatus = async (requestId: string, status: string): Promise<void> => {
-  const headers = await getAuthHeaders();
-  
-  const response = await fetch(`${BASE_URL}/recipients/requests/${requestId}/status`, {
-    method: 'PUT',
-    headers,
-    body: JSON.stringify({ status }),
-  });
-  
-  await handleResponse(response, 'Failed to update request status');
-};
-
-export const fetchMatchHistory = async (matchId: string): Promise<any> => {
-  const headers = await getAuthHeaders();
-  
-  const response = await fetch(`${BASE_URL}/matching/history/match/${matchId}`, {
-    headers,
-  });
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch match history');
-  }
-  
-  return await response.json();
-};
-
-export const fetchDonorHistoryByUser = async (donorUserId: string): Promise<any[]> => {
-  const headers = await getAuthHeaders();
-  
-  const response = await fetch(`${BASE_URL}/matching/history/donor/${donorUserId}`, {
-    headers,
-  });
-
-  if (!response.ok) {
-    throw new Error('Access denied to donor history');
-  }
-  
-  return await response.json();
-};
-
-export const fetchRecipientHistoryByUser = async (recipientUserId: string): Promise<any[]> => {
-  const headers = await getAuthHeaders();
-  
-  const response = await fetch(`${BASE_URL}/matching/history/recipient/${recipientUserId}`, {
-    headers,
-  });
-
-  if (!response.ok) {
-    throw new Error('Access denied to recipient history');
-  }
-  
-  return await response.json();
-};
-
-export const fetchHistoryByMatch = async (matchId: string, type: 'donor' | 'recipient'): Promise<any[]> => {
-  const headers = await getAuthHeaders();
-  
-  const response = await fetch(`${BASE_URL}/matching/history/match/${matchId}/${type}`, {
-    headers,
-  });
-
-  if (!response.ok) {
-    throw new Error(`Access denied to ${type} history`);
-  }
-  
+  await handleResponse(response, "Failed to fetch request details");
   return await response.json();
 };
 
@@ -535,54 +279,14 @@ export const getMatchConfirmationStatus = async (matchId: string): Promise<boole
   return await response.json();
 };
 
-export const fetchDonorHistoryForRecipient = async (donorUserId: string): Promise<any[]> => {
+export const fetchUserById = async (userId: string): Promise<UserProfile> => {
   const headers = await getAuthHeaders();
   
-  const response = await fetch(`${BASE_URL}/donors/history/for-recipient/${donorUserId}`, {
+  const response = await fetch(`${BASE_URL}/users/profile/id/${userId}`, {
+    method: 'GET',
     headers,
   });
 
-  if (!response.ok) {
-    throw new Error('Access denied to donor history');
-  }
-  
+  await handleResponse(response, 'Failed to fetch user profile');
   return await response.json();
-};
-
-export const fetchRecipientHistoryForDonor = async (recipientUserId: string): Promise<any[]> => {
-  const headers = await getAuthHeaders();
-  
-  const response = await fetch(`${BASE_URL}/recipients/history/for-donor/${recipientUserId}`, {
-    headers,
-  });
-
-  if (!response.ok) {
-    throw new Error('Access denied to recipient history');
-  }
-  
-  return await response.json();
-};
-
-export const fetchDonorHistoryByMatchId = async (matchResultId: string): Promise<any> => {
-  const headers = await getAuthHeaders();
-  
-  const response = await fetch(`${BASE_URL}/donors/history/match/${matchResultId}`, {
-    method: "GET",
-    headers,
-  });
-
-  await handleResponse(response, "Failed to fetch donor history by match");
-  return response.json();
-};
-
-export const fetchRecipientHistoryByMatchId = async (matchResultId: string): Promise<any> => {
-  const headers = await getAuthHeaders();
-  
-  const response = await fetch(`${BASE_URL}/recipients/history/match/${matchResultId}`, {
-    method: "GET",
-    headers,
-  });
-
-  await handleResponse(response, "Failed to fetch recipient history by match");
-  return response.json();
 };

@@ -22,17 +22,14 @@ import {
   recipientConfirmMatch,
   fetchDonationByIdWithAccess,
   fetchRequestByIdWithAccess,
-  getDonorByUserId,
-  getRecipientByUserId,
+  getDonorDetailsByUserId,
+  getRecipientDetailsByUserId,
   getMatchConfirmationStatus,
-  fetchRecipientHistoryByMatchId,
-  fetchDonorHistoryByMatchId,
 } from "../api/matchingApi";
 import { InfoRow } from "../../components/match/InfoRow";
 import { ProfileCard } from "../../components/match/ProfileCard";
 import { MatchInfoCard } from "../../components/match/MatchInfoCard";
 import { YourDetailsCard } from "../../components/match/YourDetailsCard";
-import { HistorySection } from "../../components/match/HistorySection";
 import { MapSection } from "../../components/match/MapSection";
 
 interface MatchDetails {
@@ -89,44 +86,26 @@ const MatchDetailsScreen = () => {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const [donorProfile, setDonorProfile] = useState<UserProfile | null>(null);
-  const [recipientProfile, setRecipientProfile] = useState<UserProfile | null>(
-    null
-  );
+  const [recipientProfile, setRecipientProfile] = useState<UserProfile | null>(null);
 
   const [donorCurrentData, setDonorCurrentData] = useState<any>(null);
   const [recipientCurrentData, setRecipientCurrentData] = useState<any>(null);
 
-  const [donorHistoryData, setDonorHistoryData] = useState<any>(null);
-  const [recipientHistoryData, setRecipientHistoryData] = useState<any>(null);
-
-  const [loadingHistory, setLoadingHistory] = useState(false);
   const [yourDetails, setYourDetails] = useState<any>(null);
   const [loadingYourDetails, setLoadingYourDetails] = useState(false);
 
-  const [currentLocation, setCurrentLocation] =
-    useState<LocationCoordinates | null>(null);
-  const [destinationLocation, setDestinationLocation] =
-    useState<LocationCoordinates | null>(null);
-  const [calculatedDistance, setCalculatedDistance] = useState<number | null>(
-    null
-  );
+  const [currentGpsLocation, setCurrentGpsLocation] = useState<LocationCoordinates | null>(null);
+  const [registeredLocation, setRegisteredLocation] = useState<LocationCoordinates | null>(null);
+  const [otherPartyLocation, setOtherPartyLocation] = useState<LocationCoordinates | null>(null);
+  const [allLocations, setAllLocations] = useState<LocationCoordinates[]>([]);
+  const [calculatedDistance, setCalculatedDistance] = useState<number | null>(null);
   const [locationPermission, setLocationPermission] = useState<boolean>(false);
   const [loadingLocation, setLoadingLocation] = useState(false);
-
-  const [currentGpsLocation, setCurrentGpsLocation] =
-    useState<LocationCoordinates | null>(null);
-  const [registeredLocation, setRegisteredLocation] =
-    useState<LocationCoordinates | null>(null);
-  const [otherPartyLocation, setOtherPartyLocation] =
-    useState<LocationCoordinates | null>(null);
-  const [allLocations, setAllLocations] = useState<LocationCoordinates[]>([]);
 
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
-  const [alertType, setAlertType] = useState<
-    "success" | "error" | "warning" | "info"
-  >("info");
+  const [alertType, setAlertType] = useState<"success" | "error" | "warning" | "info">("info");
 
   const showAlert = (
     title: string,
@@ -157,20 +136,6 @@ const MatchDetailsScreen = () => {
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     const distance = R * c;
     return distance;
-  };
-
-  const isSignificantlyDifferent = (
-    loc1: LocationCoordinates,
-    loc2: LocationCoordinates,
-    threshold = 0.1
-  ) => {
-    const distance = calculateDistance(
-      loc1.latitude,
-      loc1.longitude,
-      loc2.latitude,
-      loc2.longitude
-    );
-    return distance > threshold;
   };
 
   const getCurrentUserLocation = async () => {
@@ -208,511 +173,120 @@ const MatchDetailsScreen = () => {
     }
   };
 
-  const extractRegisteredLocation = (userData: any, userRole: string) => {
-    if (!userData) return null;
-
-    let coords = null;
-    let address = "";
-
-    if (userData.addresses && userData.addresses.length > 0) {
-      const primaryAddress = userData.addresses[0];
-      if (primaryAddress.latitude && primaryAddress.longitude) {
-        coords = {
-          latitude: parseFloat(primaryAddress.latitude),
-          longitude: parseFloat(primaryAddress.longitude),
-        };
-        address = `${primaryAddress.addressLine || ""}, ${
-          primaryAddress.city || ""
-        }`
-          .trim()
-          .replace(/^,\s*/, "");
-      }
-    } else if (
-      userData.usedLocationLatitude &&
-      userData.usedLocationLongitude
-    ) {
-      coords = {
-        latitude: parseFloat(userData.usedLocationLatitude),
-        longitude: parseFloat(userData.usedLocationLongitude),
-      };
-      address = `${userData.usedLocationAddressLine || ""}, ${
-        userData.usedLocationCity || ""
-      }`
-        .trim()
-        .replace(/^,\s*/, "");
+  const extractRegisteredLocation = (userData: any): LocationCoordinates | null => {
+    if (!userData || !userData.locations || userData.locations.length === 0) {
+      return null;
     }
 
-    if (coords && !isNaN(coords.latitude) && !isNaN(coords.longitude)) {
+    const location = userData.locations[0];
+    if (location.latitude && location.longitude) {
       return {
-        latitude: coords.latitude,
-        longitude: coords.longitude,
+        latitude: parseFloat(location.latitude.toString()),
+        longitude: parseFloat(location.longitude.toString()),
         title: "Your Registered Location",
         description: "Location from your profile",
-        address: address,
-        type: "registered" as const,
+        address: `${location.addressLine || ""}, ${location.city || ""}`
+          .trim()
+          .replace(/^,\s*/, ""),
+        type: "registered",
       };
     }
 
     return null;
   };
 
-  const getOtherPartyLocation = (
-    matchData: MatchDetails,
-    userRole: string,
-    otherPartyData: any
-  ): LocationCoordinates | null => {
-    let coords = null;
-    let title = "";
-    let address = "";
+  const getOtherPartyLocation = (otherPartyData: any, otherPartyRole: string): LocationCoordinates | null => {
+    if (!otherPartyData || !otherPartyData.locations || otherPartyData.locations.length === 0) {
+      return null;
+    }
 
-    try {
-      if (userRole === "donor") {
-        title = `${recipientProfile?.name || "Recipient"}'s Location`;
-
-        if (matchData.isConfirmed && otherPartyData) {
-          if (otherPartyData.receiveRequestSnapshot) {
-            const snapshot = otherPartyData.receiveRequestSnapshot;
-            if (
-              snapshot.usedLocationLatitude &&
-              snapshot.usedLocationLongitude
-            ) {
-              coords = {
-                latitude: parseFloat(snapshot.usedLocationLatitude),
-                longitude: parseFloat(snapshot.usedLocationLongitude),
-              };
-              address = `${snapshot.usedLocationAddressLine || ""}, ${
-                snapshot.usedLocationCity || ""
-              }`
-                .trim()
-                .replace(/^,\s*/, "");
-            }
-          }
-        } else if (yourDetails?.data) {
-          if (
-            yourDetails.data.usedLocationLatitude &&
-            yourDetails.data.usedLocationLongitude
-          ) {
-            coords = {
-              latitude: parseFloat(yourDetails.data.usedLocationLatitude),
-              longitude: parseFloat(yourDetails.data.usedLocationLongitude),
-            };
-            address = `${yourDetails.data.usedLocationAddressLine || ""}, ${
-              yourDetails.data.usedLocationCity || ""
-            }`
-              .trim()
-              .replace(/^,\s*/, "");
-          }
-        }
-      } else if (userRole === "recipient") {
-        title = `${donorProfile?.name || "Donor"}'s Location`;
-
-        if (matchData.isConfirmed && otherPartyData) {
-          if (otherPartyData.donationSnapshot) {
-            const snapshot = otherPartyData.donationSnapshot;
-            if (
-              snapshot.usedLocationLatitude &&
-              snapshot.usedLocationLongitude
-            ) {
-              coords = {
-                latitude: parseFloat(snapshot.usedLocationLatitude),
-                longitude: parseFloat(snapshot.usedLocationLongitude),
-              };
-              address = `${snapshot.usedLocationAddressLine || ""}, ${
-                snapshot.usedLocationCity || ""
-              }`
-                .trim()
-                .replace(/^,\s*/, "");
-            }
-          }
-        } else if (yourDetails?.data) {
-          if (
-            yourDetails.data.usedLocationLatitude &&
-            yourDetails.data.usedLocationLongitude
-          ) {
-            coords = {
-              latitude: parseFloat(yourDetails.data.usedLocationLatitude),
-              longitude: parseFloat(yourDetails.data.usedLocationLongitude),
-            };
-            address = `${yourDetails.data.usedLocationAddressLine || ""}, ${
-              yourDetails.data.usedLocationCity || ""
-            }`
-              .trim()
-              .replace(/^,\s*/, "");
-          }
-        }
-      }
-
-      if (coords && !isNaN(coords.latitude) && !isNaN(coords.longitude)) {
-        return {
-          latitude: coords.latitude,
-          longitude: coords.longitude,
-          title: title,
-          address: address,
-          description: matchData.isConfirmed
-            ? "Their registered location"
-            : "Their current location",
-          type: "other",
-        };
-      }
-    } catch (error) {
-      console.error("❌ Error extracting other party location:", error);
+    const location = otherPartyData.locations[0];
+    if (location.latitude && location.longitude) {
+      return {
+        latitude: parseFloat(location.latitude.toString()),
+        longitude: parseFloat(location.longitude.toString()),
+        title: `${otherPartyRole} Location`,
+        address: `${location.addressLine || ""}, ${location.city || ""}`
+          .trim()
+          .replace(/^,\s*/, ""),
+        description: "Their registered location",
+        type: "other",
+      };
     }
 
     return null;
-  };
-
-  const getDestinationLocation = (
-    matchData: MatchDetails,
-    userRole: string,
-    otherPartyData: any
-  ) => {
-    let destinationCoords: LocationCoordinates | null = null;
-    let destinationTitle = "";
-
-    console.log("🎯 DEBUG - getDestinationLocation called:", {
-      userRole,
-      isConfirmed: matchData.isConfirmed,
-      hasOtherPartyData: !!otherPartyData,
-      hasYourDetails: !!yourDetails,
-      yourDetailsType: yourDetails?.type,
-    });
-
-    try {
-      if (userRole === "donor") {
-        destinationTitle = `${recipientProfile?.name || "Recipient"} Location`;
-
-        if (matchData.isConfirmed && otherPartyData) {
-          console.log("📍 Checking historical recipient data:", {
-            hasReceiveRequestSnapshot: !!otherPartyData.receiveRequestSnapshot,
-            otherPartyDataKeys: Object.keys(otherPartyData),
-          });
-
-          let coords = null;
-
-          if (otherPartyData.receiveRequestSnapshot) {
-            const snapshot = otherPartyData.receiveRequestSnapshot;
-            if (
-              snapshot.usedLocationLatitude &&
-              snapshot.usedLocationLongitude
-            ) {
-              coords = {
-                latitude: parseFloat(snapshot.usedLocationLatitude),
-                longitude: parseFloat(snapshot.usedLocationLongitude),
-                address: `${snapshot.usedLocationAddressLine || ""}, ${
-                  snapshot.usedLocationCity || ""
-                }`
-                  .trim()
-                  .replace(/^,\s*/, ""),
-              };
-            }
-          }
-
-          if (
-            !coords &&
-            otherPartyData.usedLocationLatitude &&
-            otherPartyData.usedLocationLongitude
-          ) {
-            coords = {
-              latitude: parseFloat(otherPartyData.usedLocationLatitude),
-              longitude: parseFloat(otherPartyData.usedLocationLongitude),
-              address: `${otherPartyData.usedLocationAddressLine || ""}, ${
-                otherPartyData.usedLocationCity || ""
-              }`
-                .trim()
-                .replace(/^,\s*/, ""),
-            };
-          }
-
-          if (coords && !isNaN(coords.latitude) && !isNaN(coords.longitude)) {
-            destinationCoords = {
-              latitude: coords.latitude,
-              longitude: coords.longitude,
-              title: destinationTitle,
-              address: coords.address,
-            };
-          }
-        } else if (!matchData.isConfirmed && yourDetails?.data) {
-          console.log("📍 Checking current recipient data from yourDetails:", {
-            yourDetailsType: yourDetails.type,
-            hasLatLng: !!(
-              yourDetails.data.usedLocationLatitude &&
-              yourDetails.data.usedLocationLongitude
-            ),
-          });
-
-          if (
-            yourDetails.data.usedLocationLatitude &&
-            yourDetails.data.usedLocationLongitude
-          ) {
-            destinationCoords = {
-              latitude: parseFloat(yourDetails.data.usedLocationLatitude),
-              longitude: parseFloat(yourDetails.data.usedLocationLongitude),
-              title: destinationTitle,
-              address: `${yourDetails.data.usedLocationAddressLine || ""}, ${
-                yourDetails.data.usedLocationCity || ""
-              }`
-                .trim()
-                .replace(/^,\s*/, ""),
-            };
-          }
-        }
-      } else if (userRole === "recipient") {
-        destinationTitle = `${donorProfile?.name || "Donor"} Location`;
-
-        if (matchData.isConfirmed && otherPartyData) {
-          console.log("📍 Checking historical donor data:", {
-            hasDonationSnapshot: !!otherPartyData.donationSnapshot,
-            otherPartyDataKeys: Object.keys(otherPartyData),
-          });
-
-          let coords = null;
-
-          if (otherPartyData.donationSnapshot) {
-            const snapshot = otherPartyData.donationSnapshot;
-            if (
-              snapshot.usedLocationLatitude &&
-              snapshot.usedLocationLongitude
-            ) {
-              coords = {
-                latitude: parseFloat(snapshot.usedLocationLatitude),
-                longitude: parseFloat(snapshot.usedLocationLongitude),
-                address: `${snapshot.usedLocationAddressLine || ""}, ${
-                  snapshot.usedLocationCity || ""
-                }`
-                  .trim()
-                  .replace(/^,\s*/, ""),
-              };
-            }
-          }
-
-          if (
-            !coords &&
-            otherPartyData.usedLocationLatitude &&
-            otherPartyData.usedLocationLongitude
-          ) {
-            coords = {
-              latitude: parseFloat(otherPartyData.usedLocationLatitude),
-              longitude: parseFloat(otherPartyData.usedLocationLongitude),
-              address: `${otherPartyData.usedLocationAddressLine || ""}, ${
-                otherPartyData.usedLocationCity || ""
-              }`
-                .trim()
-                .replace(/^,\s*/, ""),
-            };
-          }
-
-          if (coords && !isNaN(coords.latitude) && !isNaN(coords.longitude)) {
-            destinationCoords = {
-              latitude: coords.latitude,
-              longitude: coords.longitude,
-              title: destinationTitle,
-              address: coords.address,
-            };
-          }
-        } else if (!matchData.isConfirmed && yourDetails?.data) {
-          console.log("📍 Checking current donor data from yourDetails:", {
-            yourDetailsType: yourDetails.type,
-            hasLatLng: !!(
-              yourDetails.data.usedLocationLatitude &&
-              yourDetails.data.usedLocationLongitude
-            ),
-          });
-
-          if (
-            yourDetails.data.usedLocationLatitude &&
-            yourDetails.data.usedLocationLongitude
-          ) {
-            destinationCoords = {
-              latitude: parseFloat(yourDetails.data.usedLocationLatitude),
-              longitude: parseFloat(yourDetails.data.usedLocationLongitude),
-              title: destinationTitle,
-              address: `${yourDetails.data.usedLocationAddressLine || ""}, ${
-                yourDetails.data.usedLocationCity || ""
-              }`
-                .trim()
-                .replace(/^,\s*/, ""),
-            };
-          }
-        }
-      }
-
-      console.log("🗺️ Final destination coordinates:", {
-        found: !!destinationCoords,
-        coordinates: destinationCoords,
-        title: destinationTitle,
-      });
-    } catch (error) {
-      console.error("❌ Error extracting destination location:", error);
-    }
-
-    return destinationCoords;
   };
 
   const updateLocationData = () => {
     if (!match || !currentUserId) return;
 
     const userRole = getUserRoleInMatch();
-    const otherPartyData =
-      userRole === "donor"
-        ? recipientHistoryData || recipientCurrentData
-        : donorHistoryData || donorCurrentData;
+    const currentUserData = userRole === "donor" ? donorCurrentData : recipientCurrentData;
+    const otherPartyData = userRole === "donor" ? recipientCurrentData : donorCurrentData;
+    const otherPartyRole = userRole === "donor" ? "Recipient" : "Donor";
 
-    const currentUserData =
-      userRole === "donor" ? donorCurrentData : recipientCurrentData;
-    const registered = extractRegisteredLocation(currentUserData, userRole);
+    const registered = extractRegisteredLocation(currentUserData);
     setRegisteredLocation(registered);
 
-    const otherLocation = getOtherPartyLocation(
-      match,
-      userRole,
-      otherPartyData
-    );
+    const otherLocation = getOtherPartyLocation(otherPartyData, otherPartyRole);
     setOtherPartyLocation(otherLocation);
 
     const locations: LocationCoordinates[] = [];
-
-    if (otherLocation) {
-      locations.push(otherLocation);
-    }
-
-    if (registered) {
-      locations.push(registered);
-    }
-
-    if (currentGpsLocation) {
-      if (
-        !registered ||
-        isSignificantlyDifferent(registered, currentGpsLocation)
-      ) {
-        locations.push(currentGpsLocation);
-      }
-    }
+    if (otherLocation) locations.push(otherLocation);
+    if (registered) locations.push(registered);
+    if (currentGpsLocation) locations.push(currentGpsLocation);
 
     setAllLocations(locations);
 
     if (registered && otherLocation) {
-      const distanceFromRegistered = calculateDistance(
+      const distance = calculateDistance(
         registered.latitude,
         registered.longitude,
         otherLocation.latitude,
         otherLocation.longitude
       );
-
-      let distanceFromCurrent = null;
-      if (currentGpsLocation) {
-        distanceFromCurrent = calculateDistance(
-          currentGpsLocation.latitude,
-          currentGpsLocation.longitude,
-          otherLocation.latitude,
-          otherLocation.longitude
-        );
-      }
-
-      setCalculatedDistance(distanceFromRegistered);
-
-      console.log("📏 Distance calculations:", {
-        fromRegistered: distanceFromRegistered.toFixed(2) + "km",
-        fromCurrent: distanceFromCurrent
-          ? distanceFromCurrent.toFixed(2) + "km"
-          : "N/A",
-      });
+      setCalculatedDistance(distance);
     }
   };
-
-  const loadHistoricalData = async (
-    matchData: MatchDetails,
-    userId: string | null
-  ) => {
-    if (!matchData?.isConfirmed || !userId) return;
-
-    setLoadingHistory(true);
-    try {
-      const userRole =
-        matchData.donorUserId === userId
-          ? "donor"
-          : matchData.recipientUserId === userId
-          ? "recipient"
-          : "unknown";
-
-      if (userRole === "donor") {
-        const recipientHistory = await fetchRecipientHistoryByMatchId(
-          matchData.matchResultId
-        );
-        console.log("📜 Recipient history loaded:", recipientHistory);
-        if (recipientHistory && recipientHistory.length > 0) {
-          const structuredData = {
-            ...recipientHistory[0],
-            isHistoricalData: true,
-            matchSpecific: true,
-          };
-          setRecipientHistoryData(structuredData);
-        }
-      } else if (userRole === "recipient") {
-        const donorHistory = await fetchDonorHistoryByMatchId(
-          matchData.matchResultId
-        );
-        console.log("📜 Donor history loaded:", donorHistory);
-        if (donorHistory && donorHistory.length > 0) {
-          const structuredData = {
-            ...donorHistory[0],
-            isHistoricalData: true,
-            matchSpecific: true,
-          };
-          setDonorHistoryData(structuredData);
-        }
-      }
-    } catch (error: any) {
-      console.log(
-        "Could not load match-specific historical data:",
-        error.message
-      );
-    } finally {
-      setLoadingHistory(false);
-    }
-  };
-
-  useEffect(() => {
-    if (
-      match &&
-      currentUserId &&
-      donorProfile &&
-      recipientProfile &&
-      (yourDetails ||
-        (match.isConfirmed && (donorHistoryData || recipientHistoryData)))
-    ) {
-      updateLocationData();
-    }
-  }, [
-    match,
-    currentUserId,
-    donorProfile,
-    recipientProfile,
-    yourDetails,
-    donorHistoryData,
-    recipientHistoryData,
-    currentLocation,
-  ]);
-
-  useEffect(() => {
-    getCurrentUserLocation();
-  }, []);
 
   const loadCurrentData = async (matchData: MatchDetails) => {
-    if (matchData.isConfirmed) return;
-
     try {
       const [donorDetails, recipientDetails] = await Promise.all([
-        getDonorByUserId(matchData.donorUserId),
-        getRecipientByUserId(matchData.recipientUserId),
+        getDonorDetailsByUserId(matchData.donorUserId),
+        getRecipientDetailsByUserId(matchData.recipientUserId),
       ]);
+      
       setDonorCurrentData(donorDetails);
       setRecipientCurrentData(recipientDetails);
-      console.log("🔄 Current data loaded:", {
-        donorDetails,
-        recipientDetails,
+      
+      console.log("Current data loaded from matching service:", {
+        donorDetails: !!donorDetails,
+        recipientDetails: !!recipientDetails,
       });
     } catch (error) {
-      console.log("Could not fetch current donor/recipient details:", error);
+      console.log("Could not fetch donor/recipient details:", error);
+    }
+  };
+
+  const loadYourDetails = async (match: MatchDetails, userId: string | null) => {
+    if (!userId) return;
+
+    setLoadingYourDetails(true);
+    try {
+      if (match.donorUserId === userId) {
+        const requestDetails = await fetchRequestByIdWithAccess(match.receiveRequestId);
+        setYourDetails({ type: "request", data: requestDetails });
+        console.log("Your details loaded (request):", requestDetails);
+      } else if (match.recipientUserId === userId) {
+        const donationDetails = await fetchDonationByIdWithAccess(match.donationId);
+        setYourDetails({ type: "donation", data: donationDetails });
+        console.log("Your details loaded (donation):", donationDetails);
+      }
+    } catch (error: any) {
+      console.log("Could not load your details:", error);
+      setYourDetails(null);
+    } finally {
+      setLoadingYourDetails(false);
     }
   };
 
@@ -744,11 +318,6 @@ const MatchDetailsScreen = () => {
 
       if (updatedMatch.donorConfirmed && updatedMatch.recipientConfirmed) {
         updatedMatch.isConfirmed = true;
-        setDonorCurrentData(null);
-        setRecipientCurrentData(null);
-        setTimeout(() => {
-          loadHistoricalData(updatedMatch, currentUserId);
-        }, 3000);
       }
 
       setMatch(updatedMatch);
@@ -768,9 +337,7 @@ const MatchDetailsScreen = () => {
         const parsedMatch = JSON.parse(matchData as string);
 
         try {
-          const confirmed = await getMatchConfirmationStatus(
-            parsedMatch.matchResultId
-          );
+          const confirmed = await getMatchConfirmationStatus(parsedMatch.matchResultId);
           parsedMatch.isConfirmed = confirmed;
         } catch (error) {
           console.log("Could not verify match status, using passed data");
@@ -787,13 +354,9 @@ const MatchDetailsScreen = () => {
         setDonorProfile(donorProfile);
         setRecipientProfile(recipientProfile);
 
-        if (parsedMatch.isConfirmed) {
-          await loadHistoricalData(parsedMatch, userId);
-        } else {
-          await loadCurrentData(parsedMatch);
-        }
-
+        await loadCurrentData(parsedMatch);
         await loadYourDetails(parsedMatch, userId);
+        
       } catch (error: any) {
         showAlert(
           "Error",
@@ -808,33 +371,15 @@ const MatchDetailsScreen = () => {
     loadMatchDetails();
   }, [matchData]);
 
-  const loadYourDetails = async (
-    match: MatchDetails,
-    userId: string | null
-  ) => {
-    if (!userId) return;
-
-    setLoadingYourDetails(true);
-    try {
-      if (match.donorUserId === userId) {
-        const requestDetails = await fetchRequestByIdWithAccess(
-          match.receiveRequestId
-        );
-        setYourDetails({ type: "request", data: requestDetails });
-        console.log("📝 Your details loaded (request):", requestDetails);
-      } else if (match.recipientUserId === userId) {
-        const donationDetails = await fetchDonationByIdWithAccess(
-          match.donationId
-        );
-        setYourDetails({ type: "donation", data: donationDetails });
-        console.log("📝 Your details loaded (donation):", donationDetails);
-      }
-    } catch (error: any) {
-      setYourDetails(null);
-    } finally {
-      setLoadingYourDetails(false);
+  useEffect(() => {
+    if (match && currentUserId && donorProfile && recipientProfile && (donorCurrentData || recipientCurrentData)) {
+      updateLocationData();
     }
-  };
+  }, [match, currentUserId, donorProfile, recipientProfile, donorCurrentData, recipientCurrentData, currentGpsLocation]);
+
+  useEffect(() => {
+    getCurrentUserLocation();
+  }, []);
 
   const getUserRoleInMatch = (): "donor" | "recipient" | "unknown" => {
     if (!match || !currentUserId) return "unknown";
@@ -845,11 +390,7 @@ const MatchDetailsScreen = () => {
 
   const getCurrentUserRole = (): string => {
     const role = getUserRoleInMatch();
-    return role === "donor"
-      ? "Donor"
-      : role === "recipient"
-      ? "Recipient"
-      : "Unknown";
+    return role === "donor" ? "Donor" : role === "recipient" ? "Recipient" : "Unknown";
   };
 
   const getCurrentUserStatus = (): boolean => {
@@ -884,14 +425,14 @@ const MatchDetailsScreen = () => {
         userId: match.recipientUserId,
         role: "Recipient",
         profile: recipientProfile,
-        data: match.isConfirmed ? recipientHistoryData : recipientCurrentData,
+        data: recipientCurrentData,
       };
     } else if (userRole === "recipient") {
       return {
         userId: match.donorUserId,
         role: "Donor",
         profile: donorProfile,
-        data: match.isConfirmed ? donorHistoryData : donorCurrentData,
+        data: donorCurrentData,
       };
     }
     return null;
@@ -908,16 +449,38 @@ const MatchDetailsScreen = () => {
           pathname: "/navigation/detailedProfile",
           params: {
             userProfile: JSON.stringify(otherPartyInfo?.profile),
-            historicalData: JSON.stringify(otherPartyInfo?.data),
-            matchData: JSON.stringify(yourDetails?.data),
+            matchingServiceData: JSON.stringify(otherPartyInfo?.data),
+            matchData: JSON.stringify(yourDetails),
             userRole: otherPartyInfo?.role,
-            isHistorical: match?.isConfirmed.toString(),
-            matchId: match?.matchResultId,
           },
         });
       }, 100);
     } catch (error) {
       console.error("Error navigating to profile:", error);
+      setNavigatingToProfile(false);
+    }
+  };
+
+  const viewDetailedInformation = () => {
+    setNavigatingToProfile(true);
+
+    try {
+      const otherPartyInfo = getOtherPartyInfo();
+
+      setTimeout(() => {
+        router.push({
+          pathname: "/navigation/detailedProfile",
+          params: {
+            userProfile: JSON.stringify(otherPartyInfo?.profile),
+            matchingServiceData: JSON.stringify(otherPartyInfo?.data),
+            matchData: JSON.stringify(yourDetails),
+            userRole: otherPartyInfo?.role,
+          },
+        });
+        setNavigatingToProfile(false);
+      }, 100);
+    } catch (error) {
+      console.error("Error navigating to detailed information:", error);
       setNavigatingToProfile(false);
     }
   };
@@ -1019,21 +582,57 @@ const MatchDetailsScreen = () => {
             otherPartyRole={otherPartyInfo?.role || "Other Party"}
             formatDate={formatDate}
           />
+
           {otherPartyInfo?.profile && (
             <ProfileCard
               user={otherPartyInfo.profile}
               title={otherPartyInfo.role}
               iconName={otherPartyInfo.role === "Donor" ? "heart" : "user"}
               onViewProfile={viewUserProfile}
-              historicalData={otherPartyInfo.data}
+              matchingServiceData={otherPartyInfo.data}
               isHistorical={match.isConfirmed}
             />
           )}
+
           <YourDetailsCard
             yourDetails={yourDetails}
             loadingYourDetails={loadingYourDetails}
             userRole={userRole}
           />
+
+          {/* NEW: Information Button */}
+          {otherPartyInfo?.profile && (
+            <View style={[styles.sectionContainer, { paddingHorizontal: 24 }]}>
+              <TouchableOpacity
+                style={{
+                  backgroundColor: theme.primary,
+                  paddingVertical: 16,
+                  paddingHorizontal: 24,
+                  borderRadius: 12,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                onPress={viewDetailedInformation}
+                activeOpacity={0.8}
+              >
+                <Feather 
+                  name={otherPartyInfo.role === "Donor" ? "heart" : "user"} 
+                  size={20} 
+                  color="#fff" 
+                />
+                <Text style={{
+                  color: '#fff',
+                  fontSize: 16,
+                  fontWeight: '600',
+                  marginLeft: 8,
+                }}>
+                  View {otherPartyInfo.role} Information
+                </Text>
+                <Feather name="arrow-right" size={16} color="#fff" style={{ marginLeft: 8 }} />
+              </TouchableOpacity>
+            </View>
+          )}
 
           <MapSection
             allLocations={allLocations}
@@ -1046,28 +645,13 @@ const MatchDetailsScreen = () => {
             onRequestLocation={getCurrentUserLocation}
             calculateDistance={calculateDistance}
             currentUserRole={getUserRoleInMatch()}
-            otherPartyRole={
-              otherPartyInfo?.role as "Donor" | "Recipient" | undefined
-            }
+            otherPartyRole={otherPartyInfo?.role as "Donor" | "Recipient" | undefined}
             matchType={match?.matchType}
           />
-
-          {!match.isConfirmed && (
-            <HistorySection
-              match={match}
-              loadingHistory={loadingHistory}
-              matchHistory={null}
-              donorHistoryData={donorHistoryData}
-              recipientHistoryData={recipientHistoryData}
-              formatDate={formatDate}
-            />
-          )}
         </ScrollView>
 
         {canConfirmMatch() && (
-          <View
-            style={[styles.submitButtonContainer, { paddingHorizontal: 24 }]}
-          >
+          <View style={[styles.submitButtonContainer, { paddingHorizontal: 24 }]}>
             <TouchableOpacity
               style={[
                 styles.submitButton,
@@ -1120,7 +704,7 @@ const MatchDetailsScreen = () => {
                   fontWeight: "500",
                 }}
               >
-                Loading Profile...
+                Loading Information...
               </Text>
             </View>
           </View>

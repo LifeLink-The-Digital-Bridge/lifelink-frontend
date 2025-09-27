@@ -9,7 +9,13 @@ import { useTheme } from "../../utils/theme-context";
 import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
 import Applayout from "../../components/AppLayout";
 import { Feather } from "@expo/vector-icons";
-import { getMyDonations, getMyRequests, getMyMatchesAsDonor, getMyMatchesAsRecipient, MatchResponse } from "../api/matchingApi";
+import { 
+  getMyMatchesAsDonor, 
+  getMyMatchesAsRecipient, 
+  fetchDonationByIdWithAccess,
+  fetchRequestByIdWithAccess,
+  MatchResponse 
+} from "../api/matchingApi";
 
 interface DonationItem {
   id: string;
@@ -65,55 +71,113 @@ const StatusScreen = () => {
       const rolesString = await SecureStore.getItemAsync("roles");
       const roles: string[] = rolesString ? JSON.parse(rolesString) : [];
 
-      // Fetch donations if user is a donor
+      let donationsData: DonationItem[] = [];
+      let requestsData: RequestItem[] = [];
+
+      // Fetch donor matches and donations if user is a donor
       if (roles.includes("DONOR")) {
         try {
-          const donationsData = await getMyDonations();
+          const matches = await getMyMatchesAsDonor();
+          setDonorMatches(matches);
+
+          // Extract donation details from matches
+          const donationPromises = matches.map(async (match) => {
+            try {
+              const donation = await fetchDonationByIdWithAccess(match.donationId);
+              return {
+                id: donation.id || match.donationId,
+                donationType: donation.donationType || match.donationType || 'N/A',
+                donationDate: donation.donationDate || match.matchedAt,
+                status: donation.status || 'MATCHED',
+                quantity: donation.quantity,
+                bloodType: donation.bloodType || match.bloodType,
+                organType: donation.organType,
+                tissueType: donation.tissueType,
+                stemCellType: donation.stemCellType,
+              };
+            } catch (error) {
+              console.log(`Could not fetch donation ${match.donationId}:`, error);
+              return {
+                id: match.donationId,
+                donationType: match.donationType || 'N/A',
+                donationDate: match.matchedAt,
+                status: 'MATCHED',
+                bloodType: match.bloodType,
+              };
+            }
+          });
+
+          donationsData = await Promise.all(donationPromises);
           setDonations(donationsData);
-          
-          // Fetch donor matches
-          try {
-            const matches = await getMyMatchesAsDonor();
-            setDonorMatches(matches);
-          } catch (error) {
-            console.log("No donor matches found");
-            setDonorMatches([]);
-          }
         } catch (error: any) {
           if (error.message === 'NOT_REGISTERED_AS_DONOR') {
             console.log("User not registered as donor");
           } else {
-            console.error("Failed to fetch donations:", error);
+            console.error("Failed to fetch donor data:", error);
           }
+          setDonorMatches([]);
           setDonations([]);
         }
       }
 
-      // Fetch requests if user is a recipient
+      // Fetch recipient matches and requests if user is a recipient
       if (roles.includes("RECIPIENT")) {
         try {
-          const requestsData = await getMyRequests();
+          const matches = await getMyMatchesAsRecipient();
+          setRecipientMatches(matches);
+
+          // Extract request details from matches
+          const requestPromises = matches.map(async (match) => {
+            try {
+              const request = await fetchRequestByIdWithAccess(match.receiveRequestId);
+              return {
+                id: request.id || match.receiveRequestId,
+                requestType: request.requestType || match.requestType || 'N/A',
+                requestDate: request.requestDate || match.matchedAt,
+                status: request.status || 'MATCHED',
+                quantity: request.quantity,
+                bloodType: request.requestedBloodType || match.bloodType,
+                organType: request.requestedOrgan,
+                tissueType: request.requestedTissue,
+                stemCellType: request.requestedStemCellType,
+              };
+            } catch (error) {
+              console.log(`Could not fetch request ${match.receiveRequestId}:`, error);
+              return {
+                id: match.receiveRequestId,
+                requestType: match.requestType || 'N/A',
+                requestDate: match.matchedAt,
+                status: 'MATCHED',
+                bloodType: match.bloodType,
+              };
+            }
+          });
+
+          requestsData = await Promise.all(requestPromises);
           setRequests(requestsData);
-          
-          // Fetch recipient matches
-          try {
-            const matches = await getMyMatchesAsRecipient();
-            setRecipientMatches(matches);
-          } catch (error) {
-            console.log("No recipient matches found");
-            setRecipientMatches([]);
-          }
         } catch (error: any) {
           if (error.message === 'NOT_REGISTERED_AS_RECIPIENT') {
             console.log("User not registered as recipient");
           } else {
-            console.error("Failed to fetch requests:", error);
+            console.error("Failed to fetch recipient data:", error);
           }
+          setRecipientMatches([]);
           setRequests([]);
         }
       }
+
+      // Set default tab based on available data
+      if (donationsData.length > 0 && requestsData.length === 0) {
+        setActiveTab("donations");
+      } else if (donationsData.length === 0 && requestsData.length > 0) {
+        setActiveTab("requests");
+      } else if (donationsData.length > 0) {
+        setActiveTab("donations");
+      }
+
     } catch (error) {
       console.error("Failed to fetch data:", error);
+      Alert.alert("Error", "Failed to load status data");
     }
     setLoading(false);
   };
@@ -129,30 +193,46 @@ const StatusScreen = () => {
   const handleViewMatches = () => {
     router.push("/navigation/MatchResultsScreen");
   };
-  
-    const getTotalMatches = () => {
+
+  const handleItemPress = (itemId: string, type: "donation" | "request") => {
+    const match = getMatchForItem(itemId, type);
+    if (match) {
+      router.push({
+        pathname: '/navigation/MatchDetailsScreen',
+        params: { matchData: JSON.stringify(match) }
+      });
+    }
+  };
+
+  const getTotalMatches = () => {
     return donorMatches.length + recipientMatches.length;
   };
 
   const renderDonationItem = (donation: DonationItem) => {
     const match = getMatchForItem(donation.id, "donation");
-    
+
     return (
-      <View key={donation.id} style={styles.card}>
+      <TouchableOpacity 
+        key={donation.id} 
+        style={styles.card}
+        onPress={() => handleItemPress(donation.id, "donation")}
+        activeOpacity={0.7}
+      >
         <View style={statusStyles.cardHeader}>
           <Text style={statusStyles.cardTitle}>{donation.donationType}</Text>
-          <View style={[styles.statusBadge, 
+          <View style={[styles.statusBadge,
             donation.status === "PENDING" ? statusStyles.statusPending :
-            donation.status === "COMPLETED" ? statusStyles.statusCompleted : statusStyles.statusRejected
+            donation.status === "COMPLETED" || donation.status === "MATCHED" ? statusStyles.statusCompleted : 
+            statusStyles.statusRejected
           ]}>
             <Text style={styles.statusText}>{donation.status}</Text>
           </View>
         </View>
-        
+
         <Text style={statusStyles.cardSubtitle}>
           Date: {new Date(donation.donationDate).toLocaleDateString()}
         </Text>
-        
+
         {donation.quantity && (
           <Text style={statusStyles.cardDetail}>Quantity: {donation.quantity}</Text>
         )}
@@ -168,39 +248,56 @@ const StatusScreen = () => {
         {donation.stemCellType && (
           <Text style={statusStyles.cardDetail}>Stem Cell: {donation.stemCellType}</Text>
         )}
-        
+
         {match && (
-          <TouchableOpacity 
-            style={styles.matchButton}
-            onPress={handleViewMatches}
-          >
-            <Feather name="users" size={16} color={theme.primary} />
-            <Text style={styles.matchButtonText}>Matched - View Details</Text>
-          </TouchableOpacity>
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginTop: 12,
+            paddingTop: 12,
+            borderTopWidth: 1,
+            borderTopColor: theme.border + '30'
+          }}>
+            <Feather name="users" size={16} color={theme.success} />
+            <Text style={{
+              color: theme.success,
+              fontSize: 14,
+              fontWeight: '600',
+              marginLeft: 8
+            }}>
+              Matched - Tap to view details
+            </Text>
+          </View>
         )}
-      </View>
+      </TouchableOpacity>
     );
   };
 
   const renderRequestItem = (request: RequestItem) => {
     const match = getMatchForItem(request.id, "request");
-    
+
     return (
-      <View key={request.id} style={styles.card}>
+      <TouchableOpacity 
+        key={request.id} 
+        style={styles.card}
+        onPress={() => handleItemPress(request.id, "request")}
+        activeOpacity={0.7}
+      >
         <View style={statusStyles.cardHeader}>
           <Text style={statusStyles.cardTitle}>{request.requestType}</Text>
           <View style={[styles.statusBadge,
             request.status === "PENDING" ? statusStyles.statusPending :
-            request.status === "FULFILLED" ? statusStyles.statusCompleted : statusStyles.statusRejected
+            request.status === "FULFILLED" || request.status === "MATCHED" ? statusStyles.statusCompleted : 
+            statusStyles.statusRejected
           ]}>
             <Text style={styles.statusText}>{request.status}</Text>
           </View>
         </View>
-        
+
         <Text style={statusStyles.cardSubtitle}>
           Date: {new Date(request.requestDate).toLocaleDateString()}
         </Text>
-        
+
         {request.quantity && (
           <Text style={statusStyles.cardDetail}>Quantity: {request.quantity}</Text>
         )}
@@ -216,17 +313,28 @@ const StatusScreen = () => {
         {request.stemCellType && (
           <Text style={statusStyles.cardDetail}>Stem Cell: {request.stemCellType}</Text>
         )}
-        
+
         {match && (
-          <TouchableOpacity 
-            style={statusStyles.matchButton}
-            onPress={handleViewMatches}
-          >
-            <Feather name="users" size={16} color={theme.primary} />
-            <Text style={statusStyles.matchButtonText}>Matched - View Details</Text>
-          </TouchableOpacity>
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginTop: 12,
+            paddingTop: 12,
+            borderTopWidth: 1,
+            borderTopColor: theme.border + '30'
+          }}>
+            <Feather name="users" size={16} color={theme.success} />
+            <Text style={{
+              color: theme.success,
+              fontSize: 14,
+              fontWeight: '600',
+              marginLeft: 8
+            }}>
+              Matched - Tap to view details
+            </Text>
+          </View>
         )}
-      </View>
+      </TouchableOpacity>
     );
   };
 
@@ -241,11 +349,10 @@ const StatusScreen = () => {
     );
   }
 
-
   return (
     <Applayout>
       <View style={styles.container}>
-        <ScrollView 
+        <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
@@ -260,32 +367,37 @@ const StatusScreen = () => {
                 Track your donations & requests
               </Text>
             </View>
-            <View style={styles.statusBadge}>
+            <TouchableOpacity 
+              style={styles.statusBadge}
+              onPress={handleViewMatches}
+            >
               <Text style={styles.statusText}>
                 {getTotalMatches()} Matches
               </Text>
-            </View>
+            </TouchableOpacity>
           </View>
 
           {/* Tab Selector */}
-          <View style={statusStyles.tabContainer}>
-            <TouchableOpacity
-              style={[statusStyles.tab, activeTab === "donations" && statusStyles.activeTab]}
-              onPress={() => setActiveTab("donations")}
-            >
-              <Text style={[statusStyles.tabText, activeTab === "donations" && statusStyles.activeTabText]}>
-                Donations ({donations.length})
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[statusStyles.tab, activeTab === "requests" && statusStyles.activeTab]}
-              onPress={() => setActiveTab("requests")}
-            >
-              <Text style={[statusStyles.tabText, activeTab === "requests" && statusStyles.activeTabText]}>
-                Requests ({requests.length})
-              </Text>
-            </TouchableOpacity>
-          </View>
+          {(donations.length > 0 || requests.length > 0) && (
+            <View style={statusStyles.tabContainer}>
+              <TouchableOpacity
+                style={[statusStyles.tab, activeTab === "donations" && statusStyles.activeTab]}
+                onPress={() => setActiveTab("donations")}
+              >
+                <Text style={[statusStyles.tabText, activeTab === "donations" && statusStyles.activeTabText]}>
+                  Donations ({donations.length})
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[statusStyles.tab, activeTab === "requests" && statusStyles.activeTab]}
+                onPress={() => setActiveTab("requests")}
+              >
+                <Text style={[statusStyles.tabText, activeTab === "requests" && statusStyles.activeTabText]}>
+                  Requests ({requests.length})
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           {/* Content */}
           <View style={statusStyles.scrollContainer}>
@@ -296,7 +408,9 @@ const StatusScreen = () => {
                 <View style={statusStyles.emptyContainer}>
                   <Feather name="heart" size={48} color={theme.textSecondary} />
                   <Text style={statusStyles.emptyText}>No donations found</Text>
-                  <Text style={statusStyles.emptySubtext}>Start by making your first donation</Text>
+                  <Text style={statusStyles.emptySubtext}>
+                    Register as a donor to start making donations
+                  </Text>
                 </View>
               )
             ) : (
@@ -306,7 +420,9 @@ const StatusScreen = () => {
                 <View style={statusStyles.emptyContainer}>
                   <Feather name="inbox" size={48} color={theme.textSecondary} />
                   <Text style={statusStyles.emptyText}>No requests found</Text>
-                  <Text style={statusStyles.emptySubtext}>Create your first request</Text>
+                  <Text style={statusStyles.emptySubtext}>
+                    Register as a recipient to create requests
+                  </Text>
                 </View>
               )
             )}
@@ -316,6 +432,5 @@ const StatusScreen = () => {
     </Applayout>
   );
 };
-
 
 export default StatusScreen;

@@ -110,7 +110,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <AppLayout hideHeader={true}>
+    <AppLayout>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.scrollContainer}
