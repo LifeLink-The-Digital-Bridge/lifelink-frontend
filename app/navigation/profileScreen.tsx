@@ -24,12 +24,12 @@ import {
   createAuthStyles,
 } from "../../constants/styles/authStyles";
 import * as SecureStore from "expo-secure-store";
-
 import {
   getRecipientByUserId,
   getRecipientRequests,
   ReceiveRequestDTO,
 } from "../api/recipientApi";
+import { fetchDonorHistory, fetchRecipientHistory } from "../api/matchingApi";
 
 const mockReviews = [
   { id: 1, text: "Great donor, very helpful!", date: "2024-06-02" },
@@ -67,8 +67,10 @@ const ProfileScreen: React.FC = () => {
   const [donationsLoading, setDonationsLoading] = useState(false);
   const [receives, setReceives] = useState<ReceiveRequestDTO[]>([]);
   const [receivesLoading, setReceivesLoading] = useState(false);
+  const [matchHistory, setMatchHistory] = useState<any[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeSegment, setActiveSegment] = useState<"donations" | "reviews" | "receives">("donations");
+  const [activeSegment, setActiveSegment] = useState<"donations" | "history" | "reviews" | "receives">("donations");
   const [showThemeSettings, setShowThemeSettings] = useState(false);
 
   const loadDonations = useCallback(async () => {
@@ -110,15 +112,58 @@ const ProfileScreen: React.FC = () => {
     setReceivesLoading(false);
   }, []);
 
+  const loadMatchHistory = useCallback(async () => {
+    setHistoryLoading(true);
+    try {
+      const userId = await SecureStore.getItemAsync('userId');
+      if (!userId) return;
+
+      const [donorHistory, recipientHistory] = await Promise.all([
+        fetchDonorHistory(userId).catch(() => []),
+        fetchRecipientHistory(userId).catch(() => [])
+      ]);
+
+      const combined = [
+        ...donorHistory.map((h: any) => ({
+          matchId: h.matchId,
+          otherPartyName: h.recipientSnapshot?.userId || 'Unknown',
+          otherPartyRole: 'Recipient' as const,
+          matchType: h.matchType,
+          matchedAt: h.matchedAt,
+          isConfirmed: h.confirmed,
+          donationOrRequestType: h.donationType
+        })),
+        ...recipientHistory.map((h: any) => ({
+          matchId: h.matchId,
+          otherPartyName: h.donorSnapshot?.userId || 'Unknown',
+          otherPartyRole: 'Donor' as const,
+          matchType: h.matchType,
+          matchedAt: h.matchedAt,
+          isConfirmed: h.confirmed,
+          donationOrRequestType: h.requestType
+        }))
+      ];
+
+      combined.sort((a, b) => new Date(b.matchedAt).getTime() - new Date(a.matchedAt).getTime());
+      setMatchHistory(combined);
+    } catch (error) {
+      console.error('Failed to fetch match history:', error);
+      setMatchHistory([]);
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, []);
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([loadDonations(), loadReceives(), loadProfile?.()]);
+    await Promise.all([loadDonations(), loadReceives(), loadMatchHistory(), loadProfile?.()]);
     setRefreshing(false);
-  }, [loadDonations, loadReceives, loadProfile]);
+  }, [loadDonations, loadReceives, loadMatchHistory, loadProfile]);
 
   useEffect(() => {
     loadDonations();
     loadReceives();
+    loadMatchHistory();
   }, []);
 
   const handleLogout = useCallback(async () => {
@@ -222,9 +267,9 @@ const ProfileScreen: React.FC = () => {
       )}
 
       <SegmentedControl
-        segments={["donations", "reviews", "receives"] as const}
+        segments={["donations", "history", "reviews", "receives"] as const}
         activeSegment={activeSegment}
-        onSegmentChange={(segment) => setActiveSegment(segment as "donations" | "reviews" | "receives")}
+        onSegmentChange={(segment) => setActiveSegment(segment as "donations" | "history" | "reviews" | "receives")}
         theme={currentTheme}
       />
 
@@ -233,8 +278,10 @@ const ProfileScreen: React.FC = () => {
         theme={currentTheme}
         donationsLoading={donationsLoading}
         receivesLoading={receivesLoading}
+        historyLoading={historyLoading}
         donations={donations}
         receives={receives}
+        matchHistory={matchHistory}
         mockReviews={mockReviews}
         formatDate={formatDate}
       />
