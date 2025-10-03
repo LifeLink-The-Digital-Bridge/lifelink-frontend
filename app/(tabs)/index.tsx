@@ -4,7 +4,7 @@ import Dashboard from '../navigation/dashboard';
 
 export default function HomeScreen() {
   return (
-    <AppLayout title="Home" hideHeader>
+    <AppLayout >
       <Dashboard />
     </AppLayout>
   );

@@ -2,6 +2,8 @@ import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
 
 const BASE_URL = Constants.expoConfig?.extra?.API_URL;
+const DONOR_SERVICE_URL = `${BASE_URL}`;
+const RECIPIENT_SERVICE_URL = `${BASE_URL}`;
 
 export interface ManualMatchRequest {
   donationId: string;
@@ -264,6 +266,51 @@ export const fetchRequestByIdWithAccess = async (requestId: string): Promise<any
   await handleResponse(response, "Failed to fetch request details");
   return await response.json();
 };
+
+export const getMyDonationDetails = async (donorId: string, donationId: string): Promise<any> => {
+  const headers = await getAuthHeaders();
+  
+  console.log('Fetching donations for donorId:', donorId);
+  
+  const response = await fetch(`${BASE_URL}/donors/${donorId}/donations`, {
+    method: 'GET',
+    headers,
+  });
+
+  await handleResponse(response, 'Failed to fetch donations');
+  const donations = await response.json();
+  
+  console.log('All donations:', donations);
+  console.log('Looking for donationId:', donationId);
+  
+  const found = donations.find((d: any) => d.id === donationId);
+  console.log('Found donation:', found);
+  
+  return found || null;
+};
+
+export const getMyRequestDetails = async (recipientId: string, requestId: string): Promise<any> => {
+  const headers = await getAuthHeaders();
+  
+  console.log('Fetching requests for recipientId:', recipientId);
+  
+  const response = await fetch(`${BASE_URL}/recipients/${recipientId}/requests`, {
+    method: 'GET',
+    headers,
+  });
+
+  await handleResponse(response, 'Failed to fetch requests');
+  const requests = await response.json();
+  
+  console.log('All requests:', requests);
+  console.log('Looking for requestId:', requestId);
+  
+  const found = requests.find((r: any) => r.id === requestId);
+  console.log('Found request:', found);
+  
+  return found || null;
+};
+
 
 export const getMatchConfirmationStatus = async (matchId: string): Promise<boolean> => {
   const headers = await getAuthHeaders();

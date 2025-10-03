@@ -22,9 +22,9 @@ export const YourDetailsCard: React.FC<YourDetailsCardProps> = ({
   const styles = createUnifiedStyles(theme);
 
   const title = userRole === 'donor' 
-    ? 'Other Party Details (Request)' 
-    : 'Other Party Details (Donation)';
-  const icon = userRole === 'donor' ? 'clipboard' : 'droplet';
+    ? 'Your Donation Details' 
+    : 'Your Request Details';
+  const icon = userRole === 'donor' ? 'droplet' : 'clipboard';
 
   if (loadingYourDetails) {
     return (
@@ -33,7 +33,7 @@ export const YourDetailsCard: React.FC<YourDetailsCardProps> = ({
           <View style={styles.sectionIconContainer}>
             <Feather name="clock" size={18} color={theme.primary} />
           </View>
-          <Text style={styles.sectionTitle}>Loading Other Party Details...</Text>
+          <Text style={styles.sectionTitle}>Loading Your Details...</Text>
         </View>
         <Text style={styles.loadingText}>Please wait...</Text>
       </View>
@@ -52,8 +52,8 @@ export const YourDetailsCard: React.FC<YourDetailsCardProps> = ({
         <View style={styles.infoRow}>
           <Text style={styles.valueText}>
             {userRole === 'donor' 
-              ? 'Request details not available or access denied' 
-              : 'Donation details not available or access denied'
+              ? 'Your donation details not available' 
+              : 'Your request details not available'
             }
           </Text>
         </View>
@@ -73,6 +73,25 @@ export const YourDetailsCard: React.FC<YourDetailsCardProps> = ({
       </View>
 
       {userRole === 'donor' ? (
+        <>
+          <InfoRow label="Donation Type" value={data.donationType || 'N/A'} />
+          <InfoRow label="Blood Type" value={data.bloodType || 'N/A'} />
+          <InfoRow label="Quantity" value={data.quantity?.toString() || 'N/A'} />
+          <InfoRow 
+            label="Status" 
+            value={data.status || 'N/A'}
+            valueColor={
+              data.status === 'COMPLETED' ? theme.success : 
+              data.status === 'AVAILABLE' ? theme.primary : theme.text
+            }
+          />
+          <InfoRow 
+            label="Donation Date" 
+            value={data.donationDate ? new Date(data.donationDate).toLocaleDateString() : 'N/A'}
+            isLast
+          />
+        </>
+      ) : (
         <>
           <InfoRow label="Request Type" value={data.requestType || 'N/A'} />
           <InfoRow label="Blood Type Needed" value={data.requestedBloodType || 'N/A'} />
@@ -101,25 +120,6 @@ export const YourDetailsCard: React.FC<YourDetailsCardProps> = ({
           <InfoRow 
             label="Request Date" 
             value={data.requestDate ? new Date(data.requestDate).toLocaleDateString() : 'N/A'}
-            isLast
-          />
-        </>
-      ) : (
-        <>
-          <InfoRow label="Donation Type" value={data.donationType || 'N/A'} />
-          <InfoRow label="Blood Type" value={data.bloodType || 'N/A'} />
-          <InfoRow label="Quantity" value={data.quantity?.toString() || 'N/A'} />
-          <InfoRow 
-            label="Status" 
-            value={data.status || 'N/A'}
-            valueColor={
-              data.status === 'COMPLETED' ? theme.success : 
-              data.status === 'AVAILABLE' ? theme.primary : theme.text
-            }
-          />
-          <InfoRow 
-            label="Donation Date" 
-            value={data.donationDate ? new Date(data.donationDate).toLocaleDateString() : 'N/A'}
             isLast
           />
         </>

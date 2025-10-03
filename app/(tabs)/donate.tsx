@@ -4,7 +4,7 @@ import DonateHubScreen from "../navigation/hubs/donateHubScreen";
 
 export default function donateScreen() {
   return (
-    <AppLayout hideHeader>
+    <AppLayout>
       <DonateHubScreen />
     </AppLayout>
   );

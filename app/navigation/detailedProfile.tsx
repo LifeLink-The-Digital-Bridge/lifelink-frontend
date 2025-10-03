@@ -10,15 +10,20 @@ import { InfoRow } from "../../components/match/InfoRow";
 
 const DetailedProfileScreen = () => {
   const { colorScheme } = useTheme();
-  const { userProfile, matchingServiceData, matchData, userRole } = useLocalSearchParams();
+  const { userProfile, matchingServiceData, theirDonationOrRequest, userRole } =
+    useLocalSearchParams();
   const router = useRouter();
   const isDark = colorScheme === "dark";
   const theme = isDark ? darkTheme : lightTheme;
   const styles = createUnifiedStyles(theme);
 
   const profile = userProfile ? JSON.parse(userProfile as string) : null;
-  const serviceData = matchingServiceData ? JSON.parse(matchingServiceData as string) : null;
-  const matchDetails = matchData ? JSON.parse(matchData as string) : null;
+  const serviceData = matchingServiceData
+    ? JSON.parse(matchingServiceData as string)
+    : null;
+  const theirDetails = theirDonationOrRequest
+    ? JSON.parse(theirDonationOrRequest as string)
+    : null;
   const role = userRole as string;
 
   if (!profile) {
@@ -39,6 +44,7 @@ const DetailedProfileScreen = () => {
   }
 
   const isDonor = role === "Donor";
+  const isRecipient = role === "Recipient";
 
   return (
     <AppLayout>
@@ -119,7 +125,9 @@ const DetailedProfileScreen = () => {
 
             <InfoRow label="Email" value={profile.email} />
             {profile.phone && <InfoRow label="Phone" value={profile.phone} />}
-            {profile.gender && <InfoRow label="Gender" value={profile.gender} isLast />}
+            {profile.gender && (
+              <InfoRow label="Gender" value={profile.gender} isLast />
+            )}
           </View>
 
           {serviceData && (
@@ -135,25 +143,38 @@ const DetailedProfileScreen = () => {
 
               {isDonor ? (
                 <>
-                  <InfoRow 
-                    label="Status" 
-                    value={serviceData.status || 'N/A'}
-                    valueColor={serviceData.status === 'ACTIVE' ? theme.success : theme.text}
+                  <InfoRow
+                    label="Status"
+                    value={serviceData.status || "N/A"}
+                    valueColor={
+                      serviceData.status === "ACTIVE"
+                        ? theme.success
+                        : theme.text
+                    }
                   />
-                  <InfoRow 
-                    label="Registration Date" 
-                    value={serviceData.registrationDate ? 
-                      new Date(serviceData.registrationDate).toLocaleDateString() : 'N/A'
+                  <InfoRow
+                    label="Registration Date"
+                    value={
+                      serviceData.registrationDate
+                        ? new Date(
+                            serviceData.registrationDate
+                          ).toLocaleDateString()
+                        : "N/A"
                     }
                     isLast
                   />
                 </>
               ) : (
                 <>
-                  <InfoRow 
-                    label="Availability" 
-                    value={serviceData.availability || 'N/A'}
-                    valueColor={serviceData.availability === 'AVAILABLE' ? theme.success : theme.text}
+                  <InfoRow
+                    label="Availability"
+                    value={serviceData.availability || "N/A"}
+                    valueColor={
+                      serviceData.availability === "AVAILABLE"
+                        ? theme.success
+                        : theme.text
+                    }
+                    isLast
                   />
                 </>
               )}
@@ -171,8 +192,11 @@ const DetailedProfileScreen = () => {
 
               <InfoRow
                 label="Hemoglobin Level"
-                value={serviceData.medicalDetails.hemoglobinLevel ? 
-                  `${serviceData.medicalDetails.hemoglobinLevel} g/dL` : "N/A"}
+                value={
+                  serviceData.medicalDetails.hemoglobinLevel
+                    ? `${serviceData.medicalDetails.hemoglobinLevel} g/dL`
+                    : "N/A"
+                }
               />
               <InfoRow
                 label="Blood Pressure"
@@ -191,11 +215,15 @@ const DetailedProfileScreen = () => {
                   />
                   <InfoRow
                     label="Has Diseases"
-                    value={serviceData.medicalDetails.hasDiseases ? "Yes" : "No"}
+                    value={
+                      serviceData.medicalDetails.hasDiseases ? "Yes" : "No"
+                    }
                   />
                   <InfoRow
                     label="Taking Medication"
-                    value={serviceData.medicalDetails.takingMedication ? "Yes" : "No"}
+                    value={
+                      serviceData.medicalDetails.takingMedication ? "Yes" : "No"
+                    }
                   />
                 </>
               ) : (
@@ -210,14 +238,19 @@ const DetailedProfileScreen = () => {
                   />
                   <InfoRow
                     label="Current Medications"
-                    value={serviceData.medicalDetails.currentMedications || "N/A"}
+                    value={
+                      serviceData.medicalDetails.currentMedications || "N/A"
+                    }
                   />
                 </>
               )}
 
               <InfoRow
                 label="Creatinine Level"
-                value={serviceData.medicalDetails.creatinineLevel?.toString() || "N/A"}
+                value={
+                  serviceData.medicalDetails.creatinineLevel?.toString() ||
+                  "N/A"
+                }
               />
               <InfoRow
                 label="Liver Function Tests"
@@ -229,7 +262,10 @@ const DetailedProfileScreen = () => {
               />
               <InfoRow
                 label="Pulmonary Function"
-                value={serviceData.medicalDetails.pulmonaryFunction?.toString() || "N/A"}
+                value={
+                  serviceData.medicalDetails.pulmonaryFunction?.toString() ||
+                  "N/A"
+                }
                 isLast
               />
             </View>
@@ -239,9 +275,15 @@ const DetailedProfileScreen = () => {
             <View style={[styles.sectionContainer, { paddingHorizontal: 24 }]}>
               <View style={styles.sectionHeader}>
                 <View style={styles.sectionIconContainer}>
-                  <Feather name="check-circle" size={18} color={theme.primary} />
+                  <Feather
+                    name="check-circle"
+                    size={18}
+                    color={theme.primary}
+                  />
                 </View>
-                <Text style={styles.sectionTitle}>Eligibility & Physical Info</Text>
+                <Text style={styles.sectionTitle}>
+                  Eligibility & Physical Info
+                </Text>
               </View>
 
               <InfoRow
@@ -250,22 +292,36 @@ const DetailedProfileScreen = () => {
               />
               <InfoRow
                 label="Date of Birth"
-                value={serviceData.eligibilityCriteria.dob ? 
-                  new Date(serviceData.eligibilityCriteria.dob).toLocaleDateString() : "N/A"}
+                value={
+                  serviceData.eligibilityCriteria.dob
+                    ? new Date(
+                        serviceData.eligibilityCriteria.dob
+                      ).toLocaleDateString()
+                    : "N/A"
+                }
               />
               <InfoRow
                 label="Weight"
-                value={serviceData.eligibilityCriteria.weight ? 
-                  `${serviceData.eligibilityCriteria.weight} kg` : "N/A"}
+                value={
+                  serviceData.eligibilityCriteria.weight
+                    ? `${serviceData.eligibilityCriteria.weight} kg`
+                    : "N/A"
+                }
               />
               <InfoRow
                 label="Height"
-                value={serviceData.eligibilityCriteria.height ? 
-                  `${serviceData.eligibilityCriteria.height} cm` : "N/A"}
+                value={
+                  serviceData.eligibilityCriteria.height
+                    ? `${serviceData.eligibilityCriteria.height} cm`
+                    : "N/A"
+                }
               />
               <InfoRow
                 label="BMI"
-                value={serviceData.eligibilityCriteria.bodyMassIndex?.toString() || "N/A"}
+                value={
+                  serviceData.eligibilityCriteria.bodyMassIndex?.toString() ||
+                  "N/A"
+                }
               />
               <InfoRow
                 label="Body Size"
@@ -276,22 +332,37 @@ const DetailedProfileScreen = () => {
                 <>
                   <InfoRow
                     label="Medical Clearance"
-                    value={serviceData.eligibilityCriteria.medicalClearance ? 
-                      "✓ Cleared" : "⚠ Not Cleared"}
-                    valueColor={serviceData.eligibilityCriteria.medicalClearance ? 
-                      theme.success : theme.error}
+                    value={
+                      serviceData.eligibilityCriteria.medicalClearance
+                        ? "✓ Cleared"
+                        : "⚠ Not Cleared"
+                    }
+                    valueColor={
+                      serviceData.eligibilityCriteria.medicalClearance
+                        ? theme.success
+                        : theme.error
+                    }
                   />
                   <InfoRow
                     label="Recent Tattoo/Piercing"
-                    value={serviceData.eligibilityCriteria.recentTattooOrPiercing ? "Yes" : "No"}
+                    value={
+                      serviceData.eligibilityCriteria.recentTattooOrPiercing
+                        ? "Yes"
+                        : "No"
+                    }
                   />
                   <InfoRow
                     label="Recent Travel"
-                    value={serviceData.eligibilityCriteria.recentTravelDetails || "None"}
+                    value={
+                      serviceData.eligibilityCriteria.recentTravelDetails ||
+                      "None"
+                    }
                   />
                   <InfoRow
                     label="Chronic Diseases"
-                    value={serviceData.eligibilityCriteria.chronicDiseases || "None"}
+                    value={
+                      serviceData.eligibilityCriteria.chronicDiseases || "None"
+                    }
                   />
                   <InfoRow
                     label="Allergies"
@@ -302,169 +373,233 @@ const DetailedProfileScreen = () => {
                 <>
                   <InfoRow
                     label="Age Eligible"
-                    value={serviceData.eligibilityCriteria.ageEligible ? "Yes" : "No"}
+                    value={
+                      serviceData.eligibilityCriteria.ageEligible ? "Yes" : "No"
+                    }
                   />
                   <InfoRow
                     label="Weight Eligible"
-                    value={serviceData.eligibilityCriteria.weightEligible ? "Yes" : "No"}
+                    value={
+                      serviceData.eligibilityCriteria.weightEligible
+                        ? "Yes"
+                        : "No"
+                    }
                   />
                   <InfoRow
                     label="Medically Eligible"
-                    value={serviceData.eligibilityCriteria.medicallyEligible ? 
-                      "✓ Eligible" : "⚠ Not Eligible"}
-                    valueColor={serviceData.eligibilityCriteria.medicallyEligible ? 
-                      theme.success : theme.error}
+                    value={
+                      serviceData.eligibilityCriteria.medicallyEligible
+                        ? "✓ Eligible"
+                        : "⚠ Not Eligible"
+                    }
+                    valueColor={
+                      serviceData.eligibilityCriteria.medicallyEligible
+                        ? theme.success
+                        : theme.error
+                    }
                   />
                   <InfoRow
                     label="Legal Clearance"
-                    value={serviceData.eligibilityCriteria.legalClearance ? "Yes" : "No"}
+                    value={
+                      serviceData.eligibilityCriteria.legalClearance
+                        ? "Yes"
+                        : "No"
+                    }
                   />
                 </>
               )}
 
               <InfoRow
                 label="Living Donor"
-                value={serviceData.eligibilityCriteria.isLivingDonor ? "Yes" : "No"}
+                value={
+                  serviceData.eligibilityCriteria.isLivingDonor ? "Yes" : "No"
+                }
                 isLast
               />
             </View>
           )}
 
-          {serviceData?.hlaProfiles && serviceData.hlaProfiles.length > 0 && (
+          {serviceData?.hlaProfile && (
             <View style={[styles.sectionContainer, { paddingHorizontal: 24 }]}>
               <View style={styles.sectionHeader}>
                 <View style={styles.sectionIconContainer}>
                   <Feather name="layers" size={18} color={theme.primary} />
                 </View>
-                <Text style={styles.sectionTitle}>HLA Compatibility Profile</Text>
+                <Text style={styles.sectionTitle}>
+                  HLA Compatibility Profile
+                </Text>
               </View>
 
-              {serviceData.hlaProfiles.map((hlaProfile: any, index: number) => (
-                <View key={index}>
-                  <InfoRow
-                    label="HLA-A"
-                    value={`${hlaProfile.hlaA1 || "N/A"}, ${hlaProfile.hlaA2 || "N/A"}`}
-                  />
-                  <InfoRow
-                    label="HLA-B"
-                    value={`${hlaProfile.hlaB1 || "N/A"}, ${hlaProfile.hlaB2 || "N/A"}`}
-                  />
-                  <InfoRow
-                    label="HLA-C"
-                    value={`${hlaProfile.hlaC1 || "N/A"}, ${hlaProfile.hlaC2 || "N/A"}`}
-                  />
-                  <InfoRow
-                    label="HLA-DP"
-                    value={`${hlaProfile.hlaDP1 || "N/A"}, ${hlaProfile.hlaDP2 || "N/A"}`}
-                  />
-                  <InfoRow
-                    label="Testing Date"
-                    value={hlaProfile.testingDate ? 
-                      new Date(hlaProfile.testingDate).toLocaleDateString() : "N/A"}
-                  />
-                  <InfoRow
-                    label="Laboratory"
-                    value={hlaProfile.laboratoryName || "N/A"}
-                  />
-                  <InfoRow
-                    label="Certification"
-                    value={hlaProfile.certificationNumber || "N/A"}
-                  />
-                  <InfoRow
-                    label="High Resolution"
-                    value={hlaProfile.isHighResolution ? "Yes" : "No"}
-                    isLast={index === serviceData.hlaProfiles.length - 1}
-                  />
-                </View>
-              ))}
+              <InfoRow
+                label="HLA-A"
+                value={`${serviceData.hlaProfile.hlaA1 || "N/A"}, ${
+                  serviceData.hlaProfile.hlaA2 || "N/A"
+                }`}
+              />
+              <InfoRow
+                label="HLA-B"
+                value={`${serviceData.hlaProfile.hlaB1 || "N/A"}, ${
+                  serviceData.hlaProfile.hlaB2 || "N/A"
+                }`}
+              />
+              <InfoRow
+                label="HLA-C"
+                value={`${serviceData.hlaProfile.hlaC1 || "N/A"}, ${
+                  serviceData.hlaProfile.hlaC2 || "N/A"
+                }`}
+              />
+              <InfoRow
+                label="HLA-DP"
+                value={`${serviceData.hlaProfile.hlaDP1 || "N/A"}, ${
+                  serviceData.hlaProfile.hlaDP2 || "N/A"
+                }`}
+              />
+              <InfoRow
+                label="Testing Date"
+                value={
+                  serviceData.hlaProfile.testingDate
+                    ? new Date(
+                        serviceData.hlaProfile.testingDate
+                      ).toLocaleDateString()
+                    : "N/A"
+                }
+              />
+              <InfoRow
+                label="Laboratory"
+                value={serviceData.hlaProfile.laboratoryName || "N/A"}
+              />
+              <InfoRow
+                label="Certification"
+                value={serviceData.hlaProfile.certificationNumber || "N/A"}
+              />
+              <InfoRow
+                label="High Resolution"
+                value={serviceData.hlaProfile.isHighResolution ? "Yes" : "No"}
+                isLast
+              />
             </View>
           )}
 
-          {matchDetails?.data && (
+          {theirDetails && (
             <View style={[styles.sectionContainer, { paddingHorizontal: 24 }]}>
               <View style={styles.sectionHeader}>
                 <View style={styles.sectionIconContainer}>
                   <Feather
-                    name={isDonor ? "clipboard" : "heart"}
+                    name={isDonor ? "heart" : "clipboard"}
                     size={18}
                     color={theme.primary}
                   />
                 </View>
                 <Text style={styles.sectionTitle}>
-                  {isDonor ? "Request Details" : "Donation Details"}
+                  {isDonor ? "Donation Details" : "Request Details"}
                 </Text>
               </View>
 
-              {isDonor && matchDetails.type === "request" ? (
+              {isDonor && (
+                <>
+                  <InfoRow
+                    label="Donation Type"
+                    value={theirDetails.donationType || "N/A"}
+                  />
+                  <InfoRow
+                    label="Blood Type"
+                    value={theirDetails.bloodType || "N/A"}
+                  />
+                  {theirDetails.organType && (
+                    <InfoRow
+                      label="Organ Type"
+                      value={theirDetails.organType}
+                    />
+                  )}
+                  <InfoRow
+                    label="Quantity"
+                    value={
+                      theirDetails.quantity
+                        ? `${theirDetails.quantity} units`
+                        : "N/A"
+                    }
+                  />
+                  <InfoRow
+                    label="Status"
+                    value={theirDetails.status || "N/A"}
+                  />
+                  <InfoRow
+                    label="Donation Date"
+                    value={
+                      theirDetails.donationDate
+                        ? new Date(
+                            theirDetails.donationDate
+                          ).toLocaleDateString()
+                        : "N/A"
+                    }
+                    isLast
+                  />
+                </>
+              )}
+
+              {isRecipient && (
                 <>
                   <InfoRow
                     label="Request Type"
-                    value={matchDetails.data.requestType || "N/A"}
+                    value={theirDetails.requestType || "N/A"}
                   />
                   <InfoRow
                     label="Blood Type Needed"
-                    value={matchDetails.data.requestedBloodType || "N/A"}
+                    value={theirDetails.requestedBloodType || "N/A"}
                   />
-                  {matchDetails.data.requestedOrgan && (
+                  {theirDetails.requestedOrgan && (
                     <InfoRow
                       label="Organ Needed"
-                      value={matchDetails.data.requestedOrgan}
+                      value={theirDetails.requestedOrgan}
+                    />
+                  )}
+                  {theirDetails.requestedTissue && (
+                    <InfoRow
+                      label="Tissue Needed"
+                      value={theirDetails.requestedTissue}
+                    />
+                  )}
+                  {theirDetails.requestedStemCellType && (
+                    <InfoRow
+                      label="Stem Cell Type Needed"
+                      value={theirDetails.requestedStemCellType}
                     />
                   )}
                   <InfoRow
                     label="Urgency Level"
-                    value={matchDetails.data.urgencyLevel || "N/A"}
+                    value={theirDetails.urgencyLevel || "N/A"}
                     valueColor={
-                      matchDetails.data.urgencyLevel === "CRITICAL" ? theme.error :
-                      matchDetails.data.urgencyLevel === "HIGH" ? "#FF6B35" :
-                      matchDetails.data.urgencyLevel === "MEDIUM" ? "#FFA500" : theme.success
+                      theirDetails.urgencyLevel === "CRITICAL"
+                        ? theme.error
+                        : theirDetails.urgencyLevel === "HIGH"
+                        ? "#FF6B35"
+                        : theirDetails.urgencyLevel === "MEDIUM"
+                        ? "#FFA500"
+                        : theme.success
                     }
                   />
                   <InfoRow
                     label="Quantity Needed"
-                    value={matchDetails.data.quantity?.toString() || "N/A"}
+                    value={theirDetails.quantity?.toString() || "N/A"}
                   />
                   <InfoRow
                     label="Status"
-                    value={matchDetails.data.status || "N/A"}
+                    value={theirDetails.status || "N/A"}
                   />
                   <InfoRow
                     label="Request Date"
-                    value={matchDetails.data.requestDate ? 
-                      new Date(matchDetails.data.requestDate).toLocaleDateString() : "N/A"}
+                    value={
+                      theirDetails.requestDate
+                        ? new Date(
+                            theirDetails.requestDate
+                          ).toLocaleDateString()
+                        : "N/A"
+                    }
                   />
-                  {matchDetails.data.notes && (
-                    <InfoRow label="Notes" value={matchDetails.data.notes} />
+                  {theirDetails.notes && (
+                    <InfoRow label="Notes" value={theirDetails.notes} isLast />
                   )}
                 </>
-              ) : (
-                matchDetails.type === "donation" && (
-                  <>
-                    <InfoRow
-                      label="Donation Type"
-                      value={matchDetails.data.donationType || "N/A"}
-                    />
-                    <InfoRow
-                      label="Blood Type"
-                      value={matchDetails.data.bloodType || "N/A"}
-                    />
-                    <InfoRow
-                      label="Quantity"
-                      value={matchDetails.data.quantity ? 
-                        `${matchDetails.data.quantity} units` : "N/A"}
-                    />
-                    <InfoRow
-                      label="Status"
-                      value={matchDetails.data.status || "N/A"}
-                    />
-                    <InfoRow
-                      label="Donation Date"
-                      value={matchDetails.data.donationDate ? 
-                        new Date(matchDetails.data.donationDate).toLocaleDateString() : "N/A"}
-                      isLast
-                    />
-                  </>
-                )
               )}
             </View>
           )}
@@ -488,22 +623,10 @@ const DetailedProfileScreen = () => {
                     label="Landmark"
                     value={location.landmark || "N/A"}
                   />
-                  <InfoRow
-                    label="Area"
-                    value={location.area || "N/A"}
-                  />
-                  <InfoRow
-                    label="City"
-                    value={location.city || "N/A"}
-                  />
-                  <InfoRow
-                    label="State"
-                    value={location.state || "N/A"}
-                  />
-                  <InfoRow
-                    label="Country"
-                    value={location.country || "N/A"}
-                  />
+                  <InfoRow label="Area" value={location.area || "N/A"} />
+                  <InfoRow label="City" value={location.city || "N/A"} />
+                  <InfoRow label="State" value={location.state || "N/A"} />
+                  <InfoRow label="Country" value={location.country || "N/A"} />
                   <InfoRow
                     label="Pincode"
                     value={location.pincode || "N/A"}

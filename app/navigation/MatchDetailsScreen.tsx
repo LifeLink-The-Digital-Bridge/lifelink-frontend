@@ -25,8 +25,9 @@ import {
   getDonorDetailsByUserId,
   getRecipientDetailsByUserId,
   getMatchConfirmationStatus,
+  getMyDonationDetails,
+  getMyRequestDetails,
 } from "../api/matchingApi";
-import { InfoRow } from "../../components/match/InfoRow";
 import { ProfileCard } from "../../components/match/ProfileCard";
 import { MatchInfoCard } from "../../components/match/MatchInfoCard";
 import { YourDetailsCard } from "../../components/match/YourDetailsCard";
@@ -86,7 +87,9 @@ const MatchDetailsScreen = () => {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const [donorProfile, setDonorProfile] = useState<UserProfile | null>(null);
-  const [recipientProfile, setRecipientProfile] = useState<UserProfile | null>(null);
+  const [recipientProfile, setRecipientProfile] = useState<UserProfile | null>(
+    null
+  );
 
   const [donorCurrentData, setDonorCurrentData] = useState<any>(null);
   const [recipientCurrentData, setRecipientCurrentData] = useState<any>(null);
@@ -94,18 +97,25 @@ const MatchDetailsScreen = () => {
   const [yourDetails, setYourDetails] = useState<any>(null);
   const [loadingYourDetails, setLoadingYourDetails] = useState(false);
 
-  const [currentGpsLocation, setCurrentGpsLocation] = useState<LocationCoordinates | null>(null);
-  const [registeredLocation, setRegisteredLocation] = useState<LocationCoordinates | null>(null);
-  const [otherPartyLocation, setOtherPartyLocation] = useState<LocationCoordinates | null>(null);
+  const [currentGpsLocation, setCurrentGpsLocation] =
+    useState<LocationCoordinates | null>(null);
+  const [registeredLocation, setRegisteredLocation] =
+    useState<LocationCoordinates | null>(null);
+  const [otherPartyLocation, setOtherPartyLocation] =
+    useState<LocationCoordinates | null>(null);
   const [allLocations, setAllLocations] = useState<LocationCoordinates[]>([]);
-  const [calculatedDistance, setCalculatedDistance] = useState<number | null>(null);
+  const [calculatedDistance, setCalculatedDistance] = useState<number | null>(
+    null
+  );
   const [locationPermission, setLocationPermission] = useState<boolean>(false);
   const [loadingLocation, setLoadingLocation] = useState(false);
 
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
-  const [alertType, setAlertType] = useState<"success" | "error" | "warning" | "info">("info");
+  const [alertType, setAlertType] = useState<
+    "success" | "error" | "warning" | "info"
+  >("info");
 
   const showAlert = (
     title: string,
@@ -134,8 +144,7 @@ const MatchDetailsScreen = () => {
         Math.sin(dLon / 2) *
         Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const distance = R * c;
-    return distance;
+    return R * c;
   };
 
   const getCurrentUserLocation = async () => {
@@ -173,7 +182,9 @@ const MatchDetailsScreen = () => {
     }
   };
 
-  const extractRegisteredLocation = (userData: any): LocationCoordinates | null => {
+  const extractRegisteredLocation = (
+    userData: any
+  ): LocationCoordinates | null => {
     if (!userData || !userData.locations || userData.locations.length === 0) {
       return null;
     }
@@ -195,8 +206,15 @@ const MatchDetailsScreen = () => {
     return null;
   };
 
-  const getOtherPartyLocation = (otherPartyData: any, otherPartyRole: string): LocationCoordinates | null => {
-    if (!otherPartyData || !otherPartyData.locations || otherPartyData.locations.length === 0) {
+  const getOtherPartyLocation = (
+    otherPartyData: any,
+    otherPartyRole: string
+  ): LocationCoordinates | null => {
+    if (
+      !otherPartyData ||
+      !otherPartyData.locations ||
+      otherPartyData.locations.length === 0
+    ) {
       return null;
     }
 
@@ -221,8 +239,10 @@ const MatchDetailsScreen = () => {
     if (!match || !currentUserId) return;
 
     const userRole = getUserRoleInMatch();
-    const currentUserData = userRole === "donor" ? donorCurrentData : recipientCurrentData;
-    const otherPartyData = userRole === "donor" ? recipientCurrentData : donorCurrentData;
+    const currentUserData =
+      userRole === "donor" ? donorCurrentData : recipientCurrentData;
+    const otherPartyData =
+      userRole === "donor" ? recipientCurrentData : donorCurrentData;
     const otherPartyRole = userRole === "donor" ? "Recipient" : "Donor";
 
     const registered = extractRegisteredLocation(currentUserData);
@@ -249,41 +269,59 @@ const MatchDetailsScreen = () => {
     }
   };
 
-  const loadCurrentData = async (matchData: MatchDetails) => {
-    try {
-      const [donorDetails, recipientDetails] = await Promise.all([
-        getDonorDetailsByUserId(matchData.donorUserId),
-        getRecipientDetailsByUserId(matchData.recipientUserId),
-      ]);
-      
-      setDonorCurrentData(donorDetails);
-      setRecipientCurrentData(recipientDetails);
-      
-      console.log("Current data loaded from matching service:", {
-        donorDetails: !!donorDetails,
-        recipientDetails: !!recipientDetails,
-      });
-    } catch (error) {
-      console.log("Could not fetch donor/recipient details:", error);
-    }
+  const getUserRoleInMatch = (): "donor" | "recipient" | "unknown" => {
+    if (!match || !currentUserId) return "unknown";
+    if (currentUserId === match.donorUserId) return "donor";
+    if (currentUserId === match.recipientUserId) return "recipient";
+    return "unknown";
   };
 
-  const loadYourDetails = async (match: MatchDetails, userId: string | null) => {
-    if (!userId) return;
-
+  const loadYourDetails = async (
+    matchData: MatchDetails,
+    userId: string | null,
+    donorData: any,
+    recipientData: any
+  ) => {
+    if (!userId) {
+      console.log(" No userId provided");
+      return;
+    }
     setLoadingYourDetails(true);
     try {
-      if (match.donorUserId === userId) {
-        const requestDetails = await fetchRequestByIdWithAccess(match.receiveRequestId);
-        setYourDetails({ type: "request", data: requestDetails });
-        console.log("Your details loaded (request):", requestDetails);
-      } else if (match.recipientUserId === userId) {
-        const donationDetails = await fetchDonationByIdWithAccess(match.donationId);
+      let userRole: "donor" | "recipient" | "unknown" = "unknown";
+      if (userId === matchData.donorUserId) {
+        userRole = "donor";
+      } else if (userId === matchData.recipientUserId) {
+        userRole = "recipient";
+      }
+
+      if (userRole === "donor") {
+        if (!donorData?.donorId) {
+          setYourDetails(null);
+          return;
+        }
+
+        const donationDetails = await getMyDonationDetails(
+          donorData.donorId,
+          matchData.donationId
+        );
+
         setYourDetails({ type: "donation", data: donationDetails });
-        console.log("Your details loaded (donation):", donationDetails);
+      } else if (userRole === "recipient") {
+        if (!recipientData?.recipientId) {
+          setYourDetails(null);
+          return;
+        }
+
+        const requestDetails = await getMyRequestDetails(
+          recipientData.recipientId,
+          matchData.receiveRequestId
+        );
+
+        setYourDetails({ type: "request", data: requestDetails });
+      } else {
       }
     } catch (error: any) {
-      console.log("Could not load your details:", error);
       setYourDetails(null);
     } finally {
       setLoadingYourDetails(false);
@@ -337,7 +375,9 @@ const MatchDetailsScreen = () => {
         const parsedMatch = JSON.parse(matchData as string);
 
         try {
-          const confirmed = await getMatchConfirmationStatus(parsedMatch.matchResultId);
+          const confirmed = await getMatchConfirmationStatus(
+            parsedMatch.matchResultId
+          );
           parsedMatch.isConfirmed = confirmed;
         } catch (error) {
           console.log("Could not verify match status, using passed data");
@@ -347,16 +387,30 @@ const MatchDetailsScreen = () => {
         setMatch(parsedMatch);
         setCurrentUserId(userId);
 
-        const [donorProfile, recipientProfile] = await Promise.all([
-          fetchUserById(parsedMatch.donorUserId),
-          fetchUserById(parsedMatch.recipientUserId),
-        ]);
+        const [donorProfile, recipientProfile, donorDetails, recipientDetails] =
+          await Promise.all([
+            fetchUserById(parsedMatch.donorUserId),
+            fetchUserById(parsedMatch.recipientUserId),
+            getDonorDetailsByUserId(parsedMatch.donorUserId),
+            getRecipientDetailsByUserId(parsedMatch.recipientUserId),
+          ]);
+
         setDonorProfile(donorProfile);
         setRecipientProfile(recipientProfile);
+        setDonorCurrentData(donorDetails);
+        setRecipientCurrentData(recipientDetails);
 
-        await loadCurrentData(parsedMatch);
-        await loadYourDetails(parsedMatch, userId);
-        
+        console.log("Current data loaded from matching service:", {
+          donorDetails: !!donorDetails,
+          recipientDetails: !!recipientDetails,
+        });
+
+        await loadYourDetails(
+          parsedMatch,
+          userId,
+          donorDetails,
+          recipientDetails
+        );
       } catch (error: any) {
         showAlert(
           "Error",
@@ -372,25 +426,36 @@ const MatchDetailsScreen = () => {
   }, [matchData]);
 
   useEffect(() => {
-    if (match && currentUserId && donorProfile && recipientProfile && (donorCurrentData || recipientCurrentData)) {
+    if (
+      match &&
+      currentUserId &&
+      donorProfile &&
+      recipientProfile &&
+      (donorCurrentData || recipientCurrentData)
+    ) {
       updateLocationData();
     }
-  }, [match, currentUserId, donorProfile, recipientProfile, donorCurrentData, recipientCurrentData, currentGpsLocation]);
+  }, [
+    match,
+    currentUserId,
+    donorProfile,
+    recipientProfile,
+    donorCurrentData,
+    recipientCurrentData,
+    currentGpsLocation,
+  ]);
 
   useEffect(() => {
     getCurrentUserLocation();
   }, []);
 
-  const getUserRoleInMatch = (): "donor" | "recipient" | "unknown" => {
-    if (!match || !currentUserId) return "unknown";
-    if (currentUserId === match.donorUserId) return "donor";
-    if (currentUserId === match.recipientUserId) return "recipient";
-    return "unknown";
-  };
-
   const getCurrentUserRole = (): string => {
     const role = getUserRoleInMatch();
-    return role === "donor" ? "Donor" : role === "recipient" ? "Recipient" : "Unknown";
+    return role === "donor"
+      ? "Donor"
+      : role === "recipient"
+      ? "Recipient"
+      : "Unknown";
   };
 
   const getCurrentUserStatus = (): boolean => {
@@ -439,10 +504,20 @@ const MatchDetailsScreen = () => {
   };
 
   const viewUserProfile = async (userId: string, userName: string) => {
+    if (!match) return;
+
     setNavigatingToProfile(true);
 
     try {
       const otherPartyInfo = getOtherPartyInfo();
+
+      let theirDetails = null;
+
+      if (otherPartyInfo?.role === "Donor") {
+        theirDetails = await fetchDonationByIdWithAccess(match.donationId);
+      } else if (otherPartyInfo?.role === "Recipient") {
+        theirDetails = await fetchRequestByIdWithAccess(match.receiveRequestId);
+      }
 
       setTimeout(() => {
         router.push({
@@ -450,37 +525,14 @@ const MatchDetailsScreen = () => {
           params: {
             userProfile: JSON.stringify(otherPartyInfo?.profile),
             matchingServiceData: JSON.stringify(otherPartyInfo?.data),
-            matchData: JSON.stringify(yourDetails),
-            userRole: otherPartyInfo?.role,
-          },
-        });
-      }, 100);
-    } catch (error) {
-      console.error("Error navigating to profile:", error);
-      setNavigatingToProfile(false);
-    }
-  };
-
-  const viewDetailedInformation = () => {
-    setNavigatingToProfile(true);
-
-    try {
-      const otherPartyInfo = getOtherPartyInfo();
-
-      setTimeout(() => {
-        router.push({
-          pathname: "/navigation/detailedProfile",
-          params: {
-            userProfile: JSON.stringify(otherPartyInfo?.profile),
-            matchingServiceData: JSON.stringify(otherPartyInfo?.data),
-            matchData: JSON.stringify(yourDetails),
+            theirDonationOrRequest: JSON.stringify(theirDetails),
             userRole: otherPartyInfo?.role,
           },
         });
         setNavigatingToProfile(false);
       }, 100);
     } catch (error) {
-      console.error("Error navigating to detailed information:", error);
+      console.error("Error navigating to profile:", error);
       setNavigatingToProfile(false);
     }
   };
@@ -600,40 +652,6 @@ const MatchDetailsScreen = () => {
             userRole={userRole}
           />
 
-          {/* NEW: Information Button */}
-          {otherPartyInfo?.profile && (
-            <View style={[styles.sectionContainer, { paddingHorizontal: 24 }]}>
-              <TouchableOpacity
-                style={{
-                  backgroundColor: theme.primary,
-                  paddingVertical: 16,
-                  paddingHorizontal: 24,
-                  borderRadius: 12,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-                onPress={viewDetailedInformation}
-                activeOpacity={0.8}
-              >
-                <Feather 
-                  name={otherPartyInfo.role === "Donor" ? "heart" : "user"} 
-                  size={20} 
-                  color="#fff" 
-                />
-                <Text style={{
-                  color: '#fff',
-                  fontSize: 16,
-                  fontWeight: '600',
-                  marginLeft: 8,
-                }}>
-                  View {otherPartyInfo.role} Information
-                </Text>
-                <Feather name="arrow-right" size={16} color="#fff" style={{ marginLeft: 8 }} />
-              </TouchableOpacity>
-            </View>
-          )}
-
           <MapSection
             allLocations={allLocations}
             registeredLocation={registeredLocation}
@@ -645,13 +663,17 @@ const MatchDetailsScreen = () => {
             onRequestLocation={getCurrentUserLocation}
             calculateDistance={calculateDistance}
             currentUserRole={getUserRoleInMatch()}
-            otherPartyRole={otherPartyInfo?.role as "Donor" | "Recipient" | undefined}
+            otherPartyRole={
+              otherPartyInfo?.role as "Donor" | "Recipient" | undefined
+            }
             matchType={match?.matchType}
           />
         </ScrollView>
 
         {canConfirmMatch() && (
-          <View style={[styles.submitButtonContainer, { paddingHorizontal: 24 }]}>
+          <View
+            style={[styles.submitButtonContainer, { paddingHorizontal: 24 }]}
+          >
             <TouchableOpacity
               style={[
                 styles.submitButton,

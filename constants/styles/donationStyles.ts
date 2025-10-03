@@ -1,4 +1,3 @@
-// constants/styles/donationStyles.ts (Add header styles)
 import { StyleSheet } from 'react-native';
 
 export const createDonationStyles = (theme: any) => StyleSheet.create({
@@ -12,7 +11,6 @@ export const createDonationStyles = (theme: any) => StyleSheet.create({
     paddingBottom: 100,
   },
 
-  // Header Styles (Same as Hub)
   headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -83,7 +81,6 @@ export const createDonationStyles = (theme: any) => StyleSheet.create({
     letterSpacing: 0.5,
   },
 
-  // Enhanced Form Styles
   sectionContainer: {
     backgroundColor: theme.card,
     borderRadius: 16,

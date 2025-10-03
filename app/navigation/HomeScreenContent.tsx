@@ -6,7 +6,7 @@ import AppLayout from "@/components/AppLayout";
 
 export default function HomeScreenContent() {
   return (
-    <AppLayout hideHeader>
+    <AppLayout>
       <View style={homeStyles.container}>
         <Image
           source={require("../../assets/images/Lifelink_splash.png")}

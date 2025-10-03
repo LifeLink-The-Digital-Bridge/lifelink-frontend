@@ -255,7 +255,7 @@ export default function HomeScreenContent() {
   ];
 
   return (
-    <AppLayout hideHeader={true}>
+    <AppLayout>
 
     <View style={homeStyles.container}>
       <ScrollView
