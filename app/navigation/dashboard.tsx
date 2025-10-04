@@ -5,49 +5,53 @@ import {
   ActivityIndicator,
   ScrollView,
   Animated,
+  Modal,
+  TouchableOpacity,
+  StyleSheet,
 } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import { useRouter } from "expo-router";
+import { Feather } from "@expo/vector-icons";
 import { useAuth } from "../../utils/auth-context";
 import { useTheme } from "../../utils/theme-context";
+import { useTabBar } from "../../utils/tabbar-context";
 import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
 import { createDashboardStyles } from "../../constants/styles/dashboardStyles";
-import { fetchDonorByUserId, fetchDonorData } from "../api/donorApi";
 
-import { TopBar } from "../../components/dashboard/TopBar";
+import { TopBar } from "../../components/common/TopBar";
 import { SidebarMenu } from "../../components/dashboard/SidebarMenu";
 import { WelcomeSection } from "../../components/dashboard/WelcomeSection";
 import { ChatBot } from "../../components/dashboard/ChatBot";
-import { ValidationAlert } from "../../components/common/ValidationAlert";
+
+const TOPBAR_HEIGHT = 90;
 
 const Dashboard = () => {
   const { isAuthenticated } = useAuth();
   const { colorScheme } = useTheme();
-  const isDark = colorScheme === 'dark';
+  const { hideTabBar, showTabBar } = useTabBar();
+
+  const isDark = colorScheme === "dark";
   const theme = isDark ? darkTheme : lightTheme;
   const styles = createDashboardStyles(theme);
   const router = useRouter();
-  
+
   const [loading, setLoading] = useState(true);
-  const [donorId, setDonorId] = useState<string | null>(null);
-  const [donorData, setDonorData] = useState<any>(null);
   const [userData, setUserData] = useState({
     username: "",
     email: "",
     roles: "",
     userId: "",
-    token: "",
-    refreshToken: "",
   });
   const [showChatIcon, setShowChatIcon] = useState(true);
   const [menuVisible, setMenuVisible] = useState(false);
-  
+
   const [validationAlertVisible, setValidationAlertVisible] = useState(false);
   const [validationAlertMessage, setValidationAlertMessage] = useState("");
   const [validationAlertTitle, setValidationAlertTitle] = useState("");
-  const [validationAlertType, setValidationAlertType] = useState<'success' | 'error' | 'warning' | 'info'>('info');
-  
+
   const scrollY = useRef(new Animated.Value(0)).current;
+  const lastScrollY = useRef(0);
+  const topBarTranslateY = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -59,26 +63,21 @@ const Dashboard = () => {
     const loadUserData = async () => {
       setLoading(true);
       try {
-        const [username, email, roles, userId, token, refreshToken] =
-          await Promise.all([
-            SecureStore.getItemAsync("username"),
-            SecureStore.getItemAsync("email"),
-            SecureStore.getItemAsync("roles"),
-            SecureStore.getItemAsync("userId"),
-            SecureStore.getItemAsync("jwt"),
-            SecureStore.getItemAsync("refreshToken"),
-          ]);
-        
+        const [username, email, roles, userId] = await Promise.all([
+          SecureStore.getItemAsync("username"),
+          SecureStore.getItemAsync("email"),
+          SecureStore.getItemAsync("roles"),
+          SecureStore.getItemAsync("userId"),
+        ]);
+
         setUserData({
           username: username || "",
           email: email || "",
           roles: roles || "",
           userId: userId || "",
-          token: token || "",
-          refreshToken: refreshToken || "",
         });
       } catch (error) {
-        console.error('Error loading user data:', error);
+        console.error("Error loading user data:", error);
       } finally {
         setLoading(false);
       }
@@ -86,124 +85,179 @@ const Dashboard = () => {
     loadUserData();
   }, []);
 
-  useEffect(() => {
-    const checkDonorStatus = async () => {
-      if (!userData.userId) return;
-      
-      try {
-        let donorId = await SecureStore.getItemAsync("donorId");
-        
-        if (!donorId) {
-          try {
-            const donorData = await fetchDonorByUserId();
-            if (donorData && donorData.id) {
-              donorId = donorData.id;
-              if (typeof donorId === "string") {
-                await SecureStore.setItemAsync("donorId", donorId);
-              }
-              setDonorId(donorId);
-              setDonorData(donorData);
-              console.log('Donor profile loaded successfully');
-            }
-          } catch (fetchError) {
-            console.log('User has not registered as a donor yet');
-            setDonorId(null);
-            setDonorData(null);
-          }
-        } else {
-          try {
-            const donorData = await fetchDonorData();
-            setDonorData(donorData);
-            setDonorId(donorId);
-          } catch (fetchError) {
-            console.log('Could not fetch existing donor data');
-            await SecureStore.deleteItemAsync("donorId");
-            setDonorId(null);
-            setDonorData(null);
-          }
-        }
-      } catch (error) {
-        console.error('Unexpected error in checkDonorStatus:', error);
-      }
-    };
-    
-    checkDonorStatus();
-  }, [userData.userId]);
-
   const handleScroll = Animated.event(
     [{ nativeEvent: { contentOffset: { y: scrollY } } }],
     {
       useNativeDriver: false,
-      listener: (event: { nativeEvent: { contentOffset: { y: number } } }) => {
-        const y = event.nativeEvent.contentOffset.y;
-        setShowChatIcon(y <= 10);
+      listener: (event: any) => {
+        const currentScrollY = event.nativeEvent.contentOffset.y;
+        const diff = currentScrollY - lastScrollY.current;
+
+        if (diff > 0 && currentScrollY > 50) {
+          Animated.timing(topBarTranslateY, {
+            toValue: -TOPBAR_HEIGHT,
+            duration: 200,
+            useNativeDriver: true,
+          }).start();
+          hideTabBar();
+        } else if (diff < 0 || currentScrollY <= 0) {
+          Animated.timing(topBarTranslateY, {
+            toValue: 0,
+            duration: 200,
+            useNativeDriver: true,
+          }).start();
+          showTabBar();
+        }
+
+        setShowChatIcon(currentScrollY <= 10);
+        lastScrollY.current = currentScrollY;
       },
     }
   );
 
-  const showValidationAlert = (
-    title: string, 
-    message: string, 
-    type: 'success' | 'error' | 'warning' | 'info' = 'info'
-  ) => {
+  const showValidationAlert = (title: string, message: string) => {
     setValidationAlertTitle(title);
     setValidationAlertMessage(message);
-    setValidationAlertType(type);
     setValidationAlertVisible(true);
   };
 
   const handleChatBotPress = () => {
-    showValidationAlert("Chat Bot", "Chat functionality coming soon!", "info");
+    showValidationAlert("Chat Bot", "Chat functionality coming soon!");
   };
 
   const handleBellPress = () => {
-    showValidationAlert("Notifications", "No new notifications at the moment", "info");
+    showValidationAlert("Notifications", "No new notifications at the moment");
   };
+
+  const alertStyles = StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      justifyContent: "center",
+      alignItems: "center",
+      padding: 20,
+    },
+    container: {
+      backgroundColor: theme.card,
+      borderRadius: 16,
+      padding: 24,
+      width: "100%",
+      maxWidth: 340,
+      alignItems: "center",
+    },
+    iconContainer: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: theme.primary + "20",
+      justifyContent: "center",
+      alignItems: "center",
+      marginBottom: 16,
+    },
+    title: {
+      fontSize: 20,
+      fontWeight: "700",
+      color: theme.text,
+      marginBottom: 8,
+      textAlign: "center",
+    },
+    message: {
+      fontSize: 15,
+      color: theme.textSecondary,
+      textAlign: "center",
+      marginBottom: 24,
+      lineHeight: 22,
+    },
+    button: {
+      backgroundColor: theme.primary,
+      paddingVertical: 12,
+      paddingHorizontal: 32,
+      borderRadius: 10,
+      width: "100%",
+    },
+    buttonText: {
+      color: "#fff",
+      fontSize: 16,
+      fontWeight: "600",
+      textAlign: "center",
+    },
+  });
 
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={theme.primary} />
-        <Text style={styles.loadingText}>
-          Loading dashboard...
-        </Text>
+        <Text style={styles.loadingText}>Loading dashboard...</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <SidebarMenu 
+      <SidebarMenu
         isVisible={menuVisible}
         onClose={() => setMenuVisible(false)}
       />
 
-      <TopBar 
-        onMenuPress={() => setMenuVisible(true)}
-        onBellPress={handleBellPress}
-      />
+      <Animated.View
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 100,
+          transform: [{ translateY: topBarTranslateY }],
+        }}
+      >
+        <TopBar
+          theme={theme}
+          onMenuPress={() => setMenuVisible(true)}
+          onBellPress={handleBellPress}
+        />
+      </Animated.View>
 
       <ScrollView
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={{
+          paddingTop: TOPBAR_HEIGHT,
+          paddingBottom: 120,
+          paddingHorizontal: 18,
+        }}
         onScroll={handleScroll}
         scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
       >
         <WelcomeSection username={userData.username} />
+        
       </ScrollView>
 
-      <ChatBot 
-        visible={showChatIcon}
-        onPress={handleChatBotPress}
-      />
+      <ChatBot visible={showChatIcon} onPress={handleChatBotPress} />
 
-      <ValidationAlert
+      <Modal
         visible={validationAlertVisible}
-        title={validationAlertTitle}
-        message={validationAlertMessage}
-        type={validationAlertType}
-        onClose={() => setValidationAlertVisible(false)}
-      />
+        transparent
+        animationType="fade"
+        onRequestClose={() => setValidationAlertVisible(false)}
+      >
+        <TouchableOpacity
+          style={alertStyles.overlay}
+          activeOpacity={1}
+          onPress={() => setValidationAlertVisible(false)}
+        >
+          <TouchableOpacity style={alertStyles.container} activeOpacity={1}>
+            <View style={alertStyles.iconContainer}>
+              <Feather name="bell" size={28} color={theme.primary} />
+            </View>
+            <Text style={alertStyles.title}>{validationAlertTitle}</Text>
+            <Text style={alertStyles.message}>{validationAlertMessage}</Text>
+            <TouchableOpacity
+              style={alertStyles.button}
+              onPress={() => setValidationAlertVisible(false)}
+            >
+              <Text style={alertStyles.buttonText}>Got it</Text>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 };

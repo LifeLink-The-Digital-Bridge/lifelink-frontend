@@ -2,10 +2,10 @@ import React from 'react';
 import { View, TouchableOpacity, Text } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { createAuthStyles } from '../../constants/styles/authStyles';
+import { createProfileStyles } from '../../constants/styles/profileStyles';
 
 interface ProfileActionsProps {
-  isOwnProfile?: boolean;
+  isOwnProfile: boolean;
   isFollowing: boolean;
   followLoading: boolean;
   theme: any;
@@ -15,62 +15,62 @@ interface ProfileActionsProps {
 }
 
 export const ProfileActions: React.FC<ProfileActionsProps> = ({
-  isOwnProfile = false,
+  isOwnProfile,
   isFollowing,
   followLoading,
   theme,
   handleFollow,
   handleUnfollow,
-  confirmLogout
+  confirmLogout,
 }) => {
   const router = useRouter();
-  const styles = createAuthStyles(theme);
+  const styles = createProfileStyles(theme);
 
-  return (
-    <View style={{ paddingHorizontal: 24, paddingBottom: 40 }}>
-      {isOwnProfile ? (
-        <>
-          <TouchableOpacity
-            style={[styles.button, { backgroundColor: theme.success, marginBottom: 12 }]}
-            onPress={() => router.push("/navigation/editProfile")}
-          >
-            <Feather name="edit" size={20} color="#fff" />
-            <Text style={[styles.buttonText, { marginLeft: 8 }]}>Edit Profile</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.button, { backgroundColor: theme.primary, marginBottom: 12 }]}
-            onPress={() => router.push("/navigation/StatusScreen")}
-          >
-            <Feather name="clipboard" size={20} color="#fff" />
-            <Text style={[styles.buttonText, { marginLeft: 8 }]}>My Status</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.button, { backgroundColor: theme.error }]}
-            onPress={confirmLogout}
-          >
-            <Feather name="log-out" size={20} color="#fff" />
-            <Text style={[styles.buttonText, { marginLeft: 8 }]}>Logout</Text>
-          </TouchableOpacity>
-        </>
-      ) : (
+  if (!isOwnProfile) {
+    return (
+      <View style={styles.actionsContainer}>
         <TouchableOpacity
           style={[
-            styles.button,
-            { backgroundColor: isFollowing ? theme.textSecondary : theme.primary },
+            styles.actionButton,
+            isFollowing ? styles.secondaryButton : styles.primaryButton,
           ]}
           onPress={isFollowing ? handleUnfollow : handleFollow}
           disabled={followLoading}
         >
           <Feather
-            name={isFollowing ? "user-minus" : "user-plus"}
-            size={20}
-            color="#fff"
+            name={isFollowing ? "user-check" : "user-plus"}
+            size={16}
+            color={isFollowing ? theme.text : "#fff"}
           />
-          <Text style={[styles.buttonText, { marginLeft: 8 }]}>
-            {isFollowing ? "Unfollow" : "Follow"}
+          <Text
+            style={[
+              styles.buttonText,
+              isFollowing ? styles.secondaryButtonText : styles.primaryButtonText,
+            ]}
+          >
+            {isFollowing ? "Following" : "Follow"}
           </Text>
         </TouchableOpacity>
-      )}
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.actionsContainer}>
+      <TouchableOpacity
+        style={[styles.actionButton, styles.secondaryButton]}
+        onPress={() => router.push("/navigation/editProfile")}
+      >
+        <Feather name="edit-2" size={16} color={theme.text} />
+        <Text style={[styles.buttonText, styles.secondaryButtonText]}>Edit Profile</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.actionButton, styles.primaryButton]}
+        onPress={() => router.push("/navigation/StatusScreen")}
+      >
+        <Feather name="activity" size={16} color="#fff" />
+        <Text style={[styles.buttonText, styles.primaryButtonText]}>My Status</Text>
+      </TouchableOpacity>
     </View>
   );
 };

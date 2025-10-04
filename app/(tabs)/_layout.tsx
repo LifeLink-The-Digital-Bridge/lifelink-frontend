@@ -1,16 +1,18 @@
 import { Tabs } from "expo-router/tabs";
 import { useAuth } from '../../utils/auth-context';
-import { MaterialIcons, Feather, Ionicons, FontAwesome5 } from "@expo/vector-icons";
+import { MaterialIcons, Feather, FontAwesome5 } from "@expo/vector-icons";
 import { Redirect } from "expo-router";
 import { useTheme } from "../../utils/theme-context";
+import { TabBarProvider, useTabBar } from "../../utils/tabbar-context";
 import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
-import { Platform, View } from "react-native";
+import { Platform, View, Animated } from "react-native";
 
-export default function TabsLayout() {
+function TabsContent() {
   const { colorScheme } = useTheme();
   const isDark = colorScheme === 'dark';
   const theme = isDark ? darkTheme : lightTheme;
   const { isAuthenticated, isLoading } = useAuth();
+  const { tabBarTranslateY } = useTabBar();
 
   if (isLoading) return null;
   if (!isAuthenticated) return <Redirect href="/(auth)/loginScreen" />;
@@ -21,6 +23,7 @@ export default function TabsLayout() {
         tabBarActiveTintColor: theme.primary,
         tabBarInactiveTintColor: theme.textSecondary,
         tabBarStyle: {
+          position: 'absolute',
           backgroundColor: theme.card,
           height: Platform.OS === 'ios' ? 88 : 85,
           paddingBottom: Platform.OS === 'ios' ? 20 : 8,
@@ -35,6 +38,7 @@ export default function TabsLayout() {
           shadowOpacity: isDark ? 0.25 : 0.1,
           shadowRadius: 12,
           elevation: 8,
+          transform: [{ translateY: tabBarTranslateY }],
         },
         tabBarItemStyle: {
           height: Platform.OS === 'ios' ? 60 : 60,
@@ -97,7 +101,7 @@ export default function TabsLayout() {
             }}>
               <FontAwesome5 
                 name="hand-holding-heart" 
-                size={focused ? 20 : 21} 
+                size={focused ? 20 : 18} 
                 color={color}
               />
             </View>
@@ -120,7 +124,7 @@ export default function TabsLayout() {
             }}>
               <MaterialIcons 
                 name="location-on" 
-                size={focused ? 24 : 26} 
+                size={focused ? 26 : 22} 
                 color={color}
               />
             </View>
@@ -143,7 +147,7 @@ export default function TabsLayout() {
             }}>
               <MaterialIcons 
                 name="medical-services" 
-                size={focused ? 22 : 26} 
+                size={focused ? 24 : 20} 
                 color={color}
               />
             </View>
@@ -166,7 +170,7 @@ export default function TabsLayout() {
             }}>
               <Feather 
                 name="user" 
-                size={focused ? 22 : 26} 
+                size={focused ? 24 : 20} 
                 color={color}
               />
             </View>
@@ -174,5 +178,13 @@ export default function TabsLayout() {
         }}
       />
     </Tabs>
+  );
+}
+
+export default function TabsLayout() {
+  return (
+    <TabBarProvider>
+      <TabsContent />
+    </TabBarProvider>
   );
 }

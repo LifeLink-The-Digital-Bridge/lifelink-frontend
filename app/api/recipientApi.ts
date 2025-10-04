@@ -259,20 +259,26 @@ export const getRecipientRequests = async (
   recipientId: string
 ): Promise<ReceiveRequestDTO[]> => {
   const token = await SecureStore.getItemAsync("jwt");
-  if (!token) throw new Error("Not authenticated");
+  const userId = await SecureStore.getItemAsync("userId");
+  if (!token || !userId) throw new Error("Not authenticated");
   
   const response = await fetch(`${BASE_URL}/recipients/${recipientId}/requests`, {
     headers: {
       Authorization: `Bearer ${token}`,
+      id: userId,
     },
   });
   
   if (!response.ok) {
+    if (response.status === 403) {
+      return [];
+    }
     throw new Error(`Failed to get recipient requests with status ${response.status}`);
   }
   
   return await response.json();
 };
+
 
 export const getMyRequests = async (): Promise<ReceiveRequestDTO[]> => {
   const token = await SecureStore.getItemAsync("jwt");
@@ -284,7 +290,7 @@ export const getMyRequests = async (): Promise<ReceiveRequestDTO[]> => {
       Authorization: `Bearer ${token}`,
       id: userId,
     },
-  });
+  }); 
   
   if (!response.ok) {
     throw new Error(`Failed to get my requests with status ${response.status}`);
@@ -292,6 +298,29 @@ export const getMyRequests = async (): Promise<ReceiveRequestDTO[]> => {
   
   return await response.json();
 };
+
+export const fetchRequestsByUserId = async (userId: string): Promise<ReceiveRequestDTO[]> => {
+  const token = await SecureStore.getItemAsync("jwt");
+  const myUserId = await SecureStore.getItemAsync("userId");
+  if (!token || !myUserId) return [];
+
+  const response = await fetch(`${BASE_URL}/recipients/by-userId/${userId}/requests`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      id: myUserId,
+    },
+  });
+
+  if (!response.ok) {
+    if (response.status === 404 || response.status === 403) {
+      return [];
+    }
+    throw new Error("Failed to fetch requests");
+  }
+  return await response.json();
+};
+
 
 export const addRecipientRole = async (): Promise<string> => {
   const token = await SecureStore.getItemAsync("jwt");

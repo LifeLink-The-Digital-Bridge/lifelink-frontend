@@ -74,13 +74,11 @@ const StatusScreen = () => {
       let donationsData: DonationItem[] = [];
       let requestsData: RequestItem[] = [];
 
-      // Fetch donor matches and donations if user is a donor
       if (roles.includes("DONOR")) {
         try {
           const matches = await getMyMatchesAsDonor();
           setDonorMatches(matches);
 
-          // Extract donation details from matches
           const donationPromises = matches.map(async (match) => {
             try {
               const donation = await fetchDonationByIdWithAccess(match.donationId);
@@ -120,13 +118,11 @@ const StatusScreen = () => {
         }
       }
 
-      // Fetch recipient matches and requests if user is a recipient
       if (roles.includes("RECIPIENT")) {
         try {
           const matches = await getMyMatchesAsRecipient();
           setRecipientMatches(matches);
 
-          // Extract request details from matches
           const requestPromises = matches.map(async (match) => {
             try {
               const request = await fetchRequestByIdWithAccess(match.receiveRequestId);
@@ -166,7 +162,6 @@ const StatusScreen = () => {
         }
       }
 
-      // Set default tab based on available data
       if (donationsData.length > 0 && requestsData.length === 0) {
         setActiveTab("donations");
       } else if (donationsData.length === 0 && requestsData.length > 0) {
@@ -356,7 +351,6 @@ const StatusScreen = () => {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          {/* Header */}
           <View style={styles.headerContainer}>
             <View style={styles.headerIconContainer}>
               <Feather name="activity" size={28} color={theme.primary} />
@@ -377,7 +371,6 @@ const StatusScreen = () => {
             </TouchableOpacity>
           </View>
 
-          {/* Tab Selector */}
           {(donations.length > 0 || requests.length > 0) && (
             <View style={statusStyles.tabContainer}>
               <TouchableOpacity
@@ -399,7 +392,6 @@ const StatusScreen = () => {
             </View>
           )}
 
-          {/* Content */}
           <View style={statusStyles.scrollContainer}>
             {activeTab === "donations" ? (
               donations.length > 0 ? (

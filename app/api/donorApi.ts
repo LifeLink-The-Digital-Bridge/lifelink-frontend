@@ -140,50 +140,10 @@ export const fetchDonorData = async (): Promise<any> => {
 
 export const fetchDonorByUserId = async (): Promise<any> => {
   const token = await SecureStore.getItemAsync("jwt");
-  if (!token) return null;
-
-  const response = await fetch(`${BASE_URL}/donors/by-userId`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (!response.ok) {
-    if (response.status === 404) {
-      return null; 
-    }
-    throw new Error("Failed to fetch donor by userId");
-  }
-  return await response.json();
-};
-
-export const fetchDonationsByDonorId = async (donorId: string): Promise<any> => {
-  const token = await SecureStore.getItemAsync("jwt");
-  if (!token) return null;
-
-  const response = await fetch(`${BASE_URL}/donors/${donorId}/donations`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (!response.ok) {
-    if (response.status === 404) {
-      return [];
-    }
-    throw new Error("Failed to fetch donations");
-  }
-  return await response.json();
-};
-
-export const getMyDonations = async (): Promise<any> => {
-  const token = await SecureStore.getItemAsync("jwt");
   const userId = await SecureStore.getItemAsync("userId");
   if (!token || !userId) return null;
 
-  const response = await fetch(`${BASE_URL}/donors/my-donations`, {
+  const response = await fetch(`${BASE_URL}/donors/by-userId`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -193,9 +153,9 @@ export const getMyDonations = async (): Promise<any> => {
 
   if (!response.ok) {
     if (response.status === 404) {
-      return [];
+      return null;
     }
-    throw new Error("Failed to fetch my donations");
+    throw new Error("Failed to fetch donor by userId");
   }
   return await response.json();
 };

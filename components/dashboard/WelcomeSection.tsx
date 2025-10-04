@@ -18,6 +18,7 @@ export function WelcomeSection({ username }: WelcomeSectionProps) {
       paddingHorizontal: 20,
       backgroundColor: theme.card,
       borderRadius: 16,
+      marginTop: 20,
       marginBottom: 20,
       shadowColor: theme.shadow,
       shadowOffset: { width: 0, height: 2 },

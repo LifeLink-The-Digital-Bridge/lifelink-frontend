@@ -3,8 +3,7 @@ import { StyleSheet } from "react-native";
 export const createDashboardStyles = (theme: any) => StyleSheet.create({
   container: { 
     flex: 1, 
-    backgroundColor: theme.background, 
-    padding: 18 
+    backgroundColor: theme.background,
   },
   
   loadingContainer: {
@@ -18,6 +17,19 @@ export const createDashboardStyles = (theme: any) => StyleSheet.create({
     marginTop: 10,
     color: theme.textSecondary,
     fontSize: 16,
+  },
+
+  header: {
+    backgroundColor: theme.card,
+    paddingHorizontal: 18,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.border,
+  },
+
+  searchContainer: {
+    marginTop: 12,
+    alignItems: 'center',
   },
   
   welcomeText: {

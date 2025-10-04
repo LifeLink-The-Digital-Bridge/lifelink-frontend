@@ -1,216 +1,353 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
-import { createAuthStyles } from '../../constants/styles/authStyles';
-
-interface MatchHistoryItem {
-  matchId: string;
-  otherPartyName: string;
-  otherPartyRole: 'Donor' | 'Recipient';
-  matchType: string;
-  matchedAt: string;
-  isConfirmed: boolean;
-  donationOrRequestType?: string;
-}
+import { useRouter } from 'expo-router';
+import { createProfileStyles } from '../../constants/styles/profileStyles';
 
 interface ProfileContentProps {
-  activeSegment: string;
+  activeTab: string;
   theme: any;
+  isOwnProfile: boolean;
+  canViewProfile: boolean;
+  checkingAccess: boolean;
   donationsLoading: boolean;
   receivesLoading: boolean;
-  historyLoading?: boolean;
   donations: any[];
   receives: any[];
-  matchHistory?: MatchHistoryItem[];
   mockReviews: any[];
   formatDate: (dateStr: string) => string;
 }
 
+const formatLocalDate = (dateValue: any): string => {
+  if (!dateValue) return "N/A";
+  
+  if (Array.isArray(dateValue)) {
+    const [year, month, day] = dateValue;
+    const date = new Date(year, month - 1, day);
+    const dayNum = date.getDate();
+    const monthName = date.toLocaleString("default", { month: "long" });
+    const yearNum = date.getFullYear();
+    return `${dayNum} ${monthName} ${yearNum}`;
+  }
+  
+  if (typeof dateValue === 'string') {
+    const date = new Date(dateValue);
+    const dayNum = date.getDate();
+    const monthName = date.toLocaleString("default", { month: "long" });
+    const yearNum = date.getFullYear();
+    return `${dayNum} ${monthName} ${yearNum}`;
+  }
+  
+  return "N/A";
+};
+
 export const ProfileContent: React.FC<ProfileContentProps> = ({
-  activeSegment,
+  activeTab,
   theme,
+  isOwnProfile,
+  canViewProfile,
+  checkingAccess,
   donationsLoading,
   receivesLoading,
-  historyLoading = false,
   donations,
   receives,
-  matchHistory = [],
   mockReviews,
-  formatDate
+  formatDate,
 }) => {
   const router = useRouter();
-  const styles = createAuthStyles(theme);
+  const styles = createProfileStyles(theme);
+
+  if (!isOwnProfile && checkingAccess) {
+    return (
+      <View style={styles.emptyState}>
+        <ActivityIndicator size="small" color={theme.primary} />
+        <Text style={[styles.emptyDescription, { marginTop: 10 }]}>
+          Checking permissions...
+        </Text>
+      </View>
+    );
+  }
+
+  if (!isOwnProfile && !canViewProfile) {
+    return (
+      <View style={styles.emptyState}>
+        <View style={styles.emptyIcon}>
+          <Feather name="lock" size={56} color={theme.textSecondary} />
+        </View>
+        <Text style={styles.emptyTitle}>Private Profile</Text>
+        <Text style={styles.emptyDescription}>
+          This user's {activeTab} are private
+        </Text>
+      </View>
+    );
+  }
 
   const renderContent = () => {
-    switch (activeSegment) {
+    switch (activeTab) {
       case "donations":
         if (donationsLoading) {
           return (
-            <View style={{ padding: 20, alignItems: "center" }}>
+            <View style={styles.emptyState}>
               <ActivityIndicator size="small" color={theme.primary} />
-              <Text style={{ marginTop: 10, color: theme.textSecondary }}>
+              <Text style={[styles.emptyDescription, { marginTop: 10 }]}>
                 Loading donations...
               </Text>
             </View>
           );
         }
-        return (
-          <>
-            <View style={{ padding: 20, alignItems: "center" }}>
-              <Text style={{ color: theme.textSecondary }}>
-                View detailed donation status in My Status
-              </Text>
-            </View>
-            <TouchableOpacity
-              style={[styles.button, styles.secondary]}
-              onPress={() => router.push("/navigation/StatusScreen")}
-            >
-              <Text style={styles.secondaryText}>View My Status</Text>
-            </TouchableOpacity>
-          </>
-        );
-
-      case "history":
-        if (historyLoading) {
-          return (
-            <View style={{ padding: 20, alignItems: "center" }}>
-              <ActivityIndicator size="small" color={theme.primary} />
-              <Text style={{ marginTop: 10, color: theme.textSecondary }}>
-                Loading match history...
-              </Text>
-            </View>
-          );
-        }
         
-        if (!matchHistory.length) {
+        if (!donations.length) {
           return (
-            <View style={{ padding: 20, alignItems: "center" }}>
-              <Feather name="clock" size={48} color={theme.textSecondary} style={{ marginBottom: 12 }} />
-              <Text style={{ color: theme.textSecondary, fontSize: 16, textAlign: 'center' }}>
-                No match history yet
+            <View style={styles.emptyState}>
+              <View style={styles.emptyIcon}>
+                <Feather name="droplet" size={56} color={theme.textSecondary} />
+              </View>
+              <Text style={styles.emptyTitle}>No Donations Yet</Text>
+              <Text style={styles.emptyDescription}>
+                {isOwnProfile 
+                  ? "Register as a donor and make your first donation to see it here"
+                  : "This user hasn't made any donations yet"}
               </Text>
-              <Text style={{ color: theme.textSecondary, fontSize: 14, marginTop: 8, textAlign: 'center' }}>
-                Your confirmed matches will appear here
-              </Text>
+              {isOwnProfile && (
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.primaryButton, { width: '80%' }]}
+                  onPress={() => router.push("/navigation/hubs/donateHubScreen")}
+                >
+                  <Feather name="plus-circle" size={16} color="#fff" />
+                  <Text style={[styles.buttonText, styles.primaryButtonText]}>
+                    Register as Donor
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
           );
         }
 
         return (
-          <>
-            {matchHistory.map((match, idx) => (
+          <View style={styles.contentContainer}>
+            {donations.slice(0, 5).map((donation, idx) => (
               <TouchableOpacity
                 key={idx}
-                style={[
-                  styles.input,
-                  { 
-                    marginBottom: 12,
-                    borderLeftWidth: 4,
-                    borderLeftColor: match.isConfirmed ? theme.success : theme.primary
-                  }
-                ]}
-                onPress={() => {
-                  console.log('View match:', match.matchId);
-                }}
+                style={styles.card}
+                onPress={() => router.push("/navigation/StatusScreen")}
+                activeOpacity={0.7}
               >
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Feather 
-                      name={match.otherPartyRole === 'Donor' ? 'heart' : 'user'} 
-                      size={20} 
-                      color={theme.primary} 
-                      style={{ marginRight: 8 }}
-                    />
-                    <Text style={{ color: theme.text, fontWeight: "600", fontSize: 16 }}>
-                      {match.otherPartyName}
+                <View style={styles.cardHeader}>
+                  <Text style={styles.cardTitle}>
+                    {donation.donationType || "Blood Donation"}
+                  </Text>
+                  <View
+                    style={[
+                      styles.badge,
+                      {
+                        backgroundColor:
+                          donation.status === "COMPLETED"
+                            ? theme.success + "20"
+                            : theme.primary + "20",
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.badgeText,
+                        {
+                          color:
+                            donation.status === "COMPLETED"
+                              ? theme.success
+                              : theme.primary,
+                        },
+                      ]}
+                    >
+                      {donation.status || "AVAILABLE"}
                     </Text>
                   </View>
-                  {match.isConfirmed && (
-                    <View style={{ 
-                      backgroundColor: theme.success + '20',
-                      paddingHorizontal: 8,
-                      paddingVertical: 4,
-                      borderRadius: 6
-                    }}>
-                      <Text style={{ color: theme.success, fontSize: 12, fontWeight: '600' }}>
-                        ✓ Confirmed
-                      </Text>
-                    </View>
-                  )}
                 </View>
 
-                <View style={{ flexDirection: 'row', marginBottom: 4 }}>
-                  <Text style={{ color: theme.textSecondary, fontSize: 14 }}>
-                    Role: <Text style={{ color: theme.text }}>{match.otherPartyRole}</Text>
-                  </Text>
-                  <Text style={{ color: theme.textSecondary, fontSize: 14, marginLeft: 16 }}>
-                    Type: <Text style={{ color: theme.text }}>{match.matchType}</Text>
-                  </Text>
-                </View>
-
-                {match.donationOrRequestType && (
-                  <Text style={{ color: theme.textSecondary, fontSize: 14, marginBottom: 4 }}>
-                    {match.donationOrRequestType}
-                  </Text>
+                {donation.bloodType && (
+                  <View style={styles.cardDetail}>
+                    <Feather name="droplet" size={14} color={theme.textSecondary} />
+                    <Text style={styles.detailLabel}>Blood Type</Text>
+                    <Text style={styles.detailValue}>{donation.bloodType}</Text>
+                  </View>
                 )}
 
-                <Text style={{ color: theme.textSecondary, fontSize: 12 }}>
-                  Matched: {formatDate(match.matchedAt)}
-                </Text>
+                {donation.organType && (
+                  <View style={styles.cardDetail}>
+                    <Feather name="heart" size={14} color={theme.textSecondary} />
+                    <Text style={styles.detailLabel}>Organ</Text>
+                    <Text style={styles.detailValue}>{donation.organType}</Text>
+                  </View>
+                )}
+
+                {donation.quantity && (
+                  <View style={styles.cardDetail}>
+                    <Feather name="package" size={14} color={theme.textSecondary} />
+                    <Text style={styles.detailLabel}>Quantity</Text>
+                    <Text style={styles.detailValue}>{donation.quantity}</Text>
+                  </View>
+                )}
+
+                <View style={styles.cardDetail}>
+                  <Feather name="calendar" size={14} color={theme.textSecondary} />
+                  <Text style={styles.detailLabel}>Date</Text>
+                  <Text style={styles.detailValue}>
+                    {formatLocalDate(donation.donationDate)}
+                  </Text>
+                </View>
               </TouchableOpacity>
             ))}
-          </>
+
+            {isOwnProfile && (
+              <TouchableOpacity
+                style={[styles.actionButton, styles.secondaryButton]}
+                onPress={() => router.push("/navigation/StatusScreen")}
+              >
+                <Text style={[styles.buttonText, styles.secondaryButtonText]}>
+                  View All Donations
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
         );
 
       case "reviews":
         return (
-          <>
+          <View style={styles.contentContainer}>
             {mockReviews.map((review) => (
-              <View key={review.id} style={[styles.input, { marginBottom: 12 }]}>
-                <Text style={{ color: theme.text }}>{review.text}</Text>
-                <Text style={{ color: theme.textSecondary, fontSize: 12 }}>
-                  {formatDate(review.date)}
-                </Text>
+              <View key={review.id} style={styles.card}>
+                <Text style={[styles.cardTitle, { marginBottom: 8 }]}>{review.text}</Text>
+                <View style={styles.cardDetail}>
+                  <Feather name="calendar" size={14} color={theme.textSecondary} />
+                  <Text style={styles.detailLabel}>Date</Text>
+                  <Text style={styles.detailValue}>{formatDate(review.date)}</Text>
+                </View>
               </View>
             ))}
-          </>
+          </View>
         );
 
       case "receives":
         if (receivesLoading) {
           return (
-            <View style={{ padding: 20, alignItems: "center" }}>
+            <View style={styles.emptyState}>
               <ActivityIndicator size="small" color={theme.primary} />
-              <Text style={{ marginTop: 10, color: theme.textSecondary }}>
+              <Text style={[styles.emptyDescription, { marginTop: 10 }]}>
                 Loading requests...
               </Text>
             </View>
           );
         }
+        
         if (!receives.length) {
           return (
-            <View style={{ padding: 20, alignItems: "center" }}>
-              <Text style={{ color: theme.textSecondary }}>No receive requests found.</Text>
+            <View style={styles.emptyState}>
+              <View style={styles.emptyIcon}>
+                <Feather name="clipboard" size={56} color={theme.textSecondary} />
+              </View>
+              <Text style={styles.emptyTitle}>No Receive Requests Yet</Text>
+              <Text style={styles.emptyDescription}>
+                {isOwnProfile
+                  ? "Register as a recipient and create your first request to see it here"
+                  : "This user hasn't made any requests yet"}
+              </Text>
+              {isOwnProfile && (
+                <TouchableOpacity
+                  style={[styles.actionButton, { backgroundColor: theme.error, borderColor: theme.error, width: '80%' }]}
+                  onPress={() => router.push("/navigation/hubs/recipientHubScreen")}
+                >
+                  <Feather name="plus-circle" size={16} color="#fff" />
+                  <Text style={[styles.buttonText, styles.primaryButtonText]}>
+                    Register as Recipient
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
           );
         }
+        
         return (
-          <>
-            {receives.slice(0, 3).map((req, idx) => (
-              <View key={idx} style={[styles.input, { marginBottom: 12 }]}>
-                <Text style={{ color: theme.text, fontWeight: "600", marginBottom: 4 }}>
-                  {req.bloodType || "Unknown Type"}
-                </Text>
-                <Text style={{ color: theme.textSecondary }}>
-                  Date: {formatDate(req.requestDate)}
-                </Text>
-                <Text style={{ color: theme.textSecondary }}>
-                  Status: {req.status}
-                </Text>
-              </View>
+          <View style={styles.contentContainer}>
+            {receives.slice(0, 5).map((req, idx) => (
+              <TouchableOpacity
+                key={idx}
+                style={styles.card}
+                onPress={() => router.push("/navigation/StatusScreen")}
+                activeOpacity={0.7}
+              >
+                <View style={styles.cardHeader}>
+                  <Text style={styles.cardTitle}>
+                    {req.requestedBloodType || req.requestedOrgan || req.requestType}
+                  </Text>
+                  <View
+                    style={[
+                      styles.badge,
+                      {
+                        backgroundColor:
+                          req.urgencyLevel === "CRITICAL"
+                            ? theme.error + "20"
+                            : theme.primary + "20",
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.badgeText,
+                        {
+                          color:
+                            req.urgencyLevel === "CRITICAL"
+                              ? theme.error
+                              : theme.primary,
+                        },
+                      ]}
+                    >
+                      {req.urgencyLevel}
+                    </Text>
+                  </View>
+                </View>
+
+                {req.requestedOrgan && (
+                  <View style={styles.cardDetail}>
+                    <Feather name="heart" size={14} color={theme.textSecondary} />
+                    <Text style={styles.detailLabel}>Organ</Text>
+                    <Text style={styles.detailValue}>{req.requestedOrgan}</Text>
+                  </View>
+                )}
+
+                {req.quantity && (
+                  <View style={styles.cardDetail}>
+                    <Feather name="package" size={14} color={theme.textSecondary} />
+                    <Text style={styles.detailLabel}>Quantity</Text>
+                    <Text style={styles.detailValue}>{req.quantity}</Text>
+                  </View>
+                )}
+
+                <View style={styles.cardDetail}>
+                  <Feather name="info" size={14} color={theme.textSecondary} />
+                  <Text style={styles.detailLabel}>Status</Text>
+                  <Text style={styles.detailValue}>{req.status}</Text>
+                </View>
+
+                <View style={styles.cardDetail}>
+                  <Feather name="calendar" size={14} color={theme.textSecondary} />
+                  <Text style={styles.detailLabel}>Date</Text>
+                  <Text style={styles.detailValue}>
+                    {formatLocalDate(req.requestDate)}
+                  </Text>
+                </View>
+              </TouchableOpacity>
             ))}
-          </>
+
+            {isOwnProfile && (
+              <TouchableOpacity
+                style={[styles.actionButton, styles.secondaryButton]}
+                onPress={() => router.push("/navigation/StatusScreen")}
+              >
+                <Text style={[styles.buttonText, styles.secondaryButtonText]}>
+                  View All Requests
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
         );
 
       default:
@@ -218,5 +355,5 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
     }
   };
 
-  return <View style={{ paddingHorizontal: 24 }}>{renderContent()}</View>;
+  return <>{renderContent()}</>;
 };

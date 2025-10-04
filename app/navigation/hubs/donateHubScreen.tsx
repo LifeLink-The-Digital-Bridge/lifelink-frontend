@@ -12,7 +12,7 @@ import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../../utils/theme-context";
 import { lightTheme, darkTheme } from "../../../constants/styles/authStyles";
 import { createUnifiedStyles } from "../../../constants/styles/unifiedStyles";
-import { fetchDonorData } from "../../api/donorApi";
+import { fetchDonorData, fetchDonorByUserId } from "../../api/donorApi";
 import { useAuth } from "../../../utils/auth-context";
 import { DonorRegistrationPrompt } from "../../../components/donor/DonorRegistrationPrompt";
 import { DonateProfile } from "../../../components/donor/DonateProfile";
@@ -54,29 +54,53 @@ export default function DonateHubScreen() {
     }
   }, [isAuthenticated]);
 
-  const loadDonorData = useCallback(async () => {
-    setLoading(true);
-    setRefreshing(true);
-    try {
-      const donorData = await fetchDonorData();
-      if (donorData) {
-        setDonorData(donorData);
-        await SecureStore.setItemAsync("donorData", JSON.stringify(donorData));
+const loadDonorData = useCallback(async () => {
+  setLoading(true);
+  setRefreshing(true);
+  try {
+    let donorData = await fetchDonorByUserId();
+    
+    if (donorData && donorData.id) {
+      await SecureStore.setItemAsync("donorId", donorData.id);
+      await SecureStore.setItemAsync("donorData", JSON.stringify(donorData));
+      setDonorData(donorData);
+    } else {
+      const cachedDonorId = await SecureStore.getItemAsync("donorId");
+      if (cachedDonorId) {
+        donorData = await fetchDonorData();
+        if (donorData) {
+          setDonorData(donorData);
+          await SecureStore.setItemAsync("donorData", JSON.stringify(donorData));
+        } else {
+          await SecureStore.deleteItemAsync("donorData");
+          await SecureStore.deleteItemAsync("donorId");
+          setDonorData(null);
+        }
       } else {
         await SecureStore.deleteItemAsync("donorData");
         setDonorData(null);
       }
-    } catch (error: any) {
-      console.error("Failed to fetch donor data:", error);
+    }
+  } catch (error: any) {
+    console.error("Failed to fetch donor data:", error);
+    if (
+      !error.message?.includes("401") &&
+      !error.message?.includes("404") &&
+      !error.message?.includes("Donor not found")
+    ) {
       showAlert(
         "Sync Error",
         "Failed to sync your donor information. Please check your internet connection.",
         "warning"
       );
     }
-    setLoading(false);
-    setRefreshing(false);
-  }, []);
+    await SecureStore.deleteItemAsync("donorData");
+    setDonorData(null);
+  }
+  setLoading(false);
+  setRefreshing(false);
+}, []);
+
 
   useEffect(() => {
     const loadInitialData = async () => {

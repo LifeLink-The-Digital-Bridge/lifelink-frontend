@@ -17,7 +17,7 @@ export function ChatBot({ visible, onPress }: ChatBotProps) {
   const styles = StyleSheet.create({
     chatBotIcon: {
       position: "absolute",
-      bottom: 40,
+      bottom: 105,
       right: 20,
       zIndex: 999,
     },

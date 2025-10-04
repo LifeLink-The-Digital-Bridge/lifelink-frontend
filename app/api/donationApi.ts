@@ -56,19 +56,66 @@ export async function registerDonation(payload: DonationRequest) {
   return await response.json();
 }
 
-export const fetchDonationsByDonorId = async (donorId: string): Promise<any> => {
+export const getMyDonations = async (): Promise<any[]> => {
   const token = await SecureStore.getItemAsync("jwt");
-  if (!token) return null;
+  const userId = await SecureStore.getItemAsync("userId");
+  if (!token || !userId) return [];
 
-  const response = await fetch(`${BASE_URL}/donors/${donorId}/donations`, {
+  const response = await fetch(`${BASE_URL}/donors/my-donations`, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${token}`,
+      id: userId,
     },
   });
 
   if (!response.ok) {
     if (response.status === 404) {
+      return [];
+    }
+    throw new Error("Failed to fetch my donations");
+  }
+  
+  return await response.json();
+};
+
+export const fetchDonationsByUserId = async (userId: string): Promise<any[]> => {
+  const token = await SecureStore.getItemAsync("jwt");
+  const currentUserId = await SecureStore.getItemAsync("userId");
+  if (!token || !currentUserId) return [];
+
+  const response = await fetch(`${BASE_URL}/donors/user/${userId}/donations`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      id: currentUserId,
+    },
+  });
+
+  if (!response.ok) {
+    if (response.status === 404 || response.status === 403) {
+      return [];
+    }
+    throw new Error("Failed to fetch donations by user ID");
+  }
+  return await response.json();
+};
+
+export const fetchDonationsByDonorId = async (donorId: string): Promise<any[]> => {
+  const token = await SecureStore.getItemAsync("jwt");
+  const userId = await SecureStore.getItemAsync("userId");
+  if (!token || !userId) return [];
+
+  const response = await fetch(`${BASE_URL}/donors/${donorId}/donations`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      id: userId,
+    },
+  });
+
+  if (!response.ok) {
+    if (response.status === 404 || response.status === 403) {
       return [];
     }
     throw new Error("Failed to fetch donations");
@@ -125,4 +172,3 @@ export async function addDonorAddress(donorId: string, locationData: any): Promi
   
   return await response.json();
 }
-
