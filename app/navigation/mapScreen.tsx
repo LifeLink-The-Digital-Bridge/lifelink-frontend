@@ -14,6 +14,8 @@ import { useTheme } from "../../utils/theme-context";
 import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
 import { createUnifiedStyles } from "../../constants/styles/unifiedStyles";
 import AppLayout from "@/components/AppLayout";
+import { StatusHeader } from "@/components/common/StatusHeader";
+import ScrollableHeaderLayout from "@/components/common/ScrollableHeaderLayout";
 
 const MapScreen = () => {
   const router = useRouter();
@@ -297,30 +299,15 @@ const MapScreen = () => {
   }
 
   return (
-    <AppLayout>
+    <ScrollableHeaderLayout>
       <View style={styles.container}>
-        <View
-          style={[
-            styles.headerContainer,
-            { paddingHorizontal: 20, paddingVertical: 16 },
-          ]}
-        >
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.backButton}
-          >
-            <Feather name="arrow-left" size={20} color={theme.text} />
-          </TouchableOpacity>
-          <View style={styles.headerIconContainer}>
-            <Feather name="map-pin" size={24} color={theme.primary} />
-          </View>
-          <View style={styles.headerTextContainer}>
-            <Text style={styles.headerTitle}>Select Location</Text>
-            <Text style={styles.headerSubtitle}>
-              Tap on map to choose location
-            </Text>
-          </View>
-        </View>
+        <StatusHeader
+          title="Select Location"
+          subtitle="Tap on map to choose location"
+          iconName="map-pin"
+          showBackButton
+          theme={theme}
+        />
 
         <View style={{ flex: 1 }}>
           <MapView
@@ -521,7 +508,7 @@ const MapScreen = () => {
           </View>
         </View>
       </View>
-    </AppLayout>
+    </ScrollableHeaderLayout>
   );
 };
 

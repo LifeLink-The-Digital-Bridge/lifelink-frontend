@@ -7,8 +7,8 @@ import {
   TouchableOpacity,
   Text,
   ActivityIndicator,
+  Animated,
 } from "react-native";
-import { Feather } from "@expo/vector-icons";
 import * as SecureStore from "expo-secure-store";
 import * as Location from "expo-location";
 import { registerRecipient, addRecipientRole } from "../api/recipientApi";
@@ -17,10 +17,12 @@ import { useTheme } from "../../utils/theme-context";
 import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
 import { createUnifiedStyles } from "../../constants/styles/unifiedStyles";
 import AppLayout from "@/components/AppLayout";
-
 import { RecipientForm } from "../../components/recipient/RecipientForm";
 import { ValidationAlert } from "../../components/common/ValidationAlert";
 import { useRecipientFormState } from "../../hooks/useRecipientFormState";
+import { StatusHeader } from "@/components/common/StatusHeader";
+
+const HEADER_HEIGHT = 120;
 
 const RecipientScreen: React.FC = () => {
   const { colorScheme } = useTheme();
@@ -30,6 +32,9 @@ const RecipientScreen: React.FC = () => {
   const isDark = colorScheme === "dark";
   const theme = isDark ? darkTheme : lightTheme;
   const styles = createUnifiedStyles(theme);
+
+  const lastScrollY = useRef(0);
+  const headerTranslateY = useRef(new Animated.Value(0)).current;
 
   const formState = useRecipientFormState();
 
@@ -62,6 +67,27 @@ const RecipientScreen: React.FC = () => {
     setAlertVisible(true);
   };
 
+  const handleScroll = (event: any) => {
+    const currentScrollY = event.nativeEvent.contentOffset.y;
+    const diff = currentScrollY - lastScrollY.current;
+
+    if (diff > 0 && currentScrollY > 50) {
+      Animated.timing(headerTranslateY, {
+        toValue: -HEADER_HEIGHT,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    } else if (diff < 0 || currentScrollY <= 0) {
+      Animated.timing(headerTranslateY, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    }
+
+    lastScrollY.current = currentScrollY;
+  };
+
   useEffect(() => {
     if (dataCheckCompleted.current) return;
 
@@ -79,15 +105,8 @@ const RecipientScreen: React.FC = () => {
             (recipient.location?.latitude && recipient.location?.longitude)
           );
           setHasLocationData(hasLocation);
-          console.log(
-            "📍 Data check complete - hasData:",
-            hasData,
-            "hasLocation:",
-            hasLocation
-          );
         } else {
           setHasLocationData(false);
-          console.log("📍 No existing data found");
         }
         dataCheckCompleted.current = true;
       } catch (error) {
@@ -108,7 +127,6 @@ const RecipientScreen: React.FC = () => {
       const lat = parseFloat(params.selectedLatitude as string);
       const lng = parseFloat(params.selectedLongitude as string);
       if (!isNaN(lat) && !isNaN(lng)) {
-        console.log("🗺️ Manual location set from map");
         setManualLocationSet(true);
         locationFetchAttempted.current = true;
         formState.setLatitude(lat);
@@ -130,17 +148,6 @@ const RecipientScreen: React.FC = () => {
       const currentLng = formState.longitude;
 
       if (currentLat !== expectedLat || currentLng !== expectedLng) {
-        console.log(
-          "🔧 Database override detected - restoring manual coordinates"
-        );
-        console.log(
-          "Expected:",
-          expectedLat,
-          expectedLng,
-          "Got:",
-          currentLat,
-          currentLng
-        );
         formState.setLatitude(expectedLat);
         formState.setLongitude(expectedLng);
       }
@@ -150,7 +157,6 @@ const RecipientScreen: React.FC = () => {
         const currentLng = formState.longitude;
 
         if (currentLat !== expectedLat || currentLng !== expectedLng) {
-          console.log("🔧 Continuous protection: Database override detected");
           formState.setLatitude(expectedLat);
           formState.setLongitude(expectedLng);
         }
@@ -238,18 +244,11 @@ const RecipientScreen: React.FC = () => {
       (formState.latitude && formState.longitude);
 
     if (shouldBlockAutoFetch) {
-      console.log("🚫 Auto-fetch BLOCKED - using existing data:", {
-        manualLocationSet,
-        hasExistingData,
-        hasLocationData,
-        hasFormLocation: !!(formState.latitude && formState.longitude),
-      });
       locationFetchAttempted.current = true;
       return;
     }
 
     const initializeLocation = async () => {
-      console.log("📍 Starting auto-fetch - no existing location data");
       locationFetchAttempted.current = true;
       setLocationLoading(true);
 
@@ -271,11 +270,6 @@ const RecipientScreen: React.FC = () => {
         if (!manualLocationSet && !hasExistingData && !hasLocationData) {
           formState.setLatitude(location.coords.latitude);
           formState.setLongitude(location.coords.longitude);
-          console.log("✅ Auto-fetch completed and coordinates set");
-        } else {
-          console.log(
-            "⚠️ Auto-fetch completed but coordinates not set due to existing data"
-          );
         }
       } catch (error: any) {
         showAlert(
@@ -308,11 +302,7 @@ const RecipientScreen: React.FC = () => {
   };
 
   const handleBackPress = () => {
-    if (canGoBack) {
-      router.back();
-    } else {
-      router.replace("/(tabs)/receive");
-    }
+    router.replace("/(tabs)/receive");
   };
 
   const handleSubmit = async (): Promise<void> => {
@@ -477,44 +467,51 @@ const RecipientScreen: React.FC = () => {
       : "Getting your location...";
 
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={theme.primary} />
-        <Text style={styles.loadingText}>{loadingMessage}</Text>
-      </View>
+      <AppLayout>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.primary} />
+          <Text style={styles.loadingText}>{loadingMessage}</Text>
+        </View>
+      </AppLayout>
     );
   }
 
   return (
     <AppLayout>
-      <View style={styles.container}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
+      <View style={{ flex: 1, overflow: "hidden" }}>
+        <Animated.View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 999,
+            transform: [{ translateY: headerTranslateY }],
+            backgroundColor: theme.background,
+          }}
         >
-          <View style={styles.headerContainer}>
-            <TouchableOpacity
-              onPress={handleBackPress}
-              style={styles.backButton}
-            >
-              <Feather name="arrow-left" size={20} color={theme.text} />
-            </TouchableOpacity>
+          <StatusHeader
+            title="Recipient Registration"
+            subtitle="Complete your medical profile"
+            iconName="user-check"
+            statusText={formState.isFormValid() ? "✓ Ready" : "In Progress"}
+            showBackButton
+            onBackPress={handleBackPress}
+            theme={theme}
+          />
+        </Animated.View>
 
-            <View style={styles.headerIconContainer}>
-              <Feather name="user-check" size={28} color={theme.primary} />
-            </View>
-            <View style={styles.headerTextContainer}>
-              <Text style={styles.headerTitle}>Recipient Registration</Text>
-              <Text style={styles.headerSubtitle}>
-                Complete your medical profile
-              </Text>
-            </View>
-            <View style={styles.statusBadge}>
-              <Text style={styles.statusText}>
-                {formState.isFormValid() ? "✓ Ready" : "In Progress"}
-              </Text>
-            </View>
-          </View>
-
+        <ScrollView
+          contentContainerStyle={{
+            paddingTop: HEADER_HEIGHT + 10,
+            paddingHorizontal: 20,
+            paddingBottom: 140,
+          }}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+          showsVerticalScrollIndicator={false}
+          style={{ flex: 1 }}
+        >
           <RecipientForm
             {...formState}
             onLocationPress={() =>
@@ -530,36 +527,38 @@ const RecipientScreen: React.FC = () => {
             onResetLocation={handleResetLocation}
             manualLocationSet={manualLocationSet}
           />
+
+          <View style={{ marginTop: 20 }}>
+            <TouchableOpacity
+              style={[
+                styles.submitButton,
+                !formState.isFormValid() || loading
+                  ? styles.submitButtonDisabled
+                  : null,
+              ]}
+              onPress={handleSubmit}
+              disabled={!formState.isFormValid() || loading}
+              activeOpacity={0.8}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <Text style={styles.submitButtonText}>
+                  Complete Registration
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
         </ScrollView>
-
-        <View style={styles.submitButtonContainer}>
-          <TouchableOpacity
-            style={[
-              styles.submitButton,
-              !formState.isFormValid() || loading
-                ? styles.submitButtonDisabled
-                : null,
-            ]}
-            onPress={handleSubmit}
-            disabled={!formState.isFormValid() || loading}
-            activeOpacity={0.8}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" size="small" />
-            ) : (
-              <Text style={styles.submitButtonText}>Complete Registration</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-
-        <ValidationAlert
-          visible={alertVisible}
-          title={alertTitle}
-          message={alertMessage}
-          type={alertType}
-          onClose={() => setAlertVisible(false)}
-        />
       </View>
+
+      <ValidationAlert
+        visible={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        type={alertType}
+        onClose={() => setAlertVisible(false)}
+      />
     </AppLayout>
   );
 };

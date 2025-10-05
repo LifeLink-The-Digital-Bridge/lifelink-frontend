@@ -10,6 +10,7 @@ import {
   Modal,
   StyleSheet,
   Animated,
+  BackHandler,
 } from "react-native";
 import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { Feather } from "@expo/vector-icons";
@@ -39,6 +40,7 @@ import {
   fetchRequestsByUserId,
   ReceiveRequestDTO,
 } from "../api/recipientApi";
+import ScrollableHeaderLayout from "../../components/common/ScrollableHeaderLayout";
 
 const mockReviews = [
   { id: 1, text: "Great donor, very helpful!", date: "2024-06-02" },
@@ -65,6 +67,7 @@ const ProfileScreen: React.FC = () => {
   const styles = createProfileStyles(currentTheme);
   const params = useLocalSearchParams();
   const searchedUsername = params.username as string | undefined;
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const [ownProfileCounts, setOwnProfileCounts] = useState<{
     followersCount?: number;
@@ -383,15 +386,35 @@ const ProfileScreen: React.FC = () => {
     loadOwnProfileCounts,
   ]);
 
+  const donationsLoadedRef = useRef(false);
+  const receivesLoadedRef = useRef(false);
+
   useEffect(() => {
-  if (isOwnProfile) {
-    loadDonations();
-    loadReceives();
-  } else if (displayProfile && canViewProfile && !checkingAccess) {
-    loadOtherUserDonations(displayProfile.id);
-    loadOtherUserRequests(displayProfile.id);
-  }
-  }, [isOwnProfile, displayProfile, canViewProfile, checkingAccess]);
+    if (isOwnProfile) {
+      if (!donationsLoadedRef.current) {
+        loadDonations();
+        donationsLoadedRef.current = true;
+      }
+      if (!receivesLoadedRef.current) {
+        loadReceives();
+        receivesLoadedRef.current = true;
+      }
+    } else if (displayProfile && canViewProfile && !checkingAccess) {
+      if (!donationsLoadedRef.current) {
+        loadOtherUserDonations(displayProfile.id);
+        donationsLoadedRef.current = true;
+      }
+      if (!receivesLoadedRef.current) {
+        loadOtherUserRequests(displayProfile.id);
+        receivesLoadedRef.current = true;
+      }
+    }
+  }, [isOwnProfile, canViewProfile, checkingAccess, displayProfile?.id]);
+
+  useEffect(() => {
+    donationsLoadedRef.current = false;
+    receivesLoadedRef.current = false;
+  }, [displayProfile?.id, isOwnProfile]);
 
   const handleScroll = Animated.event(
     [{ nativeEvent: { contentOffset: { y: scrollY } } }],
@@ -445,16 +468,8 @@ const ProfileScreen: React.FC = () => {
 
   const confirmLogout = useCallback(() => {
     setShowThemeModal(false);
-    Alert.alert(
-      "Confirm Logout",
-      "Are you sure you want to logout?",
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: "Logout", onPress: () => handleLogout(), style: "destructive" },
-      ],
-      { cancelable: true }
-    );
-  }, [handleLogout]);
+    setShowLogoutConfirm(true);
+  }, []);
 
   const handleThemeChange = (newTheme: "light" | "dark" | "system") => {
     setTheme(newTheme);
@@ -465,16 +480,26 @@ const ProfileScreen: React.FC = () => {
     setBellAlertVisible(true);
   };
 
-  const handleBackPress = () => {
-    setViewingProfile(null);
-    setProfileNotFound(false);
+  const handleBackPress = useCallback(() => {
     if (searchedUsername) {
-      router.back();
-      if (loadProfile) {
-        loadProfile();
-      }
+      setViewingProfile(null);
+      setProfileNotFound(false);
+      setDonations([]);
+      setReceives([]);
+      router.replace("/(tabs)/profile");
+      return true;
     }
-  };
+    return false;
+  }, [searchedUsername, router]);
+
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      handleBackPress
+    );
+
+    return () => backHandler.remove();
+  }, [handleBackPress]);
 
   useEffect(() => {
     if (profileNotFound && isOwnProfile && !loading) {
@@ -571,131 +596,195 @@ const ProfileScreen: React.FC = () => {
   }
 
   return (
-    <View style={styles.container}>
-      <SidebarMenu
-        isVisible={menuVisible}
-        onClose={() => setMenuVisible(false)}
-      />
-
-      <Animated.View
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 100,
-          transform: [{ translateY: topBarTranslateY }],
-        }}
-      >
-        <TopBar
-          theme={currentTheme}
-          onMenuPress={() => setMenuVisible(true)}
-          onBellPress={handleBellPress}
-          showBackButton={!isOwnProfile}
-          showSettingsButton={false}
-          onBack={handleBackPress}
-          onSettingsPress={() => setShowThemeModal(true)}
+    <ScrollableHeaderLayout>
+      <View style={{ flex: 1, overflow: "hidden" }}>
+        <SidebarMenu
+          isVisible={menuVisible}
+          onClose={() => setMenuVisible(false)}
         />
-      </Animated.View>
-
-      <ScrollView
-        contentContainerStyle={{
-          paddingTop: TOPBAR_HEIGHT,
-          paddingBottom: 120,
-        }}
-        onScroll={handleScroll}
-        scrollEventThrottle={16}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={[currentTheme.primary]}
-            progressViewOffset={TOPBAR_HEIGHT}
-          />
-        }
-      >
-        <ProfileHeader
-          profile={displayProfile}
-          theme={currentTheme}
-          formatDate={formatDate}
-          isOwnProfile={isOwnProfile}
-          onSettingsPress={() => setShowThemeModal(true)}
-        />
-
-        <ProfileActions
-          isOwnProfile={isOwnProfile}
-          isFollowing={isFollowing}
-          followLoading={followLoading}
-          theme={currentTheme}
-          handleFollow={handleFollow}
-          handleUnfollow={handleUnfollow}
-          confirmLogout={confirmLogout}
-        />
-
-        <ProfileTabs
-          tabs={["donations", "reviews", "receives"]}
-          activeTab={activeTab}
-          onTabChange={(tab) => setActiveTab(tab as any)}
-          theme={currentTheme}
-        />
-
-        <ProfileContent
-          activeTab={activeTab}
-          theme={currentTheme}
-          isOwnProfile={isOwnProfile}
-          canViewProfile={canViewProfile}
-          checkingAccess={checkingAccess}
-          donationsLoading={donationsLoading}
-          receivesLoading={receivesLoading}
-          donations={donations}
-          receives={receives}
-          mockReviews={mockReviews}
-          formatDate={formatDate}
-        />
-      </ScrollView>
-
-      {isOwnProfile && (
-        <ThemeModal
-          visible={showThemeModal}
-          onClose={() => setShowThemeModal(false)}
-          theme={currentTheme}
-          currentTheme={theme}
-          onThemeChange={handleThemeChange}
-          isDark={isDark}
-          onLogout={confirmLogout}
-        />
-      )}
-
-      <Modal
-        visible={bellAlertVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setBellAlertVisible(false)}
-      >
-        <TouchableOpacity
-          style={alertStyles.overlay}
-          activeOpacity={1}
-          onPress={() => setBellAlertVisible(false)}
+        <Animated.View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 100,
+            transform: [{ translateY: topBarTranslateY }],
+          }}
         >
-          <TouchableOpacity style={alertStyles.container} activeOpacity={1}>
-            <View style={alertStyles.iconContainer}>
-              <Feather name="bell" size={28} color={currentTheme.primary} />
+          <TopBar
+            theme={currentTheme}
+            onMenuPress={() => setMenuVisible(true)}
+            onBellPress={handleBellPress}
+            showBackButton={!isOwnProfile}
+            showSettingsButton={false}
+            onBack={handleBackPress}
+            onSettingsPress={() => setShowThemeModal(true)}
+          />
+        </Animated.View>
+        <ScrollView
+          contentContainerStyle={{
+            paddingTop: TOPBAR_HEIGHT,
+            paddingBottom: 120,
+          }}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[currentTheme.primary]}
+              progressViewOffset={TOPBAR_HEIGHT}
+            />
+          }
+        >
+          <ProfileHeader
+            profile={displayProfile}
+            theme={currentTheme}
+            formatDate={formatDate}
+            isOwnProfile={isOwnProfile}
+            onSettingsPress={() => setShowThemeModal(true)}
+          />
+
+          <ProfileActions
+            isOwnProfile={isOwnProfile}
+            isFollowing={isFollowing}
+            followLoading={followLoading}
+            theme={currentTheme}
+            handleFollow={handleFollow}
+            handleUnfollow={handleUnfollow}
+            confirmLogout={confirmLogout}
+          />
+
+          <ProfileTabs
+            tabs={["donations", "reviews", "receives"]}
+            activeTab={activeTab}
+            onTabChange={(tab) => setActiveTab(tab as any)}
+            theme={currentTheme}
+          />
+
+          <ProfileContent
+            activeTab={activeTab}
+            theme={currentTheme}
+            isOwnProfile={isOwnProfile}
+            canViewProfile={canViewProfile}
+            checkingAccess={checkingAccess}
+            donationsLoading={donationsLoading}
+            receivesLoading={receivesLoading}
+            donations={donations}
+            receives={receives}
+            mockReviews={mockReviews}
+            formatDate={formatDate}
+          />
+        </ScrollView>
+        {isOwnProfile && (
+          <ThemeModal
+            visible={showThemeModal}
+            onClose={() => setShowThemeModal(false)}
+            theme={currentTheme}
+            currentTheme={theme}
+            onThemeChange={handleThemeChange}
+            isDark={isDark}
+            onLogout={confirmLogout}
+          />
+        )}
+
+        <Modal
+          visible={showLogoutConfirm}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowLogoutConfirm(false)}
+        >
+          <View style={alertStyles.overlay}>
+            <View style={[alertStyles.container, { minWidth: 300 }]}>
+              <View
+                style={[
+                  alertStyles.iconContainer,
+                  { backgroundColor: currentTheme.error + "20" },
+                ]}
+              >
+                <Feather name="log-out" size={28} color={currentTheme.error} />
+              </View>
+              <Text style={alertStyles.title}>Confirm Logout</Text>
+              <Text style={alertStyles.message}>
+                Are you sure you want to logout? You will need to sign in again to access your account.
+              </Text>
+
+              <View
+                style={{
+                  flexDirection: "row",
+                  gap: 12,
+                  width: "100%",
+                }}
+              >
+                <TouchableOpacity
+                  style={[
+                    alertStyles.button,
+                    {
+                      flex: 1,
+                      backgroundColor: "transparent",
+                      borderWidth: 1,
+                      borderColor: currentTheme.border,
+                    },
+                  ]}
+                  onPress={() => setShowLogoutConfirm(false)}
+                >
+                  <Text style={[alertStyles.buttonText, { color: currentTheme.text }]}>
+                    Cancel
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    alertStyles.button,
+                    {
+                      flex: 1,
+                      backgroundColor: currentTheme.error,
+                    },
+                  ]}
+                  onPress={() => {
+                    setShowLogoutConfirm(false);
+                    handleLogout();
+                  }}
+                >
+                  <Text style={alertStyles.buttonText}>Logout</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-            <Text style={alertStyles.title}>Notifications</Text>
-            <Text style={alertStyles.message}>
-              No new notifications at the moment
-            </Text>
-            <TouchableOpacity
-              style={alertStyles.button}
-              onPress={() => setBellAlertVisible(false)}
-            >
-              <Text style={alertStyles.buttonText}>Got it</Text>
+          </View>
+        </Modal>
+
+        <Modal
+          visible={bellAlertVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setBellAlertVisible(false)}
+        >
+          <TouchableOpacity
+            style={alertStyles.overlay}
+            activeOpacity={1}
+            onPress={() => setBellAlertVisible(false)}
+          >
+            <TouchableOpacity style={alertStyles.container} activeOpacity={1}>
+              <View style={alertStyles.iconContainer}>
+                <Feather name="bell" size={28} color={currentTheme.primary} />
+              </View>
+              <Text style={alertStyles.title}>Notifications</Text>
+              <Text style={alertStyles.message}>
+                No new notifications at the moment
+              </Text>
+              <TouchableOpacity
+                style={alertStyles.button}
+                onPress={() => setBellAlertVisible(false)}
+              >
+                <Text style={alertStyles.buttonText}>Got it</Text>
+              </TouchableOpacity>
             </TouchableOpacity>
           </TouchableOpacity>
-        </TouchableOpacity>
-      </Modal>
-    </View>
+        </Modal>
+      </View>
+    </ScrollableHeaderLayout>
   );
 };
 

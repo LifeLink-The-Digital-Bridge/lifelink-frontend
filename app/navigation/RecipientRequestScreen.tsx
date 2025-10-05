@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
@@ -6,9 +6,9 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   ScrollView,
+  Animated,
 } from "react-native";
 import { router } from "expo-router";
-import { Feather } from "@expo/vector-icons";
 import * as SecureStore from "expo-secure-store";
 import { useAuth } from "../../utils/auth-context";
 import { useTheme } from "../../utils/theme-context";
@@ -28,6 +28,9 @@ import { ValidationAlert } from "../../components/common/ValidationAlert";
 import { RequestTypeSelector } from "../../components/request/RequestTypeSelector";
 import { RequestDetailsForm } from "../../components/request/RequestDetailsForm";
 import { LocationSelector } from "@/components/request/LocationSelector";
+import { StatusHeader } from "@/components/common/StatusHeader";
+
+const HEADER_HEIGHT = 120;
 
 const RecipientRequestScreen = () => {
   const { colorScheme } = useTheme();
@@ -35,6 +38,9 @@ const RecipientRequestScreen = () => {
   const isDark = colorScheme === "dark";
   const theme = isDark ? darkTheme : lightTheme;
   const styles = createUnifiedStyles(theme);
+
+  const lastScrollY = useRef(0);
+  const headerTranslateY = useRef(new Animated.Value(0)).current;
 
   const [loading, setLoading] = useState(false);
   const [roleLoading, setRoleLoading] = useState(true);
@@ -71,6 +77,27 @@ const RecipientRequestScreen = () => {
     setAlertMessage(message);
     setAlertType(type);
     setAlertVisible(true);
+  };
+
+  const handleScroll = (event: any) => {
+    const currentScrollY = event.nativeEvent.contentOffset.y;
+    const diff = currentScrollY - lastScrollY.current;
+
+    if (diff > 0 && currentScrollY > 50) {
+      Animated.timing(headerTranslateY, {
+        toValue: -HEADER_HEIGHT,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    } else if (diff < 0 || currentScrollY <= 0) {
+      Animated.timing(headerTranslateY, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    }
+
+    lastScrollY.current = currentScrollY;
   };
 
   useEffect(() => {
@@ -204,43 +231,57 @@ const RecipientRequestScreen = () => {
     }
   };
 
+  const handleBackPress = () => {
+    router.replace("/(tabs)/receive");
+  };
+
   if (roleLoading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={theme.primary} />
-        <Text style={styles.loadingText}>Loading...</Text>
-      </View>
+      <AppLayout>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.primary} />
+          <Text style={styles.loadingText}>Loading...</Text>
+        </View>
+      </AppLayout>
     );
   }
 
   return (
     <AppLayout>
-      <View style={styles.container}>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.headerContainer}>
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={styles.backButton}
-            >
-              <Feather name="arrow-left" size={20} color={theme.text} />
-            </TouchableOpacity>
+      <View style={{ flex: 1, overflow: "hidden" }}>
+        <Animated.View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 999,
+            transform: [{ translateY: headerTranslateY }],
+            backgroundColor: theme.background,
+          }}
+        >
+          <StatusHeader
+            title="Create Request"
+            subtitle="Request medical assistance"
+            iconName="plus-circle"
+            statusText={isFormValid() ? "✓ Ready" : "In Progress"}
+            showBackButton
+            onBackPress={handleBackPress}
+            theme={theme}
+          />
+        </Animated.View>
 
-            <View style={styles.headerIconContainer}>
-              <Feather name="plus-circle" size={28} color={theme.primary} />
-            </View>
-            <View style={styles.headerTextContainer}>
-              <Text style={styles.headerTitle}>Create Request</Text>
-              <Text style={styles.headerSubtitle}>
-                Request medical assistance
-              </Text>
-            </View>
-            <View style={styles.statusBadge}>
-              <Text style={styles.statusText}>
-                {isFormValid() ? "✓ Ready" : "In Progress"}
-              </Text>
-            </View>
-          </View>
-
+        <ScrollView
+          contentContainerStyle={{
+            paddingTop: HEADER_HEIGHT + 10,
+            paddingHorizontal: 20,
+            paddingBottom: 140,
+          }}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+          showsVerticalScrollIndicator={false}
+          style={{ flex: 1 }}
+        >
           <RequestTypeSelector
             requestType={requestType}
             setRequestType={setRequestType}
@@ -281,34 +322,34 @@ const RecipientRequestScreen = () => {
               />
             </View>
           </View>
+
+          <View style={{ marginTop: 20 }}>
+            <TouchableOpacity
+              style={[
+                styles.submitButton,
+                !isFormValid() || loading ? styles.submitButtonDisabled : null,
+              ]}
+              onPress={handleSubmit}
+              disabled={!isFormValid() || loading}
+              activeOpacity={0.8}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <Text style={styles.submitButtonText}>Submit Request</Text>
+              )}
+            </TouchableOpacity>
+          </View>
         </ScrollView>
-
-        <View style={styles.submitButtonContainer}>
-          <TouchableOpacity
-            style={[
-              styles.submitButton,
-              !isFormValid() || loading ? styles.submitButtonDisabled : null,
-            ]}
-            onPress={handleSubmit}
-            disabled={!isFormValid() || loading}
-            activeOpacity={0.8}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" size="small" />
-            ) : (
-              <Text style={styles.submitButtonText}>Submit Request</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-
-        <ValidationAlert
-          visible={alertVisible}
-          title={alertTitle}
-          message={alertMessage}
-          type={alertType}
-          onClose={() => setAlertVisible(false)}
-        />
       </View>
+
+      <ValidationAlert
+        visible={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        type={alertType}
+        onClose={() => setAlertVisible(false)}
+      />
     </AppLayout>
   );
 };

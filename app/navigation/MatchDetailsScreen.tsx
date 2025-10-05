@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Animated,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Feather } from "@expo/vector-icons";
@@ -32,6 +33,9 @@ import { ProfileCard } from "../../components/match/ProfileCard";
 import { MatchInfoCard } from "../../components/match/MatchInfoCard";
 import { YourDetailsCard } from "../../components/match/YourDetailsCard";
 import { MapSection } from "../../components/match/MapSection";
+import { StatusHeader } from "@/components/common/StatusHeader";
+
+const HEADER_HEIGHT = 120;
 
 interface MatchDetails {
   matchResultId: string;
@@ -80,6 +84,9 @@ const MatchDetailsScreen = () => {
   const theme = isDark ? darkTheme : lightTheme;
   const styles = createUnifiedStyles(theme);
 
+  const lastScrollY = useRef(0);
+  const headerTranslateY = useRef(new Animated.Value(0)).current;
+
   const [match, setMatch] = useState<MatchDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [confirmingMatch, setConfirmingMatch] = useState(false);
@@ -126,6 +133,27 @@ const MatchDetailsScreen = () => {
     setAlertMessage(message);
     setAlertType(type);
     setAlertVisible(true);
+  };
+
+  const handleScroll = (event: any) => {
+    const currentScrollY = event.nativeEvent.contentOffset.y;
+    const diff = currentScrollY - lastScrollY.current;
+
+    if (diff > 0 && currentScrollY > 50) {
+      Animated.timing(headerTranslateY, {
+        toValue: -HEADER_HEIGHT,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    } else if (diff < 0 || currentScrollY <= 0) {
+      Animated.timing(headerTranslateY, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    }
+
+    lastScrollY.current = currentScrollY;
   };
 
   const calculateDistance = (
@@ -547,6 +575,10 @@ const MatchDetailsScreen = () => {
     });
   };
 
+  const handleBackPress = () => {
+    router.back();
+  };
+
   if (loading) {
     return (
       <AppLayout>
@@ -580,51 +612,40 @@ const MatchDetailsScreen = () => {
 
   return (
     <AppLayout>
-      <View style={styles.container}>
-        <View style={[styles.headerContainer, { paddingHorizontal: 24 }]}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.backButton}
-          >
-            <Feather name="arrow-left" size={20} color={theme.text} />
-          </TouchableOpacity>
-
-          <View style={styles.headerIconContainer}>
-            <Feather name="link" size={28} color={theme.primary} />
-          </View>
-          <View style={styles.headerTextContainer}>
-            <Text style={styles.headerTitle}>Match Details</Text>
-            <Text style={styles.headerSubtitle}>
-              #{match.matchResultId.slice(0, 8)}
-            </Text>
-          </View>
-          <View
-            style={[
-              styles.statusBadge,
-              {
-                backgroundColor: match.isConfirmed
-                  ? theme.success + "20"
-                  : theme.error + "20",
-                borderColor: match.isConfirmed
-                  ? theme.success + "40"
-                  : theme.error + "40",
-              },
-            ]}
-          >
-            <Text
-              style={[
-                styles.statusText,
-                { color: match.isConfirmed ? theme.success : theme.error },
-              ]}
-            >
-              {match.isConfirmed ? "Confirmed" : "Pending"}
-            </Text>
-          </View>
-        </View>
+      <View style={{ flex: 1, overflow: "hidden" }}>
+        <Animated.View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 999,
+            transform: [{ translateY: headerTranslateY }],
+            backgroundColor: theme.background,
+          }}
+        >
+          <StatusHeader
+            title="Match Details"
+            subtitle={match.matchResultId.slice(0, 8)}
+            iconName="link"
+            statusText={match.isConfirmed ? "Confirmed" : "Pending"}
+            statusColor={match.isConfirmed ? theme.success : theme.error}
+            showBackButton
+            onBackPress={handleBackPress}
+            theme={theme}
+          />
+        </Animated.View>
 
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={{
+            paddingTop: HEADER_HEIGHT + 10,
+            paddingHorizontal: 20,
+            paddingBottom: canConfirmMatch() ? 140 : 40,
+          }}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
           showsVerticalScrollIndicator={false}
+          style={{ flex: 1 }}
         >
           <MatchInfoCard
             match={match}
@@ -668,78 +689,76 @@ const MatchDetailsScreen = () => {
             }
             matchType={match?.matchType}
           />
+
+          {canConfirmMatch() && (
+            <View style={{ marginTop: 20 }}>
+              <TouchableOpacity
+                style={[
+                  styles.submitButton,
+                  confirmingMatch ? styles.submitButtonDisabled : null,
+                ]}
+                onPress={handleConfirmMatch}
+                disabled={confirmingMatch}
+                activeOpacity={0.8}
+              >
+                {confirmingMatch ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <Text style={styles.submitButtonText}>
+                    {getConfirmationButtonText()}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          )}
         </ScrollView>
+      </View>
 
-        {canConfirmMatch() && (
-          <View
-            style={[styles.submitButtonContainer, { paddingHorizontal: 24 }]}
-          >
-            <TouchableOpacity
-              style={[
-                styles.submitButton,
-                confirmingMatch ? styles.submitButtonDisabled : null,
-              ]}
-              onPress={handleConfirmMatch}
-              disabled={confirmingMatch}
-              activeOpacity={0.8}
-            >
-              {confirmingMatch ? (
-                <ActivityIndicator color="#fff" size="small" />
-              ) : (
-                <Text style={styles.submitButtonText}>
-                  {getConfirmationButtonText()}
-                </Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {navigatingToProfile && (
+      {navigatingToProfile && (
+        <View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0,0,0,0.5)",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 1000,
+          }}
+        >
           <View
             style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: "rgba(0,0,0,0.5)",
-              justifyContent: "center",
+              backgroundColor: theme.background,
+              padding: 24,
+              borderRadius: 12,
               alignItems: "center",
-              zIndex: 1000,
+              minWidth: 200,
             }}
           >
-            <View
+            <ActivityIndicator size="large" color={theme.primary} />
+            <Text
               style={{
-                backgroundColor: theme.background,
-                padding: 24,
-                borderRadius: 12,
-                alignItems: "center",
-                minWidth: 200,
+                color: theme.text,
+                marginTop: 12,
+                fontSize: 16,
+                fontWeight: "500",
               }}
             >
-              <ActivityIndicator size="large" color={theme.primary} />
-              <Text
-                style={{
-                  color: theme.text,
-                  marginTop: 12,
-                  fontSize: 16,
-                  fontWeight: "500",
-                }}
-              >
-                Loading Information...
-              </Text>
-            </View>
+              Loading Information...
+            </Text>
           </View>
-        )}
+        </View>
+      )}
 
-        <ValidationAlert
-          visible={alertVisible}
-          title={alertTitle}
-          message={alertMessage}
-          type={alertType}
-          onClose={() => setAlertVisible(false)}
-        />
-      </View>
+      <ValidationAlert
+        visible={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        type={alertType}
+        onClose={() => setAlertVisible(false)}
+      />
     </AppLayout>
   );
 };

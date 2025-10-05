@@ -1,5 +1,12 @@
-import React from "react";
-import { View, Text, ScrollView, TouchableOpacity, Image } from "react-native";
+import React, { useRef } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  Animated,
+} from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Feather, FontAwesome } from "@expo/vector-icons";
 import { useTheme } from "../../utils/theme-context";
@@ -7,6 +14,9 @@ import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
 import { createUnifiedStyles } from "../../constants/styles/unifiedStyles";
 import AppLayout from "@/components/AppLayout";
 import { InfoRow } from "../../components/match/InfoRow";
+import { StatusHeader } from "@/components/common/StatusHeader";
+
+const HEADER_HEIGHT = 120;
 
 const DetailedProfileScreen = () => {
   const { colorScheme } = useTheme();
@@ -17,6 +27,9 @@ const DetailedProfileScreen = () => {
   const theme = isDark ? darkTheme : lightTheme;
   const styles = createUnifiedStyles(theme);
 
+  const lastScrollY = useRef(0);
+  const headerTranslateY = useRef(new Animated.Value(0)).current;
+
   const profile = userProfile ? JSON.parse(userProfile as string) : null;
   const serviceData = matchingServiceData
     ? JSON.parse(matchingServiceData as string)
@@ -25,6 +38,31 @@ const DetailedProfileScreen = () => {
     ? JSON.parse(theirDonationOrRequest as string)
     : null;
   const role = userRole as string;
+
+  const handleScroll = (event: any) => {
+    const currentScrollY = event.nativeEvent.contentOffset.y;
+    const diff = currentScrollY - lastScrollY.current;
+
+    if (diff > 0 && currentScrollY > 50) {
+      Animated.timing(headerTranslateY, {
+        toValue: -HEADER_HEIGHT,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    } else if (diff < 0 || currentScrollY <= 0) {
+      Animated.timing(headerTranslateY, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    }
+
+    lastScrollY.current = currentScrollY;
+  };
+
+  const handleBackPress = () => {
+    router.back();
+  };
 
   if (!profile) {
     return (
@@ -48,30 +86,37 @@ const DetailedProfileScreen = () => {
 
   return (
     <AppLayout>
-      <View style={styles.container}>
-        <View style={[styles.headerContainer, { paddingHorizontal: 24 }]}>
-          <TouchableOpacity
-            onPress={() => router.back()}
-            style={styles.backButton}
-          >
-            <Feather name="arrow-left" size={20} color={theme.text} />
-          </TouchableOpacity>
-          <View style={styles.headerIconContainer}>
-            <Feather
-              name={isDonor ? "heart" : "user"}
-              size={28}
-              color={theme.primary}
-            />
-          </View>
-          <View style={styles.headerTextContainer}>
-            <Text style={styles.headerTitle}>{role} Profile</Text>
-            <Text style={styles.headerSubtitle}>Complete Information</Text>
-          </View>
-        </View>
+      <View style={{ flex: 1, overflow: "hidden" }}>
+        <Animated.View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 999,
+            transform: [{ translateY: headerTranslateY }],
+            backgroundColor: theme.background,
+          }}
+        >
+          <StatusHeader
+            title={`${role} Profile`}
+            subtitle="Complete Information"
+            iconName={isDonor ? "heart" : "user"}
+            showBackButton
+            onBackPress={handleBackPress}
+            theme={theme}
+          />
+        </Animated.View>
 
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingTop: HEADER_HEIGHT + 10 },
+          ]}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
           showsVerticalScrollIndicator={false}
+          style={{ flex: 1 }}
         >
           <View style={[styles.sectionContainer, { paddingHorizontal: 24 }]}>
             <View style={styles.sectionHeader}>

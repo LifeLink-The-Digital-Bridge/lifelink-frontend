@@ -10,13 +10,11 @@ interface DetailSection {
   items: DetailItem[];
 }
 
-// Helper function to safely format dates
 const formatDate = (dateValue: any): string => {
   if (!dateValue) return "N/A";
   
   try {
     const date = new Date(dateValue);
-    // Check if date is valid
     if (isNaN(date.getTime())) {
       return "N/A";
     }

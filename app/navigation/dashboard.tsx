@@ -17,6 +17,7 @@ import { useTheme } from "../../utils/theme-context";
 import { useTabBar } from "../../utils/tabbar-context";
 import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
 import { createDashboardStyles } from "../../constants/styles/dashboardStyles";
+import ScrollableHeaderLayout from "../../components/common/ScrollableHeaderLayout";
 
 import { TopBar } from "../../components/common/TopBar";
 import { SidebarMenu } from "../../components/dashboard/SidebarMenu";
@@ -185,80 +186,83 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={theme.primary} />
-        <Text style={styles.loadingText}>Loading dashboard...</Text>
-      </View>
+      <ScrollableHeaderLayout>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.primary} />
+          <Text style={styles.loadingText}>Loading dashboard...</Text>
+        </View>
+      </ScrollableHeaderLayout>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <SidebarMenu
-        isVisible={menuVisible}
-        onClose={() => setMenuVisible(false)}
-      />
-
-      <Animated.View
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 100,
-          transform: [{ translateY: topBarTranslateY }],
-        }}
-      >
-        <TopBar
-          theme={theme}
-          onMenuPress={() => setMenuVisible(true)}
-          onBellPress={handleBellPress}
+    <ScrollableHeaderLayout>
+      <View style={{ flex: 1, overflow: "hidden" }}>
+        <SidebarMenu
+          isVisible={menuVisible}
+          onClose={() => setMenuVisible(false)}
         />
-      </Animated.View>
 
-      <ScrollView
-        contentContainerStyle={{
-          paddingTop: TOPBAR_HEIGHT,
-          paddingBottom: 120,
-          paddingHorizontal: 18,
-        }}
-        onScroll={handleScroll}
-        scrollEventThrottle={16}
-        showsVerticalScrollIndicator={false}
-      >
-        <WelcomeSection username={userData.username} />
-        
-      </ScrollView>
-
-      <ChatBot visible={showChatIcon} onPress={handleChatBotPress} />
-
-      <Modal
-        visible={validationAlertVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setValidationAlertVisible(false)}
-      >
-        <TouchableOpacity
-          style={alertStyles.overlay}
-          activeOpacity={1}
-          onPress={() => setValidationAlertVisible(false)}
+        <Animated.View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 100,
+            transform: [{ translateY: topBarTranslateY }],
+          }}
         >
-          <TouchableOpacity style={alertStyles.container} activeOpacity={1}>
-            <View style={alertStyles.iconContainer}>
-              <Feather name="bell" size={28} color={theme.primary} />
-            </View>
-            <Text style={alertStyles.title}>{validationAlertTitle}</Text>
-            <Text style={alertStyles.message}>{validationAlertMessage}</Text>
-            <TouchableOpacity
-              style={alertStyles.button}
-              onPress={() => setValidationAlertVisible(false)}
-            >
-              <Text style={alertStyles.buttonText}>Got it</Text>
+          <TopBar
+            theme={theme}
+            onMenuPress={() => setMenuVisible(true)}
+            onBellPress={handleBellPress}
+          />
+        </Animated.View>
+
+        <ScrollView
+          contentContainerStyle={{
+            paddingTop: TOPBAR_HEIGHT,
+            paddingBottom: 120,
+            paddingHorizontal: 18,
+          }}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+          showsVerticalScrollIndicator={false}
+        >
+          <WelcomeSection username={userData.username} />
+        </ScrollView>
+
+        <ChatBot visible={showChatIcon} onPress={handleChatBotPress} />
+
+        <Modal
+          visible={validationAlertVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setValidationAlertVisible(false)}
+        >
+          <TouchableOpacity
+            style={alertStyles.overlay}
+            activeOpacity={1}
+            onPress={() => setValidationAlertVisible(false)}
+          >
+            <TouchableOpacity style={alertStyles.container} activeOpacity={1}>
+              <View style={alertStyles.iconContainer}>
+                <Feather name="bell" size={28} color={theme.primary} />
+              </View>
+              <Text style={alertStyles.title}>{validationAlertTitle}</Text>
+              <Text style={alertStyles.message}>{validationAlertMessage}</Text>
+              <TouchableOpacity
+                style={alertStyles.button}
+                onPress={() => setValidationAlertVisible(false)}
+              >
+                <Text style={alertStyles.buttonText}>Got it</Text>
+              </TouchableOpacity>
             </TouchableOpacity>
           </TouchableOpacity>
-        </TouchableOpacity>
-      </Modal>
-    </View>
+        </Modal>
+      </View>
+    </ScrollableHeaderLayout>
   );
 };
 

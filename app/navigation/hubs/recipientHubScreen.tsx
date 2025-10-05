@@ -1,12 +1,13 @@
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   ScrollView,
   Text,
   View,
   RefreshControl,
+  Animated,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../../utils/theme-context";
@@ -15,16 +16,25 @@ import { createUnifiedStyles } from "../../../constants/styles/unifiedStyles";
 import { getRecipientByUserId } from "../../api/recipientApi";
 import { useAuth } from "../../../utils/auth-context";
 import { ValidationAlert } from "../../../components/common/ValidationAlert";
+import { useTabBar } from "../../../utils/tabbar-context";
 
 import { RecipientProfile } from "../../../components/recipient/RecipientProfile";
 import { RecipientActions } from "../../../components/recipient/RecipientActions";
 import { RecipientRegistrationPrompt } from "../../../components/recipient/RecipientRegistrationPrompt";
+import { StatusHeader } from "@/components/common/StatusHeader";
+import ScrollableHeaderLayout from "@/components/common/ScrollableHeaderLayout";
+
+const HEADER_HEIGHT = 120; // ✅ Matches DonorHub
 
 const RecipientHubScreen = () => {
   const { colorScheme } = useTheme();
   const isDark = colorScheme === "dark";
   const theme = isDark ? darkTheme : lightTheme;
   const styles = createUnifiedStyles(theme);
+
+  const { hideTabBar, showTabBar } = useTabBar();
+  const lastScrollY = useRef(0);
+  const headerTranslateY = useRef(new Animated.Value(0)).current;
 
   const [loading, setLoading] = useState(true);
   const [recipient, setRecipient] = useState<any>(null);
@@ -56,7 +66,6 @@ const RecipientHubScreen = () => {
     }
   }, [isAuthenticated]);
 
-  // RecipientHubScreen.tsx
   const loadRecipientData = useCallback(async () => {
     setLoading(true);
     setRefreshing(true);
@@ -113,59 +122,105 @@ const RecipientHubScreen = () => {
     router.push("/navigation/RecipientRequestScreen");
   };
 
+  const handleScroll = (event: any) => {
+    const currentScrollY = event.nativeEvent.contentOffset.y;
+    const diff = currentScrollY - lastScrollY.current;
+
+    if (diff > 0 && currentScrollY > 50) {
+      Animated.timing(headerTranslateY, {
+        toValue: -HEADER_HEIGHT,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+      hideTabBar();
+    } else if (diff < 0 || currentScrollY <= 0) {
+      Animated.timing(headerTranslateY, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+      showTabBar();
+    }
+
+    lastScrollY.current = currentScrollY;
+  };
+
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={theme.primary} />
-        <Text style={styles.loadingText}>Loading recipient information...</Text>
-      </View>
+      <ScrollableHeaderLayout>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.primary} />
+          <Text style={styles.loadingText}>
+            Loading recipient information...
+          </Text>
+        </View>
+      </ScrollableHeaderLayout>
     );
   }
 
   if (!recipient) {
-    return <RecipientRegistrationPrompt />;
+    return (
+      <ScrollableHeaderLayout>
+        <RecipientRegistrationPrompt />
+      </ScrollableHeaderLayout>
+    );
   }
 
   return (
-    <View style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={loadRecipientData}
-            tintColor={theme.primary}
-            colors={[theme.primary]}
+    <ScrollableHeaderLayout>
+      {/* ✅ Container with overflow hidden */}
+      <View style={{ flex: 1, overflow: "hidden" }}>
+        {/* ✅ Header */}
+        <Animated.View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 999,
+            transform: [{ translateY: headerTranslateY }],
+            backgroundColor: theme.background,
+          }}
+        >
+          <StatusHeader
+            title="Recipient Dashboard"
+            subtitle="Managing your healthcare needs"
+            iconName="heart"
+            statusText="Available"
+            statusColor={theme.success}
+            theme={theme}
           />
-        }
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.headerContainer}>
-          <View style={styles.headerIconContainer}>
-            <Feather name="heart" size={28} color={theme.primary} />
-          </View>
-          <View style={styles.headerTextContainer}>
-            <Text style={styles.headerTitle}>Recipient Dashboard</Text>
-            <Text style={styles.headerSubtitle}>
-              Managing your healthcare needs
-            </Text>
-          </View>
-          <View style={styles.statusBadge}>
-            <Text style={styles.statusText}>
-              {recipient.availability === "AVAILABLE"
-                ? "✓ Available"
-                : recipient.availability}
-            </Text>
-          </View>
-        </View>
+        </Animated.View>
 
-        <RecipientProfile recipient={recipient} />
+        {/* ✅ ScrollView */}
+        <ScrollView
+          contentContainerStyle={{
+            paddingTop: HEADER_HEIGHT + 10,
+            paddingHorizontal: 20,
+            paddingBottom: 140,
+          }}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={loadRecipientData}
+              tintColor={theme.primary}
+              colors={[theme.primary]}
+              progressViewOffset={HEADER_HEIGHT}
+            />
+          }
+          showsVerticalScrollIndicator={false}
+          style={{ flex: 1 }}
+        >
+          <RecipientProfile recipient={recipient} />
 
-        <RecipientActions
-          onUpdatePress={handleUpdatePress}
-          onCreateRequestPress={handleCreateRequestPress}
-        />
-      </ScrollView>
+          <RecipientActions
+            onUpdatePress={handleUpdatePress}
+            onCreateRequestPress={handleCreateRequestPress}
+          />
+        </ScrollView>
+      </View>
 
       <ValidationAlert
         visible={alertVisible}
@@ -174,7 +229,7 @@ const RecipientHubScreen = () => {
         type={alertType}
         onClose={() => setAlertVisible(false)}
       />
-    </View>
+    </ScrollableHeaderLayout>
   );
 };
 

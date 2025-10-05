@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../utils/auth-context";
 import {
@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   TextInput,
+  Animated,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as SecureStore from "expo-secure-store";
@@ -22,7 +23,6 @@ import {
   TissueType,
   StemCellType,
 } from "../api/donationApi";
-
 import { ValidationAlert } from "../../components/common/ValidationAlert";
 import { DonationTypeSelector } from "../../components/donation/DonationTypeSelector";
 import { BloodTypeSelector } from "../../components/donation/BloodTypeSelector";
@@ -31,6 +31,9 @@ import { TissueDetailsForm } from "../../components/donation/TissueDetailsForm";
 import { StemCellDetailsForm } from "../../components/donation/StemCellDetailsForm";
 import AppLayout from "@/components/AppLayout";
 import { LocationSelector } from "@/components/donation/LocationSelector";
+import { StatusHeader } from "@/components/common/StatusHeader";
+
+const HEADER_HEIGHT = 120;
 
 const DonationScreen = () => {
   const { colorScheme } = useTheme();
@@ -39,6 +42,9 @@ const DonationScreen = () => {
   const isDark = colorScheme === "dark";
   const theme = isDark ? darkTheme : lightTheme;
   const styles = createUnifiedStyles(theme);
+
+  const lastScrollY = useRef(0);
+  const headerTranslateY = useRef(new Animated.Value(0)).current;
 
   const [loading, setLoading] = useState(false);
   const [donorId, setDonorId] = useState("");
@@ -83,6 +89,27 @@ const DonationScreen = () => {
     setAlertMessage(message);
     setAlertType(type);
     setAlertVisible(true);
+  };
+
+  const handleScroll = (event: any) => {
+    const currentScrollY = event.nativeEvent.contentOffset.y;
+    const diff = currentScrollY - lastScrollY.current;
+
+    if (diff > 0 && currentScrollY > 50) {
+      Animated.timing(headerTranslateY, {
+        toValue: -HEADER_HEIGHT,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    } else if (diff < 0 || currentScrollY <= 0) {
+      Animated.timing(headerTranslateY, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    }
+
+    lastScrollY.current = currentScrollY;
   };
 
   const handleTypeChange = () => {
@@ -215,34 +242,46 @@ const DonationScreen = () => {
     }
   };
 
+  const handleBackPress = () => {
+    router.replace("/(tabs)/donate");
+  };
+
   return (
     <AppLayout>
-      <View style={styles.container}>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.headerContainer}>
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={styles.backButton}
-            >
-              <Feather name="arrow-left" size={20} color={theme.text} />
-            </TouchableOpacity>
+      <View style={{ flex: 1, overflow: "hidden" }}>
+        <Animated.View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 999,
+            transform: [{ translateY: headerTranslateY }],
+            backgroundColor: theme.background,
+          }}
+        >
+          <StatusHeader
+            title="Make Donation"
+            subtitle="Help save lives with your contribution"
+            iconName="gift"
+            statusText={isFormValid() ? "✓ Ready" : "In Progress"}
+            showBackButton
+            onBackPress={handleBackPress}
+            theme={theme}
+          />
+        </Animated.View>
 
-            <View style={styles.headerIconContainer}>
-              <Feather name="gift" size={28} color={theme.primary} />
-            </View>
-            <View style={styles.headerTextContainer}>
-              <Text style={styles.headerTitle}>Make Donation</Text>
-              <Text style={styles.headerSubtitle}>
-                Help save lives with your contribution
-              </Text>
-            </View>
-            <View style={styles.statusBadge}>
-              <Text style={styles.statusText}>
-                {isFormValid() ? "✓ Ready" : "In Progress"}
-              </Text>
-            </View>
-          </View>
-
+        <ScrollView
+          contentContainerStyle={{
+            paddingTop: HEADER_HEIGHT + 10,
+            paddingHorizontal: 20,
+            paddingBottom: 140,
+          }}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+          showsVerticalScrollIndicator={false}
+          style={{ flex: 1 }}
+        >
           <DonationTypeSelector
             donationType={donationType}
             setDonationType={setDonationType}
@@ -325,34 +364,37 @@ const DonationScreen = () => {
             />
           )}
 
-          <TouchableOpacity
-            style={[
-              styles.submitButton,
-              !isFormValid() || loading ? styles.submitButtonDisabled : {},
-            ]}
-            onPress={handleSubmit}
-            disabled={!isFormValid() || loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" size="small" />
-            ) : (
-              <Text style={styles.submitButtonText}>
-                {alertType === "success"
-                  ? "Donation Submitted!"
-                  : "Submit Donation"}
-              </Text>
-            )}
-          </TouchableOpacity>
+          <View style={{ marginTop: 20 }}>
+            <TouchableOpacity
+              style={[
+                styles.submitButton,
+                !isFormValid() || loading ? styles.submitButtonDisabled : {},
+              ]}
+              onPress={handleSubmit}
+              disabled={!isFormValid() || loading}
+              activeOpacity={0.8}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <Text style={styles.submitButtonText}>
+                  {alertType === "success"
+                    ? "Donation Submitted!"
+                    : "Submit Donation"}
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
         </ScrollView>
-
-        <ValidationAlert
-          visible={alertVisible}
-          title={alertTitle}
-          message={alertMessage}
-          type={alertType}
-          onClose={() => setAlertVisible(false)}
-        />
       </View>
+
+      <ValidationAlert
+        visible={alertVisible}
+        title={alertTitle}
+        message={alertMessage}
+        type={alertType}
+        onClose={() => setAlertVisible(false)}
+      />
     </AppLayout>
   );
 };
