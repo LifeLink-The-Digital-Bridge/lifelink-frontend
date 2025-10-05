@@ -10,6 +10,26 @@ interface DetailSection {
   items: DetailItem[];
 }
 
+// Helper function to safely format dates
+const formatDate = (dateValue: any): string => {
+  if (!dateValue) return "N/A";
+  
+  try {
+    const date = new Date(dateValue);
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      return "N/A";
+    }
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  } catch (error) {
+    return "N/A";
+  }
+};
+
 export const formatDonorDetails = (donorData: any): DetailSection[] => {
   const sections: DetailSection[] = [];
 
@@ -19,7 +39,7 @@ export const formatDonorDetails = (donorData: any): DetailSection[] => {
     items: [
       {
         label: "Registration Date",
-        value: donorData.registrationDate ? new Date(donorData.registrationDate).toLocaleDateString() : "N/A"
+        value: formatDate(donorData.registrationDate)
       },
       {
         label: "Status",
@@ -52,6 +72,10 @@ export const formatDonorDetails = (donorData: any): DetailSection[] => {
         value: donorData.medicalDetails.overallHealthStatus || "N/A"
       },
       {
+        label: "Last Medical Checkup",
+        value: formatDate(donorData.medicalDetails.lastMedicalCheckup)
+      },
+      {
         label: "Taking Medication",
         value: donorData.medicalDetails.takingMedication ? "Yes" : "No",
         isLast: true
@@ -71,6 +95,10 @@ export const formatDonorDetails = (donorData: any): DetailSection[] => {
         value: `${donorData.eligibilityCriteria.age || "N/A"} years`
       },
       {
+        label: "Date of Birth",
+        value: formatDate(donorData.eligibilityCriteria.dob)
+      },
+      {
         label: "Weight",
         value: `${donorData.eligibilityCriteria.weight || "N/A"} kg`
       },
@@ -83,7 +111,7 @@ export const formatDonorDetails = (donorData: any): DetailSection[] => {
     if (donorData.eligibilityCriteria.bodyMassIndex) {
       eligibilityItems.push({
         label: "BMI",
-        value: donorData.eligibilityCriteria.bodyMassIndex.toString()
+        value: donorData.eligibilityCriteria.bodyMassIndex.toFixed(1)
       });
     }
     
@@ -94,9 +122,9 @@ export const formatDonorDetails = (donorData: any): DetailSection[] => {
       },
       {
         label: "Last Donation",
-        value: donorData.eligibilityCriteria.lastDonationDate 
-          ? new Date(donorData.eligibilityCriteria.lastDonationDate).toLocaleDateString() 
-          : "Never",
+        value: formatDate(donorData.eligibilityCriteria.lastDonationDate) === "N/A" 
+          ? "Never" 
+          : formatDate(donorData.eligibilityCriteria.lastDonationDate),
         isLast: true
       }
     );
@@ -131,9 +159,7 @@ export const formatDonorDetails = (donorData: any): DetailSection[] => {
         },
         {
           label: "Testing Date",
-          value: donorData.hlaProfile.testingDate 
-            ? new Date(donorData.hlaProfile.testingDate).toLocaleDateString() 
-            : "N/A"
+          value: formatDate(donorData.hlaProfile.testingDate)
         },
         {
           label: "Laboratory",
@@ -192,9 +218,7 @@ export const formatDonorDetails = (donorData: any): DetailSection[] => {
         },
         {
           label: "Consent Date",
-          value: donorData.consentForm.consentedAt 
-            ? new Date(donorData.consentForm.consentedAt).toLocaleDateString() 
-            : "N/A",
+          value: formatDate(donorData.consentForm.consentedAt),
           isLast: true
         }
       ]
@@ -287,6 +311,13 @@ export const formatRecipientDetails = (recipientData: any): DetailSection[] => {
         value: `${recipientData.eligibilityCriteria.age} years`
       });
     }
+
+    if (recipientData.eligibilityCriteria.dob) {
+      eligibilityItems.push({
+        label: "Date of Birth",
+        value: formatDate(recipientData.eligibilityCriteria.dob)
+      });
+    }
     
     if (recipientData.eligibilityCriteria.weight) {
       eligibilityItems.push({
@@ -305,15 +336,13 @@ export const formatRecipientDetails = (recipientData: any): DetailSection[] => {
     if (recipientData.eligibilityCriteria.bodyMassIndex) {
       eligibilityItems.push({
         label: "BMI",
-        value: recipientData.eligibilityCriteria.bodyMassIndex.toString()
+        value: recipientData.eligibilityCriteria.bodyMassIndex.toFixed(1)
       });
     }
     
     eligibilityItems.push({
       label: "Last Reviewed",
-      value: recipientData.eligibilityCriteria.lastReviewed 
-        ? new Date(recipientData.eligibilityCriteria.lastReviewed).toLocaleDateString() 
-        : "N/A",
+      value: formatDate(recipientData.eligibilityCriteria.lastReviewed),
       isLast: true
     });
     
@@ -347,9 +376,7 @@ export const formatRecipientDetails = (recipientData: any): DetailSection[] => {
         },
         {
           label: "Testing Date",
-          value: recipientData.hlaProfile.testingDate 
-            ? new Date(recipientData.hlaProfile.testingDate).toLocaleDateString() 
-            : "N/A"
+          value: formatDate(recipientData.hlaProfile.testingDate)
         },
         {
           label: "Laboratory",
@@ -405,9 +432,7 @@ export const formatRecipientDetails = (recipientData: any): DetailSection[] => {
         },
         {
           label: "Consent Date",
-          value: recipientData.consentForm.consentedAt 
-            ? new Date(recipientData.consentForm.consentedAt).toLocaleDateString() 
-            : "N/A",
+          value: formatDate(recipientData.consentForm.consentedAt),
           isLast: true
         }
       ]
