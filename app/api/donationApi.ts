@@ -80,26 +80,40 @@ export const getMyDonations = async (): Promise<any[]> => {
 };
 
 export const fetchDonationsByUserId = async (userId: string): Promise<any[]> => {
-  const token = await SecureStore.getItemAsync("jwt");
-  const currentUserId = await SecureStore.getItemAsync("userId");
-  if (!token || !currentUserId) return [];
+  try {
+    const jwt = await SecureStore.getItemAsync("jwt");
+    const currentUserId = await SecureStore.getItemAsync("userId");
+    
+    const response = await fetch(
+      `${BASE_URL}/donors/by-userId/${userId}/donations`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${jwt}`,
+          id: currentUserId || "",
+        },
+      }
+    );
 
-  const response = await fetch(`${BASE_URL}/donors/user/${userId}/donations`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      id: currentUserId,
-    },
-  });
-
-  if (!response.ok) {
-    if (response.status === 404 || response.status === 403) {
+    if (response.status === 403) {
+      const error = await response.json();
+      console.log("Access denied to donations:", error);
       return [];
     }
-    throw new Error("Failed to fetch donations by user ID");
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch donations by user ID");
+    }
+
+    const data = await response.json();
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.error("Error loading donations:", error);
+    return [];
   }
-  return await response.json();
 };
+
 
 export const fetchDonationsByDonorId = async (donorId: string): Promise<any[]> => {
   const token = await SecureStore.getItemAsync("jwt");
