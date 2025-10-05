@@ -5,10 +5,12 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  Alert,
+  Modal,
+  StyleSheet,
 } from "react-native";
 import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
+import { Feather } from "@expo/vector-icons";
 import AppLayout from "../../components/AppLayout";
 import { LoadingButton } from "../../components/common/Button/LoadingButton";
 import { PasswordInput } from "../../components/common/Input/PasswordInput";
@@ -26,7 +28,6 @@ import {
   darkTheme,
   createAuthStyles,
 } from "../../constants/styles/authStyles";
-import { CustomAlert } from "@/components/common/CustomAlert";
 
 export default function LoginScreen() {
   const { isDark } = useTheme();
@@ -43,12 +44,74 @@ export default function LoginScreen() {
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
   const { setIsAuthenticated } = useAuth();
   const [alertVisible, setAlertVisible] = useState(false);
-  const [alertData, setAlertData] = useState({ title: "", message: "" });
+  const [alertData, setAlertData] = useState({
+    title: "",
+    message: "",
+    type: "success" as "success" | "error",
+  });
 
-  const showAlert = (title: string, message: string) => {
-    setAlertData({ title, message });
+  const alertStyles = StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      justifyContent: "center",
+      alignItems: "center",
+      padding: 20,
+    },
+    container: {
+      backgroundColor: theme.card,
+      borderRadius: 16,
+      padding: 24,
+      width: "100%",
+      maxWidth: 340,
+      alignItems: "center",
+    },
+    iconContainer: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      justifyContent: "center",
+      alignItems: "center",
+      marginBottom: 16,
+    },
+    title: {
+      fontSize: 20,
+      fontWeight: "700",
+      color: theme.text,
+      marginBottom: 8,
+      textAlign: "center",
+    },
+    message: {
+      fontSize: 15,
+      color: theme.textSecondary,
+      textAlign: "center",
+      marginBottom: 24,
+      lineHeight: 22,
+    },
+    button: {
+      backgroundColor: theme.primary,
+      paddingVertical: 12,
+      paddingHorizontal: 32,
+      borderRadius: 10,
+      width: "100%",
+    },
+    buttonText: {
+      color: "#fff",
+      fontSize: 16,
+      fontWeight: "600",
+      textAlign: "center",
+    },
+  });
+
+  const showAlert = (
+    title: string,
+    message: string,
+    type: "success" | "error"
+  ) => {
+    setAlertData({ title, message, type });
     setAlertVisible(true);
   };
+
   const validateForm = (): boolean => {
     const newErrors: { identifier?: string; password?: string } = {};
 
@@ -92,14 +155,21 @@ export default function LoginScreen() {
       await SecureStore.setItemAsync("dob", response.dob);
 
       setIsAuthenticated(true);
-      showAlert("Login Successful", `Welcome back, ${response.username}!`);
-      router.push("/(tabs)");
+      showAlert(
+        "Login Successful",
+        `Welcome back, ${response.username}!`,
+        "success"
+      );
+      setTimeout(() => {
+        setAlertVisible(false);
+        router.push("/(tabs)");
+      }, 1500);
     } catch (error: any) {
       let message = "An unexpected error occurred.";
       if (error instanceof Error) {
         message = error.message;
       }
-      showAlert("Login Failed", message);
+      showAlert("Login Failed", message, "error");
     } finally {
       setLoading(false);
     }
@@ -172,12 +242,49 @@ export default function LoginScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
-      <CustomAlert
+
+      <Modal
         visible={alertVisible}
-        title={alertData.title}
-        message={alertData.message}
-        onClose={() => setAlertVisible(false)}
-      />
+        transparent
+        animationType="fade"
+        onRequestClose={() => setAlertVisible(false)}
+      >
+        <View style={alertStyles.overlay}>
+          <View style={alertStyles.container}>
+            <View
+              style={[
+                alertStyles.iconContainer,
+                {
+                  backgroundColor:
+                    alertData.type === "success"
+                      ? theme.success + "20"
+                      : theme.error + "20",
+                },
+              ]}
+            >
+              <Feather
+                name={alertData.type === "success" ? "check-circle" : "x-circle"}
+                size={28}
+                color={alertData.type === "success" ? theme.success : theme.error}
+              />
+            </View>
+            <Text style={alertStyles.title}>{alertData.title}</Text>
+            <Text style={alertStyles.message}>{alertData.message}</Text>
+            <TouchableOpacity
+              style={[
+                alertStyles.button,
+                {
+                  backgroundColor:
+                    alertData.type === "success" ? theme.success : theme.error,
+                },
+              ]}
+              onPress={() => setAlertVisible(false)}
+            >
+              <Text style={alertStyles.buttonText}>OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </AppLayout>
   );
 }

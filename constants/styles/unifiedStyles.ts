@@ -54,7 +54,7 @@ export const createUnifiedStyles = (theme: any) =>
       backgroundColor: theme.card,
       padding: 20,
       borderRadius: 16,
-      marginBottom: 24,
+      marginBottom: 20,
       shadowColor: theme.shadow,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.15,
