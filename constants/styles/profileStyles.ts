@@ -1,6 +1,6 @@
 import { StyleSheet, Dimensions } from "react-native";
 
-const { width, height } = Dimensions.get('window');
+const { width, height } = Dimensions.get("window");
 
 export const createProfileStyles = (theme: any) =>
   StyleSheet.create({
@@ -14,11 +14,15 @@ export const createProfileStyles = (theme: any) =>
       paddingHorizontal: 20,
       paddingTop: 20,
       paddingBottom: 20,
+      borderTopLeftRadius: 16,
+      borderTopRightRadius: 16,
+      marginHorizontal: 12,
+      marginTop: 12,
     },
 
     profileTopRow: {
-      flexDirection: 'row',
-      alignItems: 'flex-start',
+      flexDirection: "row",
+      alignItems: "flex-start",
       marginBottom: 20,
     },
 
@@ -41,20 +45,20 @@ export const createProfileStyles = (theme: any) =>
       borderWidth: 3,
       borderColor: theme.border,
       backgroundColor: theme.background,
-      justifyContent: 'center',
-      alignItems: 'center',
+      justifyContent: "center",
+      alignItems: "center",
     },
 
     profileInfo: {
       flex: 1,
-      justifyContent: 'flex-start',
+      justifyContent: "flex-start",
       paddingTop: 4,
       paddingRight: 8,
     },
 
     username: {
       fontSize: 22,
-      fontWeight: '700',
+      fontWeight: "700",
       color: theme.text,
       marginBottom: 4,
     },
@@ -66,8 +70,8 @@ export const createProfileStyles = (theme: any) =>
     },
 
     infoItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       marginBottom: 6,
     },
 
@@ -83,22 +87,22 @@ export const createProfileStyles = (theme: any) =>
       height: 40,
       borderRadius: 20,
       backgroundColor: theme.background,
-      justifyContent: 'center',
-      alignItems: 'center',
+      justifyContent: "center",
+      alignItems: "center",
       borderWidth: 1,
       borderColor: theme.border,
       marginLeft: 8,
     },
 
     metaRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       marginBottom: 8,
     },
 
     metaItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       marginRight: 20,
     },
 
@@ -109,7 +113,7 @@ export const createProfileStyles = (theme: any) =>
     },
 
     statsRow: {
-      flexDirection: 'row',
+      flexDirection: "row",
       paddingTop: 16,
       borderTopWidth: 1,
       borderTopColor: theme.border,
@@ -117,12 +121,12 @@ export const createProfileStyles = (theme: any) =>
 
     statItem: {
       flex: 1,
-      alignItems: 'center',
+      alignItems: "center",
     },
 
     statValue: {
       fontSize: 18,
-      fontWeight: '700',
+      fontWeight: "700",
       color: theme.text,
       marginBottom: 2,
     },
@@ -133,18 +137,19 @@ export const createProfileStyles = (theme: any) =>
     },
 
     actionsContainer: {
-      flexDirection: 'row',
+      flexDirection: "row",
       paddingHorizontal: 20,
       paddingVertical: 16,
       backgroundColor: theme.card,
       gap: 12,
+      marginHorizontal: 12,
     },
 
     actionButton: {
       flex: 1,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
       paddingVertical: 10,
       paddingHorizontal: 16,
       borderRadius: 20,
@@ -157,23 +162,23 @@ export const createProfileStyles = (theme: any) =>
     },
 
     secondaryButton: {
-      backgroundColor: 'transparent',
+      backgroundColor: "transparent",
       borderColor: theme.border,
     },
 
     dangerButton: {
-      backgroundColor: 'transparent',
+      backgroundColor: "transparent",
       borderColor: theme.error,
     },
 
     buttonText: {
       fontSize: 15,
-      fontWeight: '600',
+      fontWeight: "600",
       marginLeft: 6,
     },
 
     primaryButtonText: {
-      color: '#fff',
+      color: "#fff",
     },
 
     secondaryButtonText: {
@@ -185,18 +190,20 @@ export const createProfileStyles = (theme: any) =>
     },
 
     tabsContainer: {
-      flexDirection: 'row',
+      flexDirection: "row",
       backgroundColor: theme.card,
       borderBottomWidth: 1,
       borderBottomColor: theme.border,
+      marginHorizontal: 12,
+      overflow: "hidden",
     },
 
     tab: {
       flex: 1,
       paddingVertical: 16,
-      alignItems: 'center',
-      borderBottomWidth: 2,
-      borderBottomColor: 'transparent',
+      alignItems: "center",
+      borderBottomWidth: 3,
+      borderBottomColor: "transparent",
     },
 
     activeTab: {
@@ -205,7 +212,7 @@ export const createProfileStyles = (theme: any) =>
 
     tabText: {
       fontSize: 15,
-      fontWeight: '600',
+      fontWeight: "600",
       color: theme.textSecondary,
     },
 
@@ -215,26 +222,45 @@ export const createProfileStyles = (theme: any) =>
 
     contentContainer: {
       padding: 16,
+      paddingTop: 0,
+      backgroundColor: theme.card,
+      marginHorizontal: 12,
+      borderBottomLeftRadius: 16,
+      borderBottomRightRadius: 16,
+      marginBottom: 12,
+    },
+
+    viewAllButton: {
+      backgroundColor: theme.primary + "15",
+      borderColor: theme.primary,
+      marginTop: 4,
+      marginBottom: 4,
+    },
+
+    viewAllButtonText: {
+      color: theme.primary,
+      fontWeight: "700",
     },
 
     card: {
-      backgroundColor: theme.card,
+      backgroundColor: theme.primary + "08",
       borderRadius: 12,
       padding: 16,
       marginBottom: 12,
+      marginTop: 12,
       borderWidth: 1,
-      borderColor: theme.border,
+      borderColor: theme.border + "60",
     },
 
     cardHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
+      flexDirection: "row",
+      justifyContent: "space-between",
       marginBottom: 12,
     },
 
     cardTitle: {
       fontSize: 17,
-      fontWeight: '600',
+      fontWeight: "600",
       color: theme.text,
     },
 
@@ -246,12 +272,12 @@ export const createProfileStyles = (theme: any) =>
 
     badgeText: {
       fontSize: 12,
-      fontWeight: '600',
+      fontWeight: "600",
     },
 
     cardDetail: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       marginBottom: 8,
     },
 
@@ -264,13 +290,18 @@ export const createProfileStyles = (theme: any) =>
 
     detailValue: {
       fontSize: 14,
-      fontWeight: '500',
+      fontWeight: "500",
       color: theme.text,
     },
 
     emptyState: {
       padding: 40,
-      alignItems: 'center',
+      alignItems: "center",
+      backgroundColor: theme.card,
+      marginHorizontal: 12,
+      borderBottomLeftRadius: 16,
+      borderBottomRightRadius: 16,
+      marginBottom: 12,
     },
 
     emptyIcon: {
@@ -279,24 +310,24 @@ export const createProfileStyles = (theme: any) =>
 
     emptyTitle: {
       fontSize: 18,
-      fontWeight: '600',
+      fontWeight: "600",
       color: theme.text,
       marginBottom: 8,
-      textAlign: 'center',
+      textAlign: "center",
     },
 
     emptyDescription: {
       fontSize: 15,
       color: theme.textSecondary,
-      textAlign: 'center',
+      textAlign: "center",
       marginBottom: 24,
       paddingHorizontal: 20,
     },
 
     modalOverlay: {
       flex: 1,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      justifyContent: 'flex-end',
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      justifyContent: "flex-end",
     },
 
     modalContent: {
@@ -312,13 +343,13 @@ export const createProfileStyles = (theme: any) =>
       height: 4,
       backgroundColor: theme.border,
       borderRadius: 2,
-      alignSelf: 'center',
+      alignSelf: "center",
       marginBottom: 20,
     },
 
     modalTitle: {
       fontSize: 24,
-      fontWeight: '700',
+      fontWeight: "700",
       color: theme.text,
       marginBottom: 24,
       paddingHorizontal: 20,
@@ -330,18 +361,18 @@ export const createProfileStyles = (theme: any) =>
 
     modalSectionTitle: {
       fontSize: 13,
-      fontWeight: '600',
+      fontWeight: "600",
       color: theme.textSecondary,
-      textTransform: 'uppercase',
+      textTransform: "uppercase",
       letterSpacing: 0.5,
       paddingHorizontal: 20,
       marginBottom: 12,
     },
 
     themeOption: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
       paddingHorizontal: 20,
       paddingVertical: 16,
       borderBottomWidth: 1,
@@ -353,8 +384,8 @@ export const createProfileStyles = (theme: any) =>
     },
 
     themeOptionLeft: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
     },
 
     themeOptionIcon: {
@@ -362,42 +393,42 @@ export const createProfileStyles = (theme: any) =>
       height: 40,
       borderRadius: 20,
       backgroundColor: theme.background,
-      justifyContent: 'center',
-      alignItems: 'center',
+      justifyContent: "center",
+      alignItems: "center",
       marginRight: 12,
     },
 
     themeOptionText: {
       fontSize: 16,
       color: theme.text,
-      fontWeight: '500',
+      fontWeight: "500",
     },
 
     imageViewerOverlay: {
       flex: 1,
-      backgroundColor: 'rgba(0, 0, 0, 0.95)',
-      justifyContent: 'center',
-      alignItems: 'center',
+      backgroundColor: "rgba(0, 0, 0, 0.95)",
+      justifyContent: "center",
+      alignItems: "center",
     },
 
     imageViewerCloseButton: {
-      position: 'absolute',
+      position: "absolute",
       top: 50,
       right: 20,
       width: 44,
       height: 44,
       borderRadius: 22,
-      backgroundColor: 'rgba(255, 255, 255, 0.2)',
-      justifyContent: 'center',
-      alignItems: 'center',
+      backgroundColor: "rgba(255, 255, 255, 0.2)",
+      justifyContent: "center",
+      alignItems: "center",
       zIndex: 10,
     },
 
     imageViewerContainer: {
       width: width,
       height: height,
-      justifyContent: 'center',
-      alignItems: 'center',
+      justifyContent: "center",
+      alignItems: "center",
     },
 
     fullscreenImage: {

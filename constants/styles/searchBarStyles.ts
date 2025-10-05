@@ -1,13 +1,13 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet } from "react-native";
 
 export const createSearchBarStyles = (theme: any) =>
   StyleSheet.create({
     searchContainer: {
       flex: 1,
-      flexDirection: 'row',
+      flexDirection: "row",
       backgroundColor: theme.card,
       borderRadius: 10,
-      alignItems: 'center',
+      alignItems: "center",
       paddingHorizontal: 12,
       paddingVertical: 10,
       borderWidth: 1,
@@ -32,8 +32,8 @@ export const createSearchBarStyles = (theme: any) =>
     },
 
     searchHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       paddingHorizontal: 16,
       paddingTop: 20,
       paddingBottom: 12,
@@ -48,8 +48,8 @@ export const createSearchBarStyles = (theme: any) =>
 
     searchInputContainer: {
       flex: 1,
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       backgroundColor: theme.background,
       borderRadius: 10,
       paddingHorizontal: 12,
@@ -68,14 +68,14 @@ export const createSearchBarStyles = (theme: any) =>
 
     centerContainer: {
       flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
+      justifyContent: "center",
+      alignItems: "center",
       padding: 40,
     },
 
     emptyTitle: {
       fontSize: 20,
-      fontWeight: '600',
+      fontWeight: "600",
       color: theme.text,
       marginTop: 16,
       marginBottom: 8,
@@ -84,14 +84,14 @@ export const createSearchBarStyles = (theme: any) =>
     emptyDescription: {
       fontSize: 15,
       color: theme.textSecondary,
-      textAlign: 'center',
+      textAlign: "center",
       lineHeight: 22,
     },
 
     emptyText: {
       fontSize: 15,
       color: theme.textSecondary,
-      textAlign: 'center',
+      textAlign: "center",
       marginTop: 10,
     },
 
@@ -100,8 +100,8 @@ export const createSearchBarStyles = (theme: any) =>
     },
 
     resultItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       padding: 16,
       backgroundColor: theme.card,
       marginHorizontal: 12,
@@ -123,8 +123,8 @@ export const createSearchBarStyles = (theme: any) =>
       height: 50,
       borderRadius: 25,
       backgroundColor: theme.background,
-      justifyContent: 'center',
-      alignItems: 'center',
+      justifyContent: "center",
+      alignItems: "center",
       marginRight: 12,
       borderWidth: 1,
       borderColor: theme.border,
@@ -136,7 +136,7 @@ export const createSearchBarStyles = (theme: any) =>
 
     resultUsername: {
       fontSize: 16,
-      fontWeight: '600',
+      fontWeight: "600",
       color: theme.text,
       marginBottom: 4,
     },

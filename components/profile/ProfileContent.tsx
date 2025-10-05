@@ -1,8 +1,8 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { Feather } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { createProfileStyles } from '../../constants/styles/profileStyles';
+import React from "react";
+import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
+import { Feather } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { createProfileStyles } from "../../constants/styles/profileStyles";
 
 interface ProfileContentProps {
   activeTab: string;
@@ -20,7 +20,7 @@ interface ProfileContentProps {
 
 const formatLocalDate = (dateValue: any): string => {
   if (!dateValue) return "N/A";
-  
+
   if (Array.isArray(dateValue)) {
     const [year, month, day] = dateValue;
     const date = new Date(year, month - 1, day);
@@ -29,15 +29,15 @@ const formatLocalDate = (dateValue: any): string => {
     const yearNum = date.getFullYear();
     return `${dayNum} ${monthName} ${yearNum}`;
   }
-  
-  if (typeof dateValue === 'string') {
+
+  if (typeof dateValue === "string") {
     const date = new Date(dateValue);
     const dayNum = date.getDate();
     const monthName = date.toLocaleString("default", { month: "long" });
     const yearNum = date.getFullYear();
     return `${dayNum} ${monthName} ${yearNum}`;
   }
-  
+
   return "N/A";
 };
 
@@ -95,7 +95,7 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
             </View>
           );
         }
-        
+
         if (!donations.length) {
           return (
             <View style={styles.emptyState}>
@@ -104,14 +104,20 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
               </View>
               <Text style={styles.emptyTitle}>No Donations Yet</Text>
               <Text style={styles.emptyDescription}>
-                {isOwnProfile 
+                {isOwnProfile
                   ? "Register as a donor and make your first donation to see it here"
                   : "This user hasn't made any donations yet"}
               </Text>
               {isOwnProfile && (
                 <TouchableOpacity
-                  style={[styles.actionButton, styles.primaryButton, { width: '80%' }]}
-                  onPress={() => router.push("/navigation/hubs/donateHubScreen")}
+                  style={[
+                    styles.actionButton,
+                    styles.primaryButton,
+                    { width: "80%" },
+                  ]}
+                  onPress={() =>
+                    router.push("/navigation/hubs/donateHubScreen")
+                  }
                 >
                   <Feather name="plus-circle" size={16} color="#fff" />
                   <Text style={[styles.buttonText, styles.primaryButtonText]}>
@@ -165,7 +171,11 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
 
                 {donation.bloodType && (
                   <View style={styles.cardDetail}>
-                    <Feather name="droplet" size={14} color={theme.textSecondary} />
+                    <Feather
+                      name="droplet"
+                      size={14}
+                      color={theme.textSecondary}
+                    />
                     <Text style={styles.detailLabel}>Blood Type</Text>
                     <Text style={styles.detailValue}>{donation.bloodType}</Text>
                   </View>
@@ -173,7 +183,11 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
 
                 {donation.organType && (
                   <View style={styles.cardDetail}>
-                    <Feather name="heart" size={14} color={theme.textSecondary} />
+                    <Feather
+                      name="heart"
+                      size={14}
+                      color={theme.textSecondary}
+                    />
                     <Text style={styles.detailLabel}>Organ</Text>
                     <Text style={styles.detailValue}>{donation.organType}</Text>
                   </View>
@@ -181,14 +195,22 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
 
                 {donation.quantity && (
                   <View style={styles.cardDetail}>
-                    <Feather name="package" size={14} color={theme.textSecondary} />
+                    <Feather
+                      name="package"
+                      size={14}
+                      color={theme.textSecondary}
+                    />
                     <Text style={styles.detailLabel}>Quantity</Text>
                     <Text style={styles.detailValue}>{donation.quantity}</Text>
                   </View>
                 )}
 
                 <View style={styles.cardDetail}>
-                  <Feather name="calendar" size={14} color={theme.textSecondary} />
+                  <Feather
+                    name="calendar"
+                    size={14}
+                    color={theme.textSecondary}
+                  />
                   <Text style={styles.detailLabel}>Date</Text>
                   <Text style={styles.detailValue}>
                     {formatLocalDate(donation.donationDate)}
@@ -199,10 +221,11 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
 
             {isOwnProfile && (
               <TouchableOpacity
-                style={[styles.actionButton, styles.secondaryButton]}
+                style={[styles.actionButton, styles.viewAllButton]}
                 onPress={() => router.push("/navigation/StatusScreen")}
               >
-                <Text style={[styles.buttonText, styles.secondaryButtonText]}>
+                <Feather name="list" size={16} color={theme.primary} />
+                <Text style={[styles.buttonText, styles.viewAllButtonText]}>
                   View All Donations
                 </Text>
               </TouchableOpacity>
@@ -215,11 +238,19 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
           <View style={styles.contentContainer}>
             {mockReviews.map((review) => (
               <View key={review.id} style={styles.card}>
-                <Text style={[styles.cardTitle, { marginBottom: 8 }]}>{review.text}</Text>
+                <Text style={[styles.cardTitle, { marginBottom: 8 }]}>
+                  {review.text}
+                </Text>
                 <View style={styles.cardDetail}>
-                  <Feather name="calendar" size={14} color={theme.textSecondary} />
+                  <Feather
+                    name="calendar"
+                    size={14}
+                    color={theme.textSecondary}
+                  />
                   <Text style={styles.detailLabel}>Date</Text>
-                  <Text style={styles.detailValue}>{formatDate(review.date)}</Text>
+                  <Text style={styles.detailValue}>
+                    {formatDate(review.date)}
+                  </Text>
                 </View>
               </View>
             ))}
@@ -237,12 +268,16 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
             </View>
           );
         }
-        
+
         if (!receives.length) {
           return (
             <View style={styles.emptyState}>
               <View style={styles.emptyIcon}>
-                <Feather name="clipboard" size={56} color={theme.textSecondary} />
+                <Feather
+                  name="clipboard"
+                  size={56}
+                  color={theme.textSecondary}
+                />
               </View>
               <Text style={styles.emptyTitle}>No Receive Requests Yet</Text>
               <Text style={styles.emptyDescription}>
@@ -252,8 +287,17 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
               </Text>
               {isOwnProfile && (
                 <TouchableOpacity
-                  style={[styles.actionButton, { backgroundColor: theme.error, borderColor: theme.error, width: '80%' }]}
-                  onPress={() => router.push("/navigation/hubs/recipientHubScreen")}
+                  style={[
+                    styles.actionButton,
+                    {
+                      backgroundColor: theme.error,
+                      borderColor: theme.error,
+                      width: "80%",
+                    },
+                  ]}
+                  onPress={() =>
+                    router.push("/navigation/hubs/recipientHubScreen")
+                  }
                 >
                   <Feather name="plus-circle" size={16} color="#fff" />
                   <Text style={[styles.buttonText, styles.primaryButtonText]}>
@@ -264,7 +308,7 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
             </View>
           );
         }
-        
+
         return (
           <View style={styles.contentContainer}>
             {receives.slice(0, 5).map((req, idx) => (
@@ -276,7 +320,9 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
               >
                 <View style={styles.cardHeader}>
                   <Text style={styles.cardTitle}>
-                    {req.requestedBloodType || req.requestedOrgan || req.requestType}
+                    {req.requestedBloodType ||
+                      req.requestedOrgan ||
+                      req.requestType}
                   </Text>
                   <View
                     style={[
@@ -307,7 +353,11 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
 
                 {req.requestedOrgan && (
                   <View style={styles.cardDetail}>
-                    <Feather name="heart" size={14} color={theme.textSecondary} />
+                    <Feather
+                      name="heart"
+                      size={14}
+                      color={theme.textSecondary}
+                    />
                     <Text style={styles.detailLabel}>Organ</Text>
                     <Text style={styles.detailValue}>{req.requestedOrgan}</Text>
                   </View>
@@ -315,7 +365,11 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
 
                 {req.quantity && (
                   <View style={styles.cardDetail}>
-                    <Feather name="package" size={14} color={theme.textSecondary} />
+                    <Feather
+                      name="package"
+                      size={14}
+                      color={theme.textSecondary}
+                    />
                     <Text style={styles.detailLabel}>Quantity</Text>
                     <Text style={styles.detailValue}>{req.quantity}</Text>
                   </View>
@@ -328,7 +382,11 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
                 </View>
 
                 <View style={styles.cardDetail}>
-                  <Feather name="calendar" size={14} color={theme.textSecondary} />
+                  <Feather
+                    name="calendar"
+                    size={14}
+                    color={theme.textSecondary}
+                  />
                   <Text style={styles.detailLabel}>Date</Text>
                   <Text style={styles.detailValue}>
                     {formatLocalDate(req.requestDate)}
@@ -339,10 +397,11 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
 
             {isOwnProfile && (
               <TouchableOpacity
-                style={[styles.actionButton, styles.secondaryButton]}
+                style={[styles.actionButton, styles.viewAllButton]}
                 onPress={() => router.push("/navigation/StatusScreen")}
               >
-                <Text style={[styles.buttonText, styles.secondaryButtonText]}>
+                <Feather name="list" size={16} color={theme.primary} />
+                <Text style={[styles.buttonText, styles.viewAllButtonText]}>
                   View All Requests
                 </Text>
               </TouchableOpacity>
