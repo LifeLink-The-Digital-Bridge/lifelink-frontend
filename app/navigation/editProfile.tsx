@@ -8,6 +8,9 @@ import {
   ActivityIndicator,
   Image,
   ScrollView,
+  Dimensions,
+  PixelRatio,
+  Platform,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
@@ -16,7 +19,37 @@ import { updateUserProfile, fetchUserProfile, UserDTO } from "../api/profile";
 import { Feather } from "@expo/vector-icons";
 import AppLayout from "@/components/AppLayout";
 import { Picker } from "@react-native-picker/picker";
-import styles from "../../constants/styles/authStyles";
+import { useTheme } from "../../utils/theme-context";
+import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+const BASE_WIDTH = 375;
+const BASE_HEIGHT = 812;
+const widthScale = SCREEN_WIDTH / BASE_WIDTH;
+const heightScale = SCREEN_HEIGHT / BASE_HEIGHT;
+const scale = Math.min(widthScale, heightScale);
+
+function normalize(size: number): number {
+  const newSize = size * scale;
+  if (Platform.OS === "ios") {
+    return Math.round(PixelRatio.roundToNearestPixel(newSize));
+  } else {
+    return Math.round(PixelRatio.roundToNearestPixel(newSize)) - 2;
+  }
+}
+
+function normalizeFont(size: number, factor = 0.5): number {
+  const newSize = size + (widthScale * size - size) * factor;
+  return Math.round(PixelRatio.roundToNearestPixel(newSize));
+}
+
+function normalizeWidth(size: number): number {
+  return SCREEN_WIDTH * (size / BASE_WIDTH);
+}
+
+function normalizeHeight(size: number): number {
+  return SCREEN_HEIGHT * (size / BASE_HEIGHT);
+}
 
 const genderOptions = [
   { label: "Select Gender", value: "" },
@@ -66,6 +99,9 @@ const pickImage = async (callback: (uri: string) => void) => {
 
 const EditProfile: React.FC = () => {
   const router = useRouter();
+  const { isDark } = useTheme();
+  const theme = isDark ? darkTheme : lightTheme;
+  
   const [loading, setLoading] = useState(false);
   const [profileLoading, setProfileLoading] = useState(true);
   const [form, setForm] = useState({
@@ -78,6 +114,115 @@ const EditProfile: React.FC = () => {
   });
   const [userId, setUserId] = useState<string | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+  const styles = {
+    container: {
+      flexGrow: 1,
+      backgroundColor: theme.background,
+      paddingHorizontal: normalize(24),
+      paddingVertical: normalize(40),
+    },
+    title: {
+      fontSize: normalizeFont(28),
+      fontWeight: "700" as const,
+      color: theme.text,
+      textAlign: "center" as const,
+      marginBottom: normalize(32),
+    },
+    input: {
+      backgroundColor: theme.inputBackground,
+      borderColor: theme.border,
+      borderWidth: 1,
+      borderRadius: normalize(12),
+      paddingVertical: normalize(16),
+      paddingHorizontal: normalize(16),
+      fontSize: normalizeFont(16),
+      color: theme.text,
+      marginBottom: normalize(16),
+      minHeight: normalize(52),
+    },
+    errorText: {
+      color: theme.error,
+      fontSize: normalizeFont(14),
+      fontWeight: "500" as const,
+      marginTop: normalize(-12),
+      marginBottom: normalize(8),
+      paddingHorizontal: normalize(4),
+    },
+    imagePicker: {
+      backgroundColor: theme.success,
+      paddingVertical: normalize(14),
+      paddingHorizontal: normalize(20),
+      borderRadius: normalize(12),
+      alignItems: "center" as const,
+      justifyContent: "center" as const,
+      marginBottom: normalize(20),
+      flexDirection: "row" as const,
+      minHeight: normalize(52),
+      ...Platform.select({
+        ios: {
+          shadowColor: theme.shadow,
+          shadowOffset: { width: 0, height: normalize(2) },
+          shadowOpacity: 0.15,
+          shadowRadius: normalize(4),
+        },
+        android: {
+          elevation: 4,
+        },
+      }),
+    },
+    imagePickerText: {
+      color: "#ffffff",
+      fontSize: normalizeFont(15),
+      fontWeight: "600" as const,
+      marginLeft: normalize(6),
+    },
+    button: {
+      backgroundColor: theme.primary,
+      paddingVertical: normalize(16),
+      paddingHorizontal: normalize(24),
+      borderRadius: normalize(12),
+      alignItems: "center" as const,
+      justifyContent: "center" as const,
+      marginTop: normalize(12),
+      minHeight: normalize(52),
+      ...Platform.select({
+        ios: {
+          shadowColor: theme.primary,
+          shadowOffset: { width: 0, height: normalize(4) },
+          shadowOpacity: 0.2,
+          shadowRadius: normalize(8),
+        },
+        android: {
+          elevation: 4,
+        },
+      }),
+    },
+    buttonText: {
+      fontSize: normalizeFont(16),
+      fontWeight: "600" as const,
+      color: "#ffffff",
+      textAlign: "center" as const,
+      letterSpacing: 0.5,
+    },
+    linkContainer: {
+      flex: 1,
+      alignItems: "center" as const,
+      justifyContent: "center" as const,
+      paddingVertical: normalize(40),
+    },
+    profileImageContainer: {
+      alignItems: "center" as const,
+      marginVertical: normalize(20),
+    },
+    profileImage: {
+      width: normalizeWidth(120),
+      height: normalizeWidth(120),
+      borderRadius: normalizeWidth(60),
+      borderWidth: normalize(4),
+      borderColor: theme.primary,
+    },
+  };
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -154,8 +299,10 @@ const EditProfile: React.FC = () => {
     return (
       <AppLayout>
         <View style={styles.linkContainer}>
-          <ActivityIndicator size="large" color="#0984e3" />
-          <Text style={styles.errorText}>Loading profile...</Text>
+          <ActivityIndicator size="large" color={theme.primary} />
+          <Text style={[styles.errorText, { marginTop: normalize(10) }]}>
+            Loading profile...
+          </Text>
         </View>
       </AppLayout>
     );
@@ -165,31 +312,49 @@ const EditProfile: React.FC = () => {
     <AppLayout>
       <ScrollView contentContainerStyle={styles.container}>
         <Text style={styles.title}>Edit Profile</Text>
+        
+        {form.profileImageUrl && (
+          <View style={styles.profileImageContainer}>
+            <Image
+              source={{ uri: form.profileImageUrl }}
+              style={styles.profileImage}
+            />
+          </View>
+        )}
+
         <TextInput
           style={styles.input}
           placeholder="Name"
+          placeholderTextColor={theme.textSecondary}
           value={form.name}
           onChangeText={(text) => handleChange("name", text)}
         />
         {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
+        
         <TextInput
           style={styles.input}
           placeholder="Phone"
+          placeholderTextColor={theme.textSecondary}
           value={form.phone}
+          keyboardType="phone-pad"
           onChangeText={(text) => handleChange("phone", text)}
         />
         {errors.phone && <Text style={styles.errorText}>{errors.phone}</Text>}
+        
         <TextInput
           style={styles.input}
           placeholder="Date of Birth (YYYY-MM-DD)"
+          placeholderTextColor={theme.textSecondary}
           value={form.dob}
           onChangeText={(text) => handleChange("dob", text)}
         />
         {errors.dob && <Text style={styles.errorText}>{errors.dob}</Text>}
-        <View style={[styles.input, { padding: 0 }]}>
+        
+        <View style={[styles.input, { padding: 0, justifyContent: "center" }]}>
           <Picker
             selectedValue={form.gender}
             onValueChange={(value) => handleChange("gender", value)}
+            style={{ color: theme.text }}
           >
             {genderOptions.map((option) => (
               <Picker.Item
@@ -201,31 +366,36 @@ const EditProfile: React.FC = () => {
           </Picker>
         </View>
         {errors.gender && <Text style={styles.errorText}>{errors.gender}</Text>}
-        {errors.profileImageUrl && (
-          <Text style={styles.errorText}>{errors.profileImageUrl}</Text>
-        )}
-
+        
         <TextInput
           style={styles.input}
           placeholder="Profile Visibility (PUBLIC or PRIVATE)"
+          placeholderTextColor={theme.textSecondary}
           value={form.profileVisibility}
           onChangeText={(text) => handleChange("profileVisibility", text)}
         />
         {errors.profileVisibility && (
           <Text style={styles.errorText}>{errors.profileVisibility}</Text>
         )}
+        
         <TouchableOpacity
-          style={[styles.imagePicker, { backgroundColor: "#00b894" }]}
+          style={styles.imagePicker}
           onPress={() =>
             pickImage((uri) => handleChange("profileImageUrl", uri))
           }
         >
-          <Text style={[styles.imagePickerText, { color: "#fff" }]}>
+          <Feather name="camera" size={normalize(20)} color="#fff" />
+          <Text style={styles.imagePickerText}>
             {form.profileImageUrl
               ? "Change Profile Image"
               : "Upload Profile Image"}
           </Text>
         </TouchableOpacity>
+        
+        {errors.profileImageUrl && (
+          <Text style={styles.errorText}>{errors.profileImageUrl}</Text>
+        )}
+        
         <TouchableOpacity
           style={styles.button}
           onPress={updateProfile}
