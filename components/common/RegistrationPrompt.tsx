@@ -1,9 +1,11 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../utils/theme-context';
 import { lightTheme, darkTheme } from '../../constants/styles/authStyles';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 
 export interface RegistrationPromptProps {
   iconName: keyof typeof Feather.glyphMap;
@@ -28,18 +30,23 @@ export function RegistrationPrompt({
   const isDark = colorScheme === 'dark';
   const theme = isDark ? darkTheme : lightTheme;
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const styles = StyleSheet.create({
-    container: {
+    scrollContainer: {
       flex: 1,
       backgroundColor: theme.background,
-      padding: 20,
-      paddingTop: 100,
+    },
+    contentContainer: {
+      flexGrow: 1,
+      padding: wp('5%'),
+      paddingTop: hp('5%'),
+      paddingBottom: hp('20%') + insets.bottom,
     },
     card: {
       backgroundColor: theme.card,
-      borderRadius: 20,
-      padding: 32,
+      borderRadius: wp('5%'),
+      padding: wp('8%'),
       shadowColor: theme.shadow,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.15,
@@ -47,74 +54,82 @@ export function RegistrationPrompt({
       elevation: 8,
       borderWidth: 1,
       borderColor: theme.border,
+      marginTop: hp('8%'),
     },
     iconContainer: {
-      width: 80,
-      height: 80,
-      borderRadius: 40,
+      width: wp('20%'),
+      height: wp('20%'),
+      borderRadius: wp('10%'),
       backgroundColor: theme.primary + '20',
       justifyContent: 'center',
       alignItems: 'center',
-      marginBottom: 24,
+      marginBottom: hp('3%'),
       alignSelf: 'center',
     },
     title: {
-      fontSize: 22,
+      fontSize: wp('5.5%'),
       fontWeight: '700',
       color: theme.text,
       textAlign: 'center',
-      marginBottom: 16,
+      marginBottom: hp('2%'),
     },
     subtitle: {
-      fontSize: 16,
+      fontSize: wp('4%'),
       color: theme.textSecondary,
       textAlign: 'center',
-      marginBottom: 32,
-      lineHeight: 24,
+      marginBottom: hp('4%'),
+      lineHeight: wp('6%'),
     },
     benefitsList: {
-      marginBottom: 32,
+      marginBottom: hp('4%'),
     },
     benefitItem: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginBottom: 16,
+      marginBottom: hp('2%'),
     },
     benefitText: {
-      fontSize: 15,
+      fontSize: wp('3.75%'),
       color: theme.text,
-      marginLeft: 12,
+      marginLeft: wp('3%'),
       flex: 1,
-      lineHeight: 22,
+      lineHeight: wp('5.5%'),
     },
     registerButton: {
-      backgroundColor: '#0984e3',
-      paddingVertical: 16,
-      paddingHorizontal: 32,
-      borderRadius: 12,
+      backgroundColor: theme.primary,
+      paddingVertical: hp('2%'),
+      paddingHorizontal: wp('8%'),
+      borderRadius: wp('3%'),
       alignItems: 'center',
       flexDirection: 'row',
       justifyContent: 'center',
-      shadowColor: '#0984e3',
+      shadowColor: theme.primary,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.3,
       shadowRadius: 8,
       elevation: 4,
+      minHeight: hp('6.5%'),
     },
     buttonText: {
       color: '#fff',
-      fontSize: 18,
+      fontSize: wp('4.5%'),
       fontWeight: '700',
       letterSpacing: 0.5,
-      marginLeft: 8,
+      marginLeft: wp('2%'),
     },
   });
 
   return (
-    <View style={styles.container}>
+    <ScrollView 
+      style={styles.scrollContainer}
+      contentContainerStyle={styles.contentContainer}
+      showsVerticalScrollIndicator={true}
+      bounces={true}
+      alwaysBounceVertical={true}
+    >
       <View style={styles.card}>
         <View style={styles.iconContainer}>
-          <Feather name={iconName} size={40} color="#0984e3" />
+          <Feather name={iconName} size={wp('10%')} color={theme.primary} />
         </View>
         
         <Text style={styles.title}>{title}</Text>
@@ -124,7 +139,7 @@ export function RegistrationPrompt({
         <View style={styles.benefitsList}>
           {benefits.map((benefit, index) => (
             <View key={index} style={styles.benefitItem}>
-              <Feather name="check-circle" size={16} color="#27ae60" />
+              <Feather name="check-circle" size={wp('4%')} color={theme.success} />
               <Text style={styles.benefitText}>{benefit}</Text>
             </View>
           ))}
@@ -135,10 +150,10 @@ export function RegistrationPrompt({
           onPress={() => router.push(navigationRoute as any)}
           activeOpacity={0.8}
         >
-          <Feather name={buttonIcon} size={20} color="#fff" />
+          <Feather name={buttonIcon} size={wp('5%')} color="#fff" />
           <Text style={styles.buttonText}>{buttonText}</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </ScrollView>
   );
 }

@@ -5,7 +5,8 @@ import { Redirect } from "expo-router";
 import { useTheme } from "../../utils/theme-context";
 import { TabBarProvider, useTabBar } from "../../utils/tabbar-context";
 import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
-import { Platform, View, Animated } from "react-native";
+import { Platform, View } from "react-native";
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 function TabsContent() {
   const { colorScheme } = useTheme();
@@ -13,9 +14,14 @@ function TabsContent() {
   const theme = isDark ? darkTheme : lightTheme;
   const { isAuthenticated, isLoading } = useAuth();
   const { tabBarTranslateY } = useTabBar();
+  const insets = useSafeAreaInsets();
 
   if (isLoading) return null;
   if (!isAuthenticated) return <Redirect href="/(auth)/loginScreen" />;
+  
+  const tabBarHeight = Platform.OS === 'ios' 
+    ? 60 + insets.bottom 
+    : 60 + Math.max(insets.bottom, 0);
   
   return (
     <Tabs
@@ -25,8 +31,8 @@ function TabsContent() {
         tabBarStyle: {
           position: 'absolute',
           backgroundColor: theme.card,
-          height: Platform.OS === 'ios' ? 88 : 85,
-          paddingBottom: Platform.OS === 'ios' ? 20 : 8,
+          height: tabBarHeight,
+          paddingBottom: insets.bottom,
           paddingTop: 8,
           paddingHorizontal: 8,
           borderTopWidth: 0,
@@ -41,7 +47,7 @@ function TabsContent() {
           transform: [{ translateY: tabBarTranslateY }],
         },
         tabBarItemStyle: {
-          height: Platform.OS === 'ios' ? 60 : 60,
+          height: 60,
           justifyContent: 'center',
           alignItems: 'center',
           borderRadius: 12,

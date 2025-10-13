@@ -1,4 +1,5 @@
 import { StyleSheet } from "react-native";
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
 
 export const createSearchBarStyles = (theme: any) =>
   StyleSheet.create({
@@ -6,10 +7,10 @@ export const createSearchBarStyles = (theme: any) =>
       flex: 1,
       flexDirection: "row",
       backgroundColor: theme.card,
-      borderRadius: 10,
+      borderRadius: wp("2.5%"),
       alignItems: "center",
-      paddingHorizontal: 12,
-      paddingVertical: 10,
+      paddingHorizontal: wp("3%"),
+      paddingVertical: hp("1.25%"),
       borderWidth: 1,
       borderColor: theme.border,
       shadowColor: theme.shadow,
@@ -21,8 +22,8 @@ export const createSearchBarStyles = (theme: any) =>
 
     searchPlaceholder: {
       flex: 1,
-      marginLeft: 8,
-      fontSize: 16,
+      marginLeft: wp("2%"),
+      fontSize: wp("4%"),
       color: theme.textSecondary,
     },
 
@@ -34,16 +35,16 @@ export const createSearchBarStyles = (theme: any) =>
     searchHeader: {
       flexDirection: "row",
       alignItems: "center",
-      paddingHorizontal: 16,
-      paddingTop: 20,
-      paddingBottom: 12,
+      paddingHorizontal: wp("4%"),
+      paddingTop: hp("2.5%"),
+      paddingBottom: hp("1.5%"),
       backgroundColor: theme.card,
       borderBottomWidth: 1,
       borderBottomColor: theme.border,
     },
 
     backButton: {
-      marginRight: 12,
+      marginRight: wp("3%"),
     },
 
     searchInputContainer: {
@@ -51,81 +52,81 @@ export const createSearchBarStyles = (theme: any) =>
       flexDirection: "row",
       alignItems: "center",
       backgroundColor: theme.background,
-      borderRadius: 10,
-      paddingHorizontal: 12,
-      paddingVertical: 10,
+      borderRadius: wp("2.5%"),
+      paddingHorizontal: wp("3%"),
+      paddingVertical: hp("1.25%"),
       borderWidth: 1,
       borderColor: theme.border,
     },
 
     searchInput: {
       flex: 1,
-      fontSize: 16,
+      fontSize: wp("4%"),
       color: theme.text,
-      marginLeft: 8,
-      marginRight: 8,
+      marginLeft: wp("2%"),
+      marginRight: wp("2%"),
     },
 
     centerContainer: {
       flex: 1,
       justifyContent: "center",
       alignItems: "center",
-      padding: 40,
+      padding: wp("10%"),
     },
 
     emptyTitle: {
-      fontSize: 20,
+      fontSize: wp("5%"),
       fontWeight: "600",
       color: theme.text,
-      marginTop: 16,
-      marginBottom: 8,
+      marginTop: hp("2%"),
+      marginBottom: hp("1%"),
     },
 
     emptyDescription: {
-      fontSize: 15,
+      fontSize: wp("3.75%"),
       color: theme.textSecondary,
       textAlign: "center",
-      lineHeight: 22,
+      lineHeight: hp("2.75%"),
     },
 
     emptyText: {
-      fontSize: 15,
+      fontSize: wp("3.75%"),
       color: theme.textSecondary,
       textAlign: "center",
-      marginTop: 10,
+      marginTop: hp("1.25%"),
     },
 
     resultsList: {
-      paddingVertical: 8,
+      paddingVertical: hp("1%"),
     },
 
     resultItem: {
       flexDirection: "row",
       alignItems: "center",
-      padding: 16,
+      padding: wp("4%"),
       backgroundColor: theme.card,
-      marginHorizontal: 12,
-      marginVertical: 4,
-      borderRadius: 12,
+      marginHorizontal: wp("3%"),
+      marginVertical: hp("0.5%"),
+      borderRadius: wp("3%"),
       borderWidth: 1,
       borderColor: theme.border,
     },
 
     resultAvatar: {
-      width: 50,
-      height: 50,
-      borderRadius: 25,
-      marginRight: 12,
+      width: wp("12.5%"),
+      height: wp("12.5%"),
+      borderRadius: wp("6.25%"),
+      marginRight: wp("3%"),
     },
 
     resultAvatarPlaceholder: {
-      width: 50,
-      height: 50,
-      borderRadius: 25,
+      width: wp("12.5%"),
+      height: wp("12.5%"),
+      borderRadius: wp("6.25%"),
       backgroundColor: theme.background,
       justifyContent: "center",
       alignItems: "center",
-      marginRight: 12,
+      marginRight: wp("3%"),
       borderWidth: 1,
       borderColor: theme.border,
     },
@@ -135,14 +136,14 @@ export const createSearchBarStyles = (theme: any) =>
     },
 
     resultUsername: {
-      fontSize: 16,
+      fontSize: wp("4%"),
       fontWeight: "600",
       color: theme.text,
-      marginBottom: 4,
+      marginBottom: hp("0.5%"),
     },
 
     resultEmail: {
-      fontSize: 14,
+      fontSize: wp("3.5%"),
       color: theme.textSecondary,
     },
   });

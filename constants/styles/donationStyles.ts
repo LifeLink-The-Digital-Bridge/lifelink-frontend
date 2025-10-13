@@ -1,4 +1,5 @@
 import { StyleSheet } from 'react-native';
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
 
 export const createDonationStyles = (theme: any) => StyleSheet.create({
   container: {
@@ -7,17 +8,17 @@ export const createDonationStyles = (theme: any) => StyleSheet.create({
   },
 
   scrollContent: {
-    padding: 16,
-    paddingBottom: 100,
+    padding: wp("4%"),
+    paddingBottom: hp("12.5%"),
   },
 
   headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: theme.card,
-    padding: 20,
-    borderRadius: 20,
-    marginBottom: 24,
+    padding: wp("5%"),
+    borderRadius: wp("5%"),
+    marginBottom: hp("3%"),
     shadowColor: theme.shadow,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,
@@ -28,23 +29,23 @@ export const createDonationStyles = (theme: any) => StyleSheet.create({
   },
 
   backButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: wp("9%"),
+    height: wp("9%"),
+    borderRadius: wp("4.5%"),
     backgroundColor: theme.background,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: wp("4%"),
   },
 
   headerIconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: wp("14%"),
+    height: wp("14%"),
+    borderRadius: wp("7%"),
     backgroundColor: theme.primary + '15',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: wp("4%"),
   },
 
   headerTextContainer: {
@@ -52,40 +53,40 @@ export const createDonationStyles = (theme: any) => StyleSheet.create({
   },
 
   headerTitle: {
-    fontSize: 20,
+    fontSize: wp("5%"),
     fontWeight: '700',
     color: theme.text,
     letterSpacing: 0.3,
   },
 
   headerSubtitle: {
-    fontSize: 14,
+    fontSize: wp("3.5%"),
     color: theme.textSecondary,
-    marginTop: 2,
+    marginTop: hp("0.25%"),
     fontWeight: '500',
   },
 
   statusBadge: {
     backgroundColor: theme.success + '15',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
+    paddingHorizontal: wp("3%"),
+    paddingVertical: hp("0.75%"),
+    borderRadius: wp("3%"),
     borderWidth: 1,
     borderColor: theme.success + '30',
   },
 
   statusText: {
     color: theme.success,
-    fontSize: 12,
+    fontSize: wp("3%"),
     fontWeight: '600',
     letterSpacing: 0.5,
   },
 
   sectionContainer: {
     backgroundColor: theme.card,
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
+    borderRadius: wp("4%"),
+    padding: wp("5%"),
+    marginBottom: hp("2%"),
     shadowColor: theme.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -95,9 +96,9 @@ export const createDonationStyles = (theme: any) => StyleSheet.create({
 
   formSection: {
     backgroundColor: theme.card,
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
+    borderRadius: wp("4%"),
+    padding: wp("5%"),
+    marginBottom: hp("2%"),
     shadowColor: theme.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -108,34 +109,34 @@ export const createDonationStyles = (theme: any) => StyleSheet.create({
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: hp("2.5%"),
   },
 
   sectionTitle: {
-    fontSize: 18,
+    fontSize: wp("4.5%"),
     fontWeight: '700',
     color: theme.text,
-    marginLeft: 12,
+    marginLeft: wp("3%"),
   },
 
   inputContainer: {
-    marginBottom: 16,
+    marginBottom: hp("2%"),
   },
 
   label: {
-    fontSize: 16,
+    fontSize: wp("4%"),
     fontWeight: '600',
     color: theme.text,
-    marginBottom: 8,
+    marginBottom: hp("1%"),
   },
 
   input: {
     backgroundColor: theme.inputBackground,
     borderWidth: 1,
     borderColor: theme.border,
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
+    borderRadius: wp("2%"),
+    padding: wp("3%"),
+    fontSize: wp("4%"),
     color: theme.text,
   },
 
@@ -143,11 +144,11 @@ export const createDonationStyles = (theme: any) => StyleSheet.create({
     backgroundColor: theme.inputBackground,
     borderWidth: 1,
     borderColor: theme.border,
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
+    borderRadius: wp("2%"),
+    padding: wp("3%"),
+    fontSize: wp("4%"),
     color: theme.text,
-    minHeight: 80,
+    minHeight: hp("10%"),
     textAlignVertical: 'top',
   },
 
@@ -155,7 +156,7 @@ export const createDonationStyles = (theme: any) => StyleSheet.create({
     backgroundColor: theme.inputBackground,
     borderWidth: 1,
     borderColor: theme.border,
-    borderRadius: 8,
+    borderRadius: wp("2%"),
     overflow: 'hidden',
   },
 
@@ -168,15 +169,15 @@ export const createDonationStyles = (theme: any) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: hp("2%"),
   },
 
   toggleButton: {
     backgroundColor: theme.border,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    minWidth: 60,
+    paddingVertical: hp("1%"),
+    paddingHorizontal: wp("4%"),
+    borderRadius: wp("5%"),
+    minWidth: wp("15%"),
     alignItems: 'center',
   },
 
@@ -185,7 +186,7 @@ export const createDonationStyles = (theme: any) => StyleSheet.create({
   },
 
   toggleButtonText: {
-    fontSize: 14,
+    fontSize: wp("3.5%"),
     fontWeight: '600',
     color: theme.textSecondary,
   },
@@ -196,10 +197,10 @@ export const createDonationStyles = (theme: any) => StyleSheet.create({
 
   submitButton: {
     backgroundColor: theme.primary,
-    paddingVertical: 16,
-    borderRadius: 12,
+    paddingVertical: hp("2%"),
+    borderRadius: wp("3%"),
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: hp("2.5%"),
     shadowColor: theme.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -215,7 +216,7 @@ export const createDonationStyles = (theme: any) => StyleSheet.create({
 
   submitButtonText: {
     color: '#fff',
-    fontSize: 18,
+    fontSize: wp("4.5%"),
     fontWeight: '700',
     letterSpacing: 0.5,
   },

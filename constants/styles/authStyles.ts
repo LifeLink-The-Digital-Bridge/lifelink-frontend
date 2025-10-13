@@ -1,6 +1,5 @@
-import { StyleSheet, Dimensions } from "react-native";
-
-const { width } = Dimensions.get("window");
+import { StyleSheet } from "react-native";
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
 
 export const lightTheme = {
   background: "#f8fafc",
@@ -33,45 +32,39 @@ export const createAuthStyles = (theme: typeof lightTheme) =>
     container: {
       flex: 1,
       backgroundColor: theme.background,
-      paddingHorizontal: 24,
+      paddingHorizontal: wp("6%"),
     },
-
     scrollContainer: {
       flexGrow: 1,
       justifyContent: "center",
-      paddingVertical: 40,
+      paddingVertical: hp("5%"),
     },
-
     headerContainer: {
       alignItems: "center",
-      marginBottom: 40,
+      marginBottom: hp("5%"),
     },
-
     title: {
-      fontSize: 32,
+      fontSize: wp("8%"),
       fontWeight: "700",
       color: theme.text,
       textAlign: "center",
-      marginBottom: 8,
+      marginBottom: hp("1%"),
     },
-
     subtitle: {
-      fontSize: 16,
+      fontSize: wp("4%"),
       color: theme.textSecondary,
       textAlign: "center",
     },
-
     inputContainer: {
-      marginBottom: 20,
+      marginBottom: hp("2.5%"),
     },
-
     input: {
       backgroundColor: theme.inputBackground,
       borderColor: theme.border,
-      borderRadius: 12,
-      paddingVertical: 16,
-      paddingHorizontal: 16,
-      fontSize: 16,
+      borderRadius: wp("3%"),
+      paddingVertical: hp("2%"),
+      paddingHorizontal: wp("4%"),
+      fontSize: wp("4%"),
       color: theme.text,
       shadowColor: theme.shadow,
       shadowOffset: {
@@ -82,30 +75,26 @@ export const createAuthStyles = (theme: typeof lightTheme) =>
       shadowRadius: 2,
       elevation: 1,
     },
-
     inputFocused: {
       borderColor: theme.primary,
       shadowColor: theme.primary,
       shadowOpacity: 0.15,
     },
-
     inputError: {
       borderColor: theme.error,
     },
-
     passwordContainer: {
       position: "relative",
     },
-
     passwordInput: {
       backgroundColor: theme.card,
       borderWidth: 2,
       borderColor: theme.border,
-      borderRadius: 12,
-      paddingVertical: 16,
-      paddingHorizontal: 16,
-      paddingRight: 52,
-      fontSize: 16,
+      borderRadius: wp("3%"),
+      paddingVertical: hp("2%"),
+      paddingHorizontal: wp("4%"),
+      paddingRight: wp("13%"),
+      fontSize: wp("4%"),
       color: theme.text,
       shadowColor: theme.shadow,
       shadowOffset: {
@@ -116,25 +105,23 @@ export const createAuthStyles = (theme: typeof lightTheme) =>
       shadowRadius: 2,
       elevation: 1,
     },
-
     eyeButton: {
       position: "absolute",
-      right: 16,
+      right: wp("4%"),
       top: "50%",
-      marginTop: -12,
-      padding: 4,
-      borderRadius: 6,
+      marginTop: hp("-1.5%"),
+      padding: wp("1%"),
+      borderRadius: wp("1.5%"),
     },
-
     button: {
       backgroundColor: theme.primary,
-      paddingVertical: 16,
-      paddingHorizontal: 24,
-      borderRadius: 12,
+      paddingVertical: hp("2%"),
+      paddingHorizontal: wp("6%"),
+      borderRadius: wp("3%"),
       alignItems: "center",
       justifyContent: "center",
-      marginVertical: 12,
-      minHeight: 52,
+      marginVertical: hp("1.5%"),
+      minHeight: hp("6.5%"),
       shadowColor: theme.primary,
       shadowOffset: {
         width: 0,
@@ -144,11 +131,9 @@ export const createAuthStyles = (theme: typeof lightTheme) =>
       shadowRadius: 8,
       elevation: 4,
     },
-
     primary: {
       backgroundColor: theme.primary,
     },
-
     secondary: {
       backgroundColor: "transparent",
       borderWidth: 2,
@@ -156,69 +141,58 @@ export const createAuthStyles = (theme: typeof lightTheme) =>
       shadowOpacity: 0,
       elevation: 0,
     },
-
     disabled: {
       backgroundColor: theme.textSecondary,
       shadowOpacity: 0,
       elevation: 0,
     },
-
     buttonText: {
-      fontSize: 16,
+      fontSize: wp("4%"),
       fontWeight: "600",
       textAlign: "center",
       letterSpacing: 0.5,
     },
-
     primaryText: {
       color: "#ffffff",
     },
-
     secondaryText: {
       color: theme.primary,
     },
-
     linkContainer: {
       alignItems: "center",
-      marginTop: 24,
+      marginTop: hp("3%"),
     },
-
     linkText: {
       color: theme.primary,
-      fontSize: 16,
+      fontSize: wp("4%"),
       fontWeight: "500",
     },
-
     errorContainer: {
-      marginTop: 4,
-      marginBottom: 8,
+      marginTop: hp("0.5%"),
+      marginBottom: hp("1%"),
     },
-
     errorText: {
       color: theme.error,
-      fontSize: 14,
+      fontSize: wp("3.5%"),
       fontWeight: "500",
     },
-
     successContainer: {
-      marginTop: 4,
-      marginBottom: 8,
+      marginTop: hp("0.5%"),
+      marginBottom: hp("1%"),
     },
-
     successText: {
       color: theme.success,
-      fontSize: 14,
+      fontSize: wp("3.5%"),
       fontWeight: "500",
     },
-
     imagePicker: {
       backgroundColor: theme.primary,
-      paddingVertical: 12,
-      paddingHorizontal: 20,
-      borderRadius: 10,
+      paddingVertical: hp("1.5%"),
+      paddingHorizontal: wp("5%"),
+      borderRadius: wp("2.5%"),
       alignItems: "center",
       justifyContent: "center",
-      marginBottom: 16,
+      marginBottom: hp("2%"),
       shadowColor: theme.primary,
       shadowOffset: {
         width: 0,
@@ -228,49 +202,43 @@ export const createAuthStyles = (theme: typeof lightTheme) =>
       shadowRadius: 4,
       elevation: 2,
       flexDirection: "row",
-      minHeight: 44,
+      minHeight: hp("5.5%"),
     },
-
     imagePickerText: {
       color: "#ffffff",
-      fontSize: 15,
+      fontSize: wp("3.7%"),
       fontWeight: "600",
-      marginLeft: 6,
+      marginLeft: wp("1.5%"),
     },
-
     profileImageContainer: {
       alignItems: "center",
-      marginTop: 16,
-      marginBottom: 20,
+      marginTop: hp("2%"),
+      marginBottom: hp("2.5%"),
     },
-
     profileImage: {
-      width: 120,
-      height: 120,
-      borderRadius: 60,
-      borderWidth: 4,
+      width: wp("30%"),
+      height: wp("30%"),
+      borderRadius: wp("15%"),
+      borderWidth: wp("1%"),
       borderColor: theme.primary,
-      marginTop: 12,
+      marginTop: hp("1.5%"),
     },
-
     formSection: {
-      marginBottom: 24,
+      marginBottom: hp("3%"),
     },
-
     sectionTitle: {
-      fontSize: 18,
+      fontSize: wp("4.5%"),
       fontWeight: "600",
       color: theme.text,
-      marginBottom: 16,
+      marginBottom: hp("2%"),
     },
-
     themeToggle: {
       position: "absolute",
-      top: 50,
-      right: 20,
-      width: 44,
-      height: 44,
-      borderRadius: 22,
+      top: hp("6.2%"),
+      right: wp("5%"),
+      width: wp("11%"),
+      height: wp("11%"),
+      borderRadius: wp("5.5%"),
       backgroundColor: theme.card,
       borderWidth: 2,
       borderColor: theme.border,
@@ -286,16 +254,14 @@ export const createAuthStyles = (theme: typeof lightTheme) =>
       elevation: 3,
       zIndex: 1000,
     },
-
     mapContainer: {
       flex: 1,
     },
-
     mapHeader: {
       backgroundColor: theme.card,
-      paddingTop: 50,
-      paddingBottom: 16,
-      paddingHorizontal: 24,
+      paddingTop: hp("6.2%"),
+      paddingBottom: hp("2%"),
+      paddingHorizontal: wp("6%"),
       borderBottomWidth: 1,
       borderBottomColor: theme.border,
       shadowColor: theme.shadow,
@@ -307,87 +273,79 @@ export const createAuthStyles = (theme: typeof lightTheme) =>
       shadowRadius: 4,
       elevation: 3,
     },
-
     mapHeaderContent: {
       flexDirection: "row",
       alignItems: "center",
     },
-
     mapBackButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+      width: wp("10%"),
+      height: wp("10%"),
+      borderRadius: wp("5%"),
       backgroundColor: theme.background,
       borderWidth: 1,
       borderColor: theme.border,
       justifyContent: "center",
       alignItems: "center",
-      marginRight: 16,
+      marginRight: wp("4%"),
     },
-
     mapHeaderTextContainer: {
       flex: 1,
     },
-
     mapHeaderTitle: {
-      fontSize: 20,
+      fontSize: wp("5%"),
       fontWeight: "700",
       color: theme.text,
     },
-
     mapHeaderSubtitle: {
-      fontSize: 14,
+      fontSize: wp("3.5%"),
       color: theme.textSecondary,
-      marginTop: 2,
+      marginTop: hp("0.25%"),
     },
-
     coordinatesOverlay: {
       position: "absolute",
-      top: 20,
-      left: 20,
-      right: 20,
+      top: hp("2.5%"),
+      left: wp("5%"),
+      right: wp("5%"),
       backgroundColor: theme.card,
-      padding: 16,
-      borderRadius: 12,
+      padding: wp("4%"),
+      borderRadius: wp("3%"),
       borderWidth: 1,
       borderColor: theme.border,
       shadowColor: theme.shadow,
-      shadowOffset: { width: 0, height: 2 },
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
       shadowOpacity: 0.15,
       shadowRadius: 8,
       elevation: 5,
     },
-
     coordinatesLabel: {
-      fontSize: 14,
+      fontSize: wp("3.5%"),
       fontWeight: "600",
       color: theme.textSecondary,
-      marginBottom: 4,
+      marginBottom: hp("0.5%"),
     },
-
     coordinatesText: {
-      fontSize: 16,
+      fontSize: wp("4%"),
       fontWeight: "500",
       color: theme.text,
       fontFamily: "monospace",
     },
-
     actionButtonsContainer: {
       position: "absolute",
-      bottom: 30,
-      left: 20,
-      right: 20,
+      bottom: hp("3.7%"),
+      left: wp("5%"),
+      right: wp("5%"),
     },
-
     buttonRow: {
       flexDirection: "row",
-      gap: 12,
+      gap: wp("3%"),
     },
-
     mapButton: {
-      paddingVertical: 14,
-      paddingHorizontal: 20,
-      borderRadius: 12,
+      paddingVertical: hp("1.7%"),
+      paddingHorizontal: wp("5%"),
+      borderRadius: wp("3%"),
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
@@ -400,28 +358,24 @@ export const createAuthStyles = (theme: typeof lightTheme) =>
       shadowRadius: 8,
       elevation: 4,
     },
-
     currentLocationButton: {
       backgroundColor: theme.textSecondary,
       flex: 1,
     },
-
     confirmButton: {
       backgroundColor: theme.primary,
       flex: 2,
     },
-
     confirmButtonDisabled: {
       backgroundColor: theme.border,
       shadowOpacity: 0,
       elevation: 0,
     },
-
     mapButtonText: {
       color: "#ffffff",
-      fontSize: 16,
+      fontSize: wp("4%"),
       fontWeight: "600",
-      marginLeft: 8,
+      marginLeft: wp("2%"),
     },
   });
 

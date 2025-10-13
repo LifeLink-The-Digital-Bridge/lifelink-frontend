@@ -1,4 +1,5 @@
 import { StyleSheet } from "react-native";
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
 
 export const createDashboardStyles = (theme: any) => StyleSheet.create({
   container: { 
@@ -14,49 +15,49 @@ export const createDashboardStyles = (theme: any) => StyleSheet.create({
   },
   
   loadingText: {
-    marginTop: 10,
+    marginTop: hp("1.3%"),
     color: theme.textSecondary,
-    fontSize: 16,
+    fontSize: wp("4%"),
   },
 
   header: {
     backgroundColor: theme.card,
-    paddingHorizontal: 18,
-    paddingBottom: 12,
+    paddingHorizontal: wp("4.5%"),
+    paddingBottom: hp("1.5%"),
     borderBottomWidth: 1,
     borderBottomColor: theme.border,
   },
 
   searchContainer: {
-    marginTop: 12,
+    marginTop: hp("1.5%"),
     alignItems: 'center',
   },
   
   welcomeText: {
-    fontSize: 22,
+    fontSize: wp("5.5%"),
     color: theme.primary,
-    marginBottom: 4,
-    marginTop: 8,
+    marginBottom: hp("0.5%"),
+    marginTop: hp("1%"),
   },
   
   subText: {
-    fontSize: 16,
+    fontSize: wp("4%"),
     color: theme.textSecondary,
-    marginBottom: 18,
+    marginBottom: hp("2.3%"),
   },
   
   chatBotIcon: {
     position: "absolute",
-    bottom: 40,
-    right: 20,
+    bottom: hp("5%"),
+    right: wp("5%"),
     zIndex: 999,
   },
   
   chatBotButton: {
     backgroundColor: theme.primary,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: wp("14%"),
+    height: wp("14%"),
+    borderRadius: wp("7%"),
     justifyContent: "center",
     alignItems: "center",
     elevation: 4,

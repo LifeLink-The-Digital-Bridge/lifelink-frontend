@@ -1,16 +1,5 @@
-import { StyleSheet, Dimensions, Platform, PixelRatio } from "react-native";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const scale = SCREEN_WIDTH / 375;
-
-export function normalize(size: number): number {
-  const newSize = size * scale;
-  if (Platform.OS === "ios") {
-    return Math.round(PixelRatio.roundToNearestPixel(newSize));
-  } else {
-    return Math.round(PixelRatio.roundToNearestPixel(newSize)) - 2;
-  }
-}
+import { StyleSheet } from "react-native";
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
 
 export const createUnifiedStyles = (theme: any) =>
   StyleSheet.create({
@@ -20,15 +9,15 @@ export const createUnifiedStyles = (theme: any) =>
     },
 
     scrollContent: {
-      padding: 20,
-      paddingBottom: 140,
+      padding: wp("5%"),
+      paddingBottom: hp("17.5%"),
     },
 
     card: {
       backgroundColor: theme.card,
-      borderRadius: 20,
-      padding: 24,
-      marginBottom: 24,
+      borderRadius: wp("5%"),
+      padding: wp("6%"),
+      marginBottom: hp("3%"),
       shadowColor: theme.shadow,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.15,
@@ -41,9 +30,9 @@ export const createUnifiedStyles = (theme: any) =>
 
     sectionCard: {
       backgroundColor: theme.background,
-      borderRadius: 16,
-      padding: 20,
-      marginBottom: 20,
+      borderRadius: wp("4%"),
+      padding: wp("5%"),
+      marginBottom: hp("2.5%"),
       borderWidth: 1,
       borderColor: theme.border + "30",
     },
@@ -52,9 +41,9 @@ export const createUnifiedStyles = (theme: any) =>
       flexDirection: "row",
       alignItems: "center",
       backgroundColor: theme.card,
-      padding: 20,
-      borderRadius: 16,
-      marginBottom: 20,
+      padding: wp("5%"),
+      borderRadius: wp("4%"),
+      marginBottom: hp("2.5%"),
       shadowColor: theme.shadow,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.15,
@@ -65,13 +54,13 @@ export const createUnifiedStyles = (theme: any) =>
     },
 
     backButton: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
+      width: wp("9%"),
+      height: wp("9%"),
+      borderRadius: wp("4.5%"),
       backgroundColor: theme.background,
       justifyContent: "center",
       alignItems: "center",
-      marginRight: 12,
+      marginRight: wp("3%"),
       shadowColor: theme.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
@@ -80,13 +69,13 @@ export const createUnifiedStyles = (theme: any) =>
     },
 
     headerIconContainer: {
-      width: 52,
-      height: 52,
-      borderRadius: 26,
+      width: wp("13%"),
+      height: wp("13%"),
+      borderRadius: wp("6.5%"),
       backgroundColor: theme.primary + "20",
       justifyContent: "center",
       alignItems: "center",
-      marginRight: 16,
+      marginRight: wp("4%"),
     },
 
     headerTextContainer: {
@@ -94,35 +83,35 @@ export const createUnifiedStyles = (theme: any) =>
     },
 
     headerTitle: {
-      fontSize: normalize(18),
+      fontSize: wp("4.5%"),
       fontWeight: "700",
       color: theme.text,
       letterSpacing: 0.2,
-      lineHeight: normalize(22),
+      lineHeight: wp("5.5%"),
     },
 
     headerSubtitle: {
-      fontSize: normalize(15),
+      fontSize: wp("3.75%"),
       color: theme.textSecondary,
-      marginTop: 4,
+      marginTop: hp("0.5%"),
       fontWeight: "500",
-      lineHeight: normalize(20),
+      lineHeight: wp("5%"),
     },
 
     statusBadge: {
       backgroundColor: theme.success + "20",
-      paddingHorizontal: 16,
-      paddingVertical: 8,
-      borderRadius: 16,
+      paddingHorizontal: wp("4%"),
+      paddingVertical: hp("1%"),
+      borderRadius: wp("4%"),
       borderWidth: 1,
       borderColor: theme.success + "40",
       justifyContent: "center",
       alignItems: "center",
-      minWidth: 80,
+      minWidth: wp("20%"),
     },
 
     statusText: {
-      fontSize: normalize(13),
+      fontSize: wp("3.25%"),
       color: theme.success,
       fontWeight: "700",
       letterSpacing: 0.5,
@@ -130,9 +119,9 @@ export const createUnifiedStyles = (theme: any) =>
 
     sectionContainer: {
       backgroundColor: theme.card,
-      borderRadius: 20,
-      padding: 28,
-      marginBottom: 28,
+      borderRadius: wp("5%"),
+      padding: wp("7%"),
+      marginBottom: hp("3.5%"),
       shadowColor: theme.shadow,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.12,
@@ -145,48 +134,48 @@ export const createUnifiedStyles = (theme: any) =>
     sectionHeader: {
       flexDirection: "row",
       alignItems: "center",
-      marginBottom: 20,
-      paddingBottom: 8,
+      marginBottom: hp("2.5%"),
+      paddingBottom: hp("1%"),
       borderBottomWidth: 2,
       borderBottomColor: theme.primary + "30",
     },
 
     sectionIconContainer: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
+      width: wp("8%"),
+      height: wp("8%"),
+      borderRadius: wp("4%"),
       backgroundColor: theme.primary + "20",
       justifyContent: "center",
       alignItems: "center",
-      marginRight: 12,
+      marginRight: wp("3%"),
     },
 
     sectionTitle: {
-      fontSize: normalize(20),
+      fontSize: wp("5%"),
       fontWeight: "700",
       color: theme.text,
       letterSpacing: 0.2,
-      lineHeight: normalize(24),
+      lineHeight: wp("6%"),
     },
 
     subSectionTitle: {
-      fontSize: normalize(17),
+      fontSize: wp("4.25%"),
       fontWeight: "600",
       color: theme.text,
-      marginTop: 20,
-      marginBottom: 16,
+      marginTop: hp("2.5%"),
+      marginBottom: hp("2%"),
       letterSpacing: 0.1,
-      lineHeight: normalize(22),
+      lineHeight: wp("5.5%"),
     },
 
     infoRow: {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "flex-start",
-      paddingVertical: 12,
+      paddingVertical: hp("1.5%"),
       borderBottomWidth: 1,
       borderBottomColor: theme.border + "25",
-      minHeight: 44,
+      minHeight: hp("5.5%"),
     },
 
     lastInfoRow: {
@@ -194,47 +183,47 @@ export const createUnifiedStyles = (theme: any) =>
     },
 
     labelText: {
-      fontSize: normalize(15),
+      fontSize: wp("3.75%"),
       color: theme.textSecondary,
       fontWeight: "500",
       flex: 1,
-      lineHeight: normalize(20),
+      lineHeight: wp("5%"),
       letterSpacing: 0.1,
     },
 
     valueText: {
-      fontSize: normalize(15),
+      fontSize: wp("3.75%"),
       color: theme.text,
       fontWeight: "600",
       flex: 1.5,
       textAlign: "right",
-      lineHeight: normalize(20),
+      lineHeight: wp("5%"),
       letterSpacing: 0.1,
     },
 
     inputContainer: {
-      marginBottom: 24,
+      marginBottom: hp("3%"),
     },
 
     label: {
-      fontSize: normalize(16),
+      fontSize: wp("4%"),
       color: theme.text,
       fontWeight: "600",
-      marginBottom: 12,
+      marginBottom: hp("1.5%"),
       letterSpacing: 0.1,
-      lineHeight: normalize(20),
+      lineHeight: wp("5%"),
     },
 
     input: {
       backgroundColor: theme.inputBackground,
-      borderRadius: 12,
-      padding: 18,
-      fontSize: normalize(16),
+      borderRadius: wp("3%"),
+      padding: wp("4.5%"),
+      fontSize: wp("4%"),
       borderWidth: 2,
       borderColor: theme.border,
       color: theme.text,
-      lineHeight: normalize(20),
-      minHeight: 56,
+      lineHeight: wp("5%"),
+      minHeight: hp("7%"),
     },
 
     inputDisabled: {
@@ -244,15 +233,15 @@ export const createUnifiedStyles = (theme: any) =>
 
     textArea: {
       backgroundColor: theme.inputBackground,
-      borderRadius: 12,
-      padding: 18,
-      fontSize: normalize(16),
+      borderRadius: wp("3%"),
+      padding: wp("4.5%"),
+      fontSize: wp("4%"),
       borderWidth: 2,
       borderColor: theme.border,
       color: theme.text,
-      minHeight: 120,
+      minHeight: hp("15%"),
       textAlignVertical: "top",
-      lineHeight: normalize(22),
+      lineHeight: wp("5.5%"),
     },
 
     row: {
@@ -263,22 +252,22 @@ export const createUnifiedStyles = (theme: any) =>
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      paddingVertical: 8,
-      marginBottom: 12,
-      minHeight: 44,
+      paddingVertical: hp("1%"),
+      marginBottom: hp("1.5%"),
+      minHeight: hp("5.5%"),
     },
 
     switchLabel: {
-      fontSize: normalize(16),
+      fontSize: wp("4%"),
       color: theme.text,
       fontWeight: "500",
       flex: 1,
-      marginRight: 16,
-      lineHeight: normalize(22),
+      marginRight: wp("4%"),
+      lineHeight: wp("5.5%"),
     },
 
     locationButtonContainer: {
-      marginTop: 8,
+      marginTop: hp("1%"),
     },
 
     locationButton: {
@@ -286,84 +275,84 @@ export const createUnifiedStyles = (theme: any) =>
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      paddingVertical: 12,
-      paddingHorizontal: 20,
-      borderRadius: 12,
-      marginBottom: 12,
+      paddingVertical: hp("1.5%"),
+      paddingHorizontal: wp("5%"),
+      borderRadius: wp("3%"),
+      marginBottom: hp("1.5%"),
     },
 
     locationButtonText: {
       color: "#fff",
       fontWeight: "600",
-      fontSize: normalize(16),
-      marginLeft: 8,
+      fontSize: wp("4%"),
+      marginLeft: wp("2%"),
       textAlign: "center",
     },
 
     locationText: {
-      fontSize: normalize(14),
+      fontSize: wp("3.5%"),
       color: theme.textSecondary,
       textAlign: "center",
-      marginBottom: 12,
+      marginBottom: hp("1.5%"),
     },
 
     coordinatesContainer: {
       flexDirection: "row",
       alignItems: "center",
       backgroundColor: theme.success + "15",
-      padding: 12,
-      borderRadius: 8,
+      padding: wp("3%"),
+      borderRadius: wp("2%"),
       borderWidth: 1,
       borderColor: theme.success + "30",
     },
 
     coordinatesText: {
-      fontSize: normalize(14),
+      fontSize: wp("3.5%"),
       color: theme.success,
-      marginLeft: 8,
+      marginLeft: wp("2%"),
       fontWeight: "500",
     },
 
     agreementCard: {
       backgroundColor: theme.background,
-      padding: 20,
-      borderRadius: 16,
+      padding: wp("5%"),
+      borderRadius: wp("4%"),
       borderWidth: 2,
       borderColor: theme.border + "40",
-      marginBottom: 20,
+      marginBottom: hp("2.5%"),
     },
 
     agreementHeader: {
       flexDirection: "row",
       alignItems: "center",
-      marginBottom: 16,
+      marginBottom: hp("2%"),
     },
 
     agreementIcon: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+      width: wp("10%"),
+      height: wp("10%"),
+      borderRadius: wp("5%"),
       justifyContent: "center",
       alignItems: "center",
-      marginRight: 12,
+      marginRight: wp("3%"),
     },
 
     agreementTitle: {
-      fontSize: normalize(18),
+      fontSize: wp("4.5%"),
       fontWeight: "700",
       color: theme.text,
-      marginBottom: 4,
+      marginBottom: hp("0.5%"),
     },
 
     agreementSubtitle: {
-      fontSize: normalize(14),
+      fontSize: wp("3.5%"),
       color: theme.textSecondary,
     },
 
     consentCard: {
       backgroundColor: theme.background,
-      padding: 20,
-      borderRadius: 16,
+      padding: wp("5%"),
+      borderRadius: wp("4%"),
       borderWidth: 2,
       borderColor: theme.border + "40",
     },
@@ -371,27 +360,27 @@ export const createUnifiedStyles = (theme: any) =>
     consentHeader: {
       flexDirection: "row",
       alignItems: "center",
-      marginBottom: 16,
+      marginBottom: hp("2%"),
     },
 
     consentIcon: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+      width: wp("10%"),
+      height: wp("10%"),
+      borderRadius: wp("5%"),
       justifyContent: "center",
       alignItems: "center",
-      marginRight: 12,
+      marginRight: wp("3%"),
     },
 
     consentTitle: {
-      fontSize: normalize(18),
+      fontSize: wp("4.5%"),
       fontWeight: "700",
       color: theme.text,
-      marginBottom: 4,
+      marginBottom: hp("0.5%"),
     },
 
     consentSubtitle: {
-      fontSize: normalize(14),
+      fontSize: wp("3.5%"),
       color: theme.textSecondary,
     },
 
@@ -399,68 +388,68 @@ export const createUnifiedStyles = (theme: any) =>
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      paddingVertical: 8,
+      paddingVertical: hp("1%"),
     },
 
     consentText: {
-      fontSize: normalize(16),
+      fontSize: wp("4%"),
       fontWeight: "600",
       color: theme.text,
       flex: 1,
-      marginRight: 12,
+      marginRight: wp("3%"),
     },
 
     termsButton: {
       flexDirection: "row",
       alignItems: "center",
       backgroundColor: theme.primary + "15",
-      padding: 16,
-      borderRadius: 12,
-      marginBottom: 16,
+      padding: wp("4%"),
+      borderRadius: wp("3%"),
+      marginBottom: hp("2%"),
     },
 
     termsButtonText: {
-      marginLeft: 12,
+      marginLeft: wp("3%"),
       color: theme.primary,
       fontWeight: "600",
-      fontSize: normalize(15),
+      fontSize: wp("3.75%"),
       flex: 1,
     },
 
     termsSubText: {
       color: theme.textSecondary,
-      fontSize: normalize(13),
+      fontSize: wp("3.25%"),
       fontStyle: "italic",
     },
 
     successMessage: {
       backgroundColor: theme.success + "15",
-      padding: 16,
-      borderRadius: 12,
+      padding: wp("4%"),
+      borderRadius: wp("3%"),
       borderWidth: 1,
       borderColor: theme.success + "30",
       flexDirection: "row",
       alignItems: "center",
-      marginTop: 16,
+      marginTop: hp("2%"),
     },
 
     successTitle: {
       color: theme.success,
       fontWeight: "700",
-      fontSize: normalize(16),
-      marginBottom: 4,
+      fontSize: wp("4%"),
+      marginBottom: hp("0.5%"),
     },
 
     successSubtitle: {
       color: theme.success,
-      fontSize: normalize(14),
+      fontSize: wp("3.5%"),
       opacity: 0.8,
     },
 
     button: {
-      marginTop: 24,
-      paddingVertical: 18,
-      borderRadius: 16,
+      marginTop: hp("3%"),
+      paddingVertical: hp("2.25%"),
+      borderRadius: wp("4%"),
       alignItems: "center",
       shadowColor: theme.shadow,
       shadowOffset: { width: 0, height: 4 },
@@ -480,24 +469,24 @@ export const createUnifiedStyles = (theme: any) =>
     buttonText: {
       color: "#fff",
       fontWeight: "700",
-      fontSize: normalize(18),
+      fontSize: wp("4.5%"),
       letterSpacing: 0.5,
     },
 
     submitButton: {
       backgroundColor: theme.primary,
-      paddingVertical: 18,
-      paddingHorizontal: 32,
-      borderRadius: 16,
+      paddingVertical: hp("2.25%"),
+      paddingHorizontal: wp("8%"),
+      borderRadius: wp("4%"),
       alignItems: "center",
       justifyContent: "center",
-      marginTop: 32,
+      marginTop: hp("4%"),
       shadowColor: theme.primary,
       shadowOffset: { width: 0, height: 6 },
       shadowOpacity: 0.3,
       shadowRadius: 12,
       elevation: 8,
-      minHeight: 56,
+      minHeight: hp("7%"),
     },
 
     submitButtonDisabled: {
@@ -509,10 +498,10 @@ export const createUnifiedStyles = (theme: any) =>
 
     submitButtonText: {
       color: "#fff",
-      fontSize: normalize(18),
+      fontSize: wp("4.5%"),
       fontWeight: "700",
       letterSpacing: 0.8,
-      lineHeight: normalize(22),
+      lineHeight: wp("5.5%"),
     },
 
     submitButtonContainer: {
@@ -521,9 +510,9 @@ export const createUnifiedStyles = (theme: any) =>
       left: 0,
       right: 0,
       backgroundColor: theme.background,
-      paddingHorizontal: 20,
-      paddingVertical: 16,
-      paddingBottom: 34,
+      paddingHorizontal: wp("5%"),
+      paddingVertical: hp("2%"),
+      paddingBottom: hp("4.25%"),
       borderTopWidth: 1,
       borderTopColor: theme.border + "50",
       shadowColor: theme.shadow,
@@ -534,13 +523,13 @@ export const createUnifiedStyles = (theme: any) =>
     },
 
     actionsContainer: {
-      marginTop: 8,
+      marginTop: hp("1%"),
     },
 
     actionButton: {
       backgroundColor: theme.card,
-      borderRadius: 16,
-      marginBottom: 16,
+      borderRadius: wp("4%"),
+      marginBottom: hp("2%"),
       shadowColor: theme.shadow,
       shadowOffset: { width: 0, height: 3 },
       shadowOpacity: 0.12,
@@ -551,16 +540,16 @@ export const createUnifiedStyles = (theme: any) =>
     actionButtonContent: {
       flexDirection: "row",
       alignItems: "center",
-      padding: 20,
+      padding: wp("5%"),
     },
 
     actionIconContainer: {
-      width: 44,
-      height: 44,
-      borderRadius: 22,
+      width: wp("11%"),
+      height: wp("11%"),
+      borderRadius: wp("5.5%"),
       justifyContent: "center",
       alignItems: "center",
-      marginRight: 16,
+      marginRight: wp("4%"),
     },
 
     actionTextContainer: {
@@ -568,19 +557,19 @@ export const createUnifiedStyles = (theme: any) =>
     },
 
     actionTitle: {
-      fontSize: normalize(17),
+      fontSize: wp("4.25%"),
       fontWeight: "600",
       color: theme.text,
-      marginBottom: 4,
+      marginBottom: hp("0.5%"),
       letterSpacing: 0.1,
-      lineHeight: normalize(22),
+      lineHeight: wp("5.5%"),
     },
 
     actionSubtitle: {
-      fontSize: normalize(14),
+      fontSize: wp("3.5%"),
       color: theme.textSecondary,
       fontWeight: "500",
-      lineHeight: normalize(18),
+      lineHeight: wp("4.5%"),
     },
 
     updateButton: {
@@ -597,51 +586,51 @@ export const createUnifiedStyles = (theme: any) =>
       flex: 1,
       justifyContent: "center",
       alignItems: "center",
-      padding: 24,
+      padding: wp("6%"),
       backgroundColor: theme.background,
     },
 
     promptIconContainer: {
-      width: 80,
-      height: 80,
-      borderRadius: 40,
+      width: wp("20%"),
+      height: wp("20%"),
+      borderRadius: wp("10%"),
       backgroundColor: theme.primary + "15",
       justifyContent: "center",
       alignItems: "center",
-      marginBottom: 24,
+      marginBottom: hp("3%"),
     },
 
     promptTitle: {
-      fontSize: normalize(24),
+      fontSize: wp("6%"),
       fontWeight: "700",
       color: theme.text,
-      marginBottom: 8,
+      marginBottom: hp("1%"),
       textAlign: "center",
     },
 
     promptSubtitle: {
-      fontSize: normalize(16),
+      fontSize: wp("4%"),
       color: theme.textSecondary,
       textAlign: "center",
-      lineHeight: 24,
-      marginBottom: 32,
+      lineHeight: hp("3%"),
+      marginBottom: hp("4%"),
     },
 
     benefitsList: {
       alignSelf: "stretch",
-      marginBottom: 32,
+      marginBottom: hp("4%"),
     },
 
     benefitItem: {
       flexDirection: "row",
       alignItems: "center",
-      marginBottom: 12,
+      marginBottom: hp("1.5%"),
     },
 
     benefitText: {
-      fontSize: normalize(14),
+      fontSize: wp("3.5%"),
       color: theme.text,
-      marginLeft: 12,
+      marginLeft: wp("3%"),
       flex: 1,
     },
 
@@ -650,9 +639,9 @@ export const createUnifiedStyles = (theme: any) =>
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      paddingVertical: 16,
-      paddingHorizontal: 32,
-      borderRadius: 12,
+      paddingVertical: hp("2%"),
+      paddingHorizontal: wp("8%"),
+      borderRadius: wp("3%"),
       shadowColor: theme.primary,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.3,
@@ -662,9 +651,9 @@ export const createUnifiedStyles = (theme: any) =>
 
     registerButtonText: {
       color: "#fff",
-      fontSize: normalize(16),
+      fontSize: wp("4%"),
       fontWeight: "700",
-      marginLeft: 8,
+      marginLeft: wp("2%"),
     },
 
     loadingContainer: {
@@ -672,25 +661,25 @@ export const createUnifiedStyles = (theme: any) =>
       justifyContent: "center",
       alignItems: "center",
       backgroundColor: theme.background,
-      padding: 40,
+      padding: wp("10%"),
     },
 
     loadingText: {
-      fontSize: normalize(16),
+      fontSize: wp("4%"),
       color: theme.textSecondary,
-      marginTop: 20,
+      marginTop: hp("2.5%"),
       fontWeight: "500",
       textAlign: "center",
-      lineHeight: normalize(22),
+      lineHeight: wp("5.5%"),
     },
 
     eligibilityText: {
-      fontSize: normalize(14),
+      fontSize: wp("3.5%"),
       fontWeight: "600",
-      marginBottom: 12,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      borderRadius: 8,
+      marginBottom: hp("1.5%"),
+      paddingHorizontal: wp("3%"),
+      paddingVertical: hp("1%"),
+      borderRadius: wp("2%"),
       textAlign: "center",
     },
 
@@ -703,145 +692,167 @@ export const createUnifiedStyles = (theme: any) =>
       color: theme.error,
       backgroundColor: theme.error + "20",
     },
+
     matchButton: {
       flexDirection: "row",
       alignItems: "center",
       backgroundColor: theme.primary + "15",
-      paddingVertical: 8,
-      paddingHorizontal: 12,
-      borderRadius: 8,
-      marginTop: 12,
+      paddingVertical: hp("1%"),
+      paddingHorizontal: wp("3%"),
+      borderRadius: wp("2%"),
+      marginTop: hp("1.5%"),
       borderWidth: 1,
       borderColor: theme.primary + "30",
     },
 
     matchButtonText: {
       color: theme.primary,
-      fontSize: normalize(14),
+      fontSize: wp("3.5%"),
       fontWeight: "600",
-      marginLeft: 8,
+      marginLeft: wp("2%"),
       letterSpacing: 0.1,
     },
+
     modalOverlay: {
       flex: 1,
       backgroundColor: "rgba(0, 0, 0, 0.5)",
       justifyContent: "center",
       alignItems: "center",
     },
+
     modalContent: {
       backgroundColor: theme.card,
-      borderRadius: 16,
-      padding: 20,
+      borderRadius: wp("4%"),
+      padding: wp("5%"),
       width: "90%",
       maxHeight: "80%",
     },
+
     modalHeader: {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
-      marginBottom: 20,
+      marginBottom: hp("2.5%"),
     },
+
     modalTitle: {
-      fontSize: 20,
+      fontSize: wp("5%"),
       fontWeight: "600",
       color: theme.text,
     },
+
     locationItem: {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
-      paddingVertical: 16,
-      paddingHorizontal: 4,
+      paddingVertical: hp("2%"),
+      paddingHorizontal: wp("1%"),
       borderBottomWidth: 1,
       borderBottomColor: theme.border,
     },
+
     locationAddress: {
-      fontSize: 16,
+      fontSize: wp("4%"),
       fontWeight: "500",
       color: theme.text,
-      marginBottom: 4,
+      marginBottom: hp("0.5%"),
     },
+
     locationDetails: {
-      fontSize: 14,
+      fontSize: wp("3.5%"),
       color: theme.textSecondary,
     },
+
     emptyText: {
       textAlign: "center",
       color: theme.textSecondary,
-      fontSize: 16,
-      marginVertical: 20,
+      fontSize: wp("4%"),
+      marginVertical: hp("2.5%"),
     },
+
     addNewButton: {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "center",
-      paddingVertical: 16,
+      paddingVertical: hp("2%"),
       borderTopWidth: 1,
       borderTopColor: theme.border,
-      marginTop: 10,
+      marginTop: hp("1.25%"),
     },
+
     addNewText: {
-      marginLeft: 8,
-      fontSize: 16,
+      marginLeft: wp("2%"),
+      fontSize: wp("4%"),
       fontWeight: "500",
       color: theme.primary,
     },
+
     addForm: {
-      gap: 12,
+      gap: hp("1.5%"),
     },
+
     buttonRow: {
       flexDirection: "row",
-      gap: 12,
-      marginTop: 16,
+      gap: wp("3%"),
+      marginTop: hp("2%"),
     },
+
     cancelButton: {
       backgroundColor: theme.border,
     },
+
     cancelButtonText: {
       color: theme.text,
       fontWeight: "500",
     },
+
     saveButton: {
       backgroundColor: theme.primary,
     },
+
     saveButtonText: {
       color: "white",
       fontWeight: "500",
     },
+
     inputText: {
       flex: 1,
-      fontSize: 16,
+      fontSize: wp("4%"),
       color: theme.text,
     },
 
     locationStatus: {
       flexDirection: "row",
       alignItems: "center",
-      padding: 12,
+      padding: wp("3%"),
       backgroundColor: theme.primary + "15",
-      borderRadius: 8,
-      marginBottom: 16,
+      borderRadius: wp("2%"),
+      marginBottom: hp("2%"),
     },
+
     locationStatusText: {
-      marginLeft: 8,
+      marginLeft: wp("2%"),
       color: theme.primary,
-      fontSize: 14,
+      fontSize: wp("3.5%"),
       fontWeight: "500",
     },
+
     locationError: {
       flexDirection: "row",
       alignItems: "center",
-      padding: 12,
+      padding: wp("3%"),
       backgroundColor: theme.error + "15",
-      borderRadius: 8,
-      marginBottom: 16,
+      borderRadius: wp("2%"),
+      marginBottom: hp("2%"),
     },
+
     locationErrorText: {
-      marginLeft: 8,
+      marginLeft: wp("2%"),
       color: theme.error,
-      fontSize: 14,
+      fontSize: wp("3.5%"),
       flex: 1,
     },
+
     locationSelector: {
       flexDirection: "row",
       alignItems: "center",
@@ -856,9 +867,9 @@ export const createUnifiedStyles = (theme: any) =>
 
     selectedLocationItem: {
       backgroundColor: theme.primary + "10",
-      borderRadius: 8,
-      marginVertical: 2,
-      paddingHorizontal: 8,
+      borderRadius: wp("2%"),
+      marginVertical: hp("0.25%"),
+      paddingHorizontal: wp("2%"),
       borderWidth: 1,
       borderColor: theme.primary + "30",
     },
@@ -869,22 +880,22 @@ export const createUnifiedStyles = (theme: any) =>
 
     emptyContainer: {
       alignItems: "center",
-      paddingVertical: 40,
+      paddingVertical: hp("5%"),
     },
 
     emptySubtext: {
-      fontSize: normalize(14),
+      fontSize: wp("3.5%"),
       color: theme.textSecondary,
-      marginTop: 4,
+      marginTop: hp("0.5%"),
       textAlign: "center",
-      lineHeight: normalize(18),
+      lineHeight: wp("4.5%"),
     },
 
     addFormTitle: {
-      fontSize: normalize(18),
+      fontSize: wp("4.5%"),
       fontWeight: "600",
       color: theme.text,
-      marginBottom: 16,
+      marginBottom: hp("2%"),
       letterSpacing: 0.1,
     },
 
@@ -893,9 +904,9 @@ export const createUnifiedStyles = (theme: any) =>
     },
 
     text: {
-      fontSize: normalize(15),
+      fontSize: wp("3.75%"),
       color: theme.text,
       fontWeight: "400",
-      lineHeight: normalize(20),
+      lineHeight: wp("5%"),
     },
   });

@@ -6,7 +6,7 @@ pluginManagement {
     }.standardOutput.asText.get().trim()
   ).getParentFile().absolutePath
   includeBuild(reactNativeGradlePlugin)
-
+  
   def expoPluginsPath = new File(
     providers.exec {
       workingDir(rootDir)
@@ -32,7 +32,8 @@ extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
 expoAutolinking.useExpoModules()
 
 rootProject.name = 'LifeLink'
-include ':app'
 
 expoAutolinking.useExpoVersionCatalog()
+
+include ':app'
 includeBuild(expoAutolinking.reactNativeGradlePlugin)

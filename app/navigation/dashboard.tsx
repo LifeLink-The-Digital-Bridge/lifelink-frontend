@@ -10,6 +10,7 @@ import {
   StyleSheet,
 } from "react-native";
 import * as SecureStore from "expo-secure-store";
+import * as Location from "expo-location";
 import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import { useAuth } from "../../utils/auth-context";
@@ -17,7 +18,9 @@ import { useTheme } from "../../utils/theme-context";
 import { useTabBar } from "../../utils/tabbar-context";
 import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
 import { createDashboardStyles } from "../../constants/styles/dashboardStyles";
+import { createUnifiedStyles } from "../../constants/styles/unifiedStyles";
 import ScrollableHeaderLayout from "../../components/common/ScrollableHeaderLayout";
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
 
 import { TopBar } from "../../components/common/TopBar";
 import { SidebarMenu } from "../../components/dashboard/SidebarMenu";
@@ -34,6 +37,7 @@ const Dashboard = () => {
   const isDark = colorScheme === "dark";
   const theme = isDark ? darkTheme : lightTheme;
   const styles = createDashboardStyles(theme);
+  const unifiedStyles = createUnifiedStyles(theme);
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
@@ -45,6 +49,10 @@ const Dashboard = () => {
   });
   const [showChatIcon, setShowChatIcon] = useState(true);
   const [menuVisible, setMenuVisible] = useState(false);
+  const [locationPermission, setLocationPermission] = useState<boolean | null>(null);
+  const [currentLocation, setCurrentLocation] = useState<Location.LocationObject | null>(null);
+  const [nearbyData, setNearbyData] = useState<any[]>([]);
+  const [loadingNearby, setLoadingNearby] = useState(false);
 
   const [validationAlertVisible, setValidationAlertVisible] = useState(false);
   const [validationAlertMessage, setValidationAlertMessage] = useState("");
@@ -77,6 +85,8 @@ const Dashboard = () => {
           roles: roles || "",
           userId: userId || "",
         });
+
+        await checkLocationPermission();
       } catch (error) {
         console.error("Error loading user data:", error);
       } finally {
@@ -85,6 +95,57 @@ const Dashboard = () => {
     };
     loadUserData();
   }, []);
+
+  const checkLocationPermission = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      
+      if (status === "granted") {
+        setLocationPermission(true);
+        await getCurrentLocation();
+      } else {
+        setLocationPermission(false);
+      }
+    } catch (error) {
+      console.error("Error checking location permission:", error);
+      setLocationPermission(false);
+    }
+  };
+
+  const getCurrentLocation = async () => {
+    try {
+      setLoadingNearby(true);
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+      setCurrentLocation(location);
+      
+      await fetchNearbyData(location.coords.latitude, location.coords.longitude);
+    } catch (error) {
+      console.error("Error getting current location:", error);
+      setLoadingNearby(false);
+    }
+  };
+
+  const fetchNearbyData = async (latitude: number, longitude: number) => {
+    try {
+      setLoadingNearby(true);
+      
+
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setNearbyData([]);
+      
+    } catch (error) {
+      console.error("Error fetching nearby data:", error);
+      setNearbyData([]);
+    } finally {
+      setLoadingNearby(false);
+    }
+  };
+
+  const handleEnableLocation = async () => {
+    await checkLocationPermission();
+  };
 
   const handleScroll = Animated.event(
     [{ nativeEvent: { contentOffset: { y: scrollY } } }],
@@ -130,55 +191,131 @@ const Dashboard = () => {
     showValidationAlert("Notifications", "No new notifications at the moment");
   };
 
+  const nearbyStyles = StyleSheet.create({
+    sectionContainer: {
+      backgroundColor: theme.card,
+      borderRadius: wp("4%"),
+      padding: wp("5%"),
+      marginTop: hp("2%"),
+      marginBottom: hp("2%"),
+      shadowColor: theme.shadow,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    sectionHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginBottom: hp("2%"),
+    },
+    sectionTitle: {
+      fontSize: wp("4.5%"),
+      fontWeight: "700",
+      color: theme.text,
+    },
+    locationDisabled: {
+      alignItems: "center",
+      paddingVertical: hp("3%"),
+    },
+    locationIcon: {
+      width: wp("15%"),
+      height: wp("15%"),
+      borderRadius: wp("7.5%"),
+      backgroundColor: theme.primary + "15",
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: hp("2%"),
+    },
+    locationDisabledText: {
+      fontSize: wp("3.5%"),
+      color: theme.textSecondary,
+      textAlign: "center",
+      marginBottom: hp("2%"),
+      lineHeight: wp("5%"),
+    },
+    enableLocationButton: {
+      backgroundColor: theme.primary,
+      paddingVertical: hp("1.5%"),
+      paddingHorizontal: wp("6%"),
+      borderRadius: wp("2.5%"),
+      marginTop: hp("1%"),
+    },
+    enableLocationText: {
+      color: "#fff",
+      fontSize: wp("3.5%"),
+      fontWeight: "600",
+    },
+    emptyState: {
+      alignItems: "center",
+      paddingVertical: hp("3%"),
+    },
+    emptyIcon: {
+      marginBottom: hp("2%"),
+    },
+    emptyText: {
+      fontSize: wp("4%"),
+      fontWeight: "600",
+      color: theme.text,
+      marginBottom: hp("1%"),
+    },
+    emptySubtext: {
+      fontSize: wp("3.5%"),
+      color: theme.textSecondary,
+      textAlign: "center",
+    },
+  });
+
   const alertStyles = StyleSheet.create({
     overlay: {
       flex: 1,
       backgroundColor: "rgba(0, 0, 0, 0.5)",
       justifyContent: "center",
       alignItems: "center",
-      padding: 20,
+      padding: wp("5%"),
     },
     container: {
       backgroundColor: theme.card,
-      borderRadius: 16,
-      padding: 24,
+      borderRadius: wp("4%"),
+      padding: wp("6%"),
       width: "100%",
       maxWidth: 340,
       alignItems: "center",
     },
     iconContainer: {
-      width: 56,
-      height: 56,
-      borderRadius: 28,
+      width: wp("14%"),
+      height: wp("14%"),
+      borderRadius: wp("7%"),
       backgroundColor: theme.primary + "20",
       justifyContent: "center",
       alignItems: "center",
-      marginBottom: 16,
+      marginBottom: hp("2%"),
     },
     title: {
-      fontSize: 20,
+      fontSize: wp("5%"),
       fontWeight: "700",
       color: theme.text,
-      marginBottom: 8,
+      marginBottom: hp("1%"),
       textAlign: "center",
     },
     message: {
-      fontSize: 15,
+      fontSize: wp("3.75%"),
       color: theme.textSecondary,
       textAlign: "center",
-      marginBottom: 24,
-      lineHeight: 22,
+      marginBottom: hp("3%"),
+      lineHeight: wp("5.5%"),
     },
     button: {
       backgroundColor: theme.primary,
-      paddingVertical: 12,
-      paddingHorizontal: 32,
-      borderRadius: 10,
+      paddingVertical: hp("1.5%"),
+      paddingHorizontal: wp("8%"),
+      borderRadius: wp("2.5%"),
       width: "100%",
     },
     buttonText: {
       color: "#fff",
-      fontSize: 16,
+      fontSize: wp("4%"),
       fontWeight: "600",
       textAlign: "center",
     },
@@ -231,6 +368,68 @@ const Dashboard = () => {
           showsVerticalScrollIndicator={false}
         >
           <WelcomeSection username={userData.username} />
+
+          {/* Nearby Donations/Requests Section */}
+          <View style={nearbyStyles.sectionContainer}>
+            <View style={nearbyStyles.sectionHeader}>
+              <Text style={nearbyStyles.sectionTitle}>Nearby Activity</Text>
+              <Feather name="map-pin" size={wp("5%")} color={theme.primary} />
+            </View>
+
+            {locationPermission === false ? (
+              <View style={nearbyStyles.locationDisabled}>
+                <View style={nearbyStyles.locationIcon}>
+                  <Feather name="map-pin" size={wp("8%")} color={theme.primary} />
+                </View>
+                <Text style={nearbyStyles.locationDisabledText}>
+                  Enable location to see nearby donors and recipients
+                </Text>
+                <TouchableOpacity
+                  style={nearbyStyles.enableLocationButton}
+                  onPress={handleEnableLocation}
+                >
+                  <Text style={nearbyStyles.enableLocationText}>
+                    Enable Location
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            ) : loadingNearby ? (
+              <View style={{ paddingVertical: hp("3%"), alignItems: "center" }}>
+                <ActivityIndicator size="small" color={theme.primary} />
+                <Text
+                  style={{
+                    marginTop: hp("1%"),
+                    color: theme.textSecondary,
+                    fontSize: wp("3.5%"),
+                  }}
+                >
+                  Finding nearby activity...
+                </Text>
+              </View>
+            ) : nearbyData.length === 0 ? (
+              <View style={nearbyStyles.emptyState}>
+                <Feather
+                  name="users"
+                  size={wp("12%")}
+                  color={theme.textSecondary}
+                  style={nearbyStyles.emptyIcon}
+                />
+                <Text style={nearbyStyles.emptyText}>
+                  No activity nearby
+                </Text>
+                <Text style={nearbyStyles.emptySubtext}>
+                  No donors or recipients found in your area at the moment
+                </Text>
+              </View>
+            ) : (
+              // TODO: Render nearby donors/recipients list when API is ready
+              <View>
+                {nearbyData.map((item, index) => (
+                  <Text key={index}>{item.name}</Text>
+                ))}
+              </View>
+            )}
+          </View>
         </ScrollView>
 
         <ChatBot visible={showChatIcon} onPress={handleChatBotPress} />
@@ -248,7 +447,7 @@ const Dashboard = () => {
           >
             <TouchableOpacity style={alertStyles.container} activeOpacity={1}>
               <View style={alertStyles.iconContainer}>
-                <Feather name="bell" size={28} color={theme.primary} />
+                <Feather name="bell" size={wp("7%")} color={theme.primary} />
               </View>
               <Text style={alertStyles.title}>{validationAlertTitle}</Text>
               <Text style={alertStyles.message}>{validationAlertMessage}</Text>

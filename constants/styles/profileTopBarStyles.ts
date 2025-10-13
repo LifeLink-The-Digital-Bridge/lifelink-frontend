@@ -1,4 +1,5 @@
 import { StyleSheet } from "react-native";
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
 
 export const createProfileTopBarStyles = (theme: any) =>
   StyleSheet.create({
@@ -6,39 +7,39 @@ export const createProfileTopBarStyles = (theme: any) =>
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      paddingHorizontal: 16,
-      paddingTop: 60,
-      paddingBottom: 16,
+      paddingHorizontal: wp("4%"),
+      paddingTop: hp("7.5%"),
+      paddingBottom: hp("2%"),
       backgroundColor: theme.card,
       borderBottomWidth: 1,
       borderBottomColor: theme.border,
     },
 
     backButton: {
-      width: 40,
-      height: 40,
+      width: wp("10%"),
+      height: wp("10%"),
       justifyContent: "center",
       alignItems: "center",
     },
 
     title: {
       flex: 1,
-      fontSize: 20,
+      fontSize: wp("5%"),
       fontWeight: "700",
       color: theme.text,
-      marginLeft: 12,
+      marginLeft: wp("3%"),
     },
 
     actions: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 8,
+      gap: wp("2%"),
     },
 
     actionButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+      width: wp("10%"),
+      height: wp("10%"),
+      borderRadius: wp("5%"),
       backgroundColor: theme.card,
       justifyContent: "center",
       alignItems: "center",
