@@ -244,10 +244,6 @@ export const createUnifiedStyles = (theme: any) =>
       lineHeight: wp("5.5%"),
     },
 
-    row: {
-      flexDirection: "row",
-    },
-
     switchRow: {
       flexDirection: "row",
       alignItems: "center",
@@ -909,4 +905,17 @@ export const createUnifiedStyles = (theme: any) =>
       fontWeight: "400",
       lineHeight: wp("5%"),
     },
+
+    row: {
+      flexDirection: "row",
+      marginHorizontal: -wp(1.5),
+    },
+
+    halfWidthContainer: {
+      flex: 1,
+      paddingHorizontal: wp(1.5),
+      marginBottom: hp(3),
+    },
+
+
   });

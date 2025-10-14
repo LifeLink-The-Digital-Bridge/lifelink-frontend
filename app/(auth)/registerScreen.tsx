@@ -7,6 +7,10 @@ import {
   View,
   Modal,
   StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { router } from "expo-router";
 import { Feather } from "@expo/vector-icons";
@@ -198,157 +202,164 @@ export default function RegisterScreen() {
 
   return (
     <AppLayout>
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.scrollContainer}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
       >
-        <View style={styles.headerContainer}>
-          <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>
-            Join LifeLink and connect with others
-          </Text>
-        </View>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <ScrollView
+            style={styles.container}
+            contentContainerStyle={styles.scrollContainer}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.headerContainer}>
+              <Text style={styles.title}>Create Account</Text>
+              <Text style={styles.subtitle}>
+                Join LifeLink and connect with others
+              </Text>
+            </View>
 
-        <View style={styles.formSection}>
-          <ImagePickerComponent
-            imageUri={formData.profileImageUrl}
-            onImageSelected={(uri) => handleChange("profileImageUrl", uri)}
-            placeholder="Choose Profile Picture"
-          />
-          <ValidationMessage error={errors.profileImageUrl} />
-        </View>
+            <View style={styles.formSection}>
+              <ImagePickerComponent
+                imageUri={formData.profileImageUrl}
+                onImageSelected={(uri) => handleChange("profileImageUrl", uri)}
+                placeholder="Choose Profile Picture"
+              />
+              <ValidationMessage error={errors.profileImageUrl} />
+            </View>
 
-        <View style={styles.formSection}>
-          <Text style={styles.sectionTitle}>Personal Information</Text>
+            <View style={styles.formSection}>
+              <Text style={styles.sectionTitle}>Personal Information</Text>
 
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={[
-                styles.input,
-                focusedInput === "name" && styles.inputFocused,
-                errors.name && styles.inputError,
-              ]}
-              placeholder="Full Name"
-              placeholderTextColor={theme.textSecondary}
-              value={formData.name}
-              onChangeText={(text) => handleChange("name", text)}
-              onFocus={() => setFocusedInput("name")}
-              onBlur={() => setFocusedInput(null)}
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={[
+                    styles.input,
+                    focusedInput === "name" && styles.inputFocused,
+                    errors.name && styles.inputError,
+                  ]}
+                  placeholder="Full Name"
+                  placeholderTextColor={theme.textSecondary}
+                  value={formData.name}
+                  onChangeText={(text) => handleChange("name", text)}
+                  onFocus={() => setFocusedInput("name")}
+                  onBlur={() => setFocusedInput(null)}
+                />
+                <ValidationMessage error={errors.name} />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={[
+                    styles.input,
+                    focusedInput === "email" && styles.inputFocused,
+                    errors.email && styles.inputError,
+                  ]}
+                  placeholder="Email Address"
+                  placeholderTextColor={theme.textSecondary}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  value={formData.email}
+                  onChangeText={(text) => handleChange("email", text)}
+                  onFocus={() => setFocusedInput("email")}
+                  onBlur={() => setFocusedInput(null)}
+                />
+                <ValidationMessage error={errors.email} />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={[
+                    styles.input,
+                    focusedInput === "phone" && styles.inputFocused,
+                    errors.phone && styles.inputError,
+                  ]}
+                  placeholder="Phone Number (10 digits)"
+                  placeholderTextColor={theme.textSecondary}
+                  keyboardType="phone-pad"
+                  value={formData.phone}
+                  onChangeText={(text) => handleChange("phone", text)}
+                  onFocus={() => setFocusedInput("phone")}
+                  onBlur={() => setFocusedInput(null)}
+                />
+                <ValidationMessage error={errors.phone} />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <CustomDatePicker
+                  selectedDate={formData.dob}
+                  onDateChange={(date) => handleChange("dob", date)}
+                  hasError={!!errors.dob}
+                  placeholder="Select Date of Birth"
+                />
+                <ValidationMessage error={errors.dob} />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <GenderPicker
+                  selectedValue={formData.gender}
+                  onValueChange={(value) => handleChange("gender", value)}
+                  hasError={!!errors.gender}
+                />
+                <ValidationMessage error={errors.gender} />
+              </View>
+            </View>
+
+            <View style={styles.formSection}>
+              <Text style={styles.sectionTitle}>Account Information</Text>
+
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={[
+                    styles.input,
+                    focusedInput === "username" && styles.inputFocused,
+                    errors.username && styles.inputError,
+                  ]}
+                  placeholder="Username"
+                  placeholderTextColor={theme.textSecondary}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  value={formData.username}
+                  onChangeText={(text) => handleChange("username", text)}
+                  onFocus={() => setFocusedInput("username")}
+                  onBlur={() => setFocusedInput(null)}
+                />
+                <ValidationMessage error={errors.username} />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <PasswordInput
+                  placeholder="Password (minimum 6 characters)"
+                  value={formData.password}
+                  onChangeText={(text) => handleChange("password", text)}
+                  hasError={!!errors.password}
+                  onFocus={() => setFocusedInput("password")}
+                  onBlur={() => setFocusedInput(null)}
+                />
+                <ValidationMessage error={errors.password} />
+              </View>
+            </View>
+
+            <LoadingButton
+              title="Create Account"
+              onPress={handleRegister}
+              loading={loading}
+              variant="primary"
             />
-            <ValidationMessage error={errors.name} />
-          </View>
 
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={[
-                styles.input,
-                focusedInput === "email" && styles.inputFocused,
-                errors.email && styles.inputError,
-              ]}
-              placeholder="Email Address"
-              placeholderTextColor={theme.textSecondary}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              value={formData.email}
-              onChangeText={(text) => handleChange("email", text)}
-              onFocus={() => setFocusedInput("email")}
-              onBlur={() => setFocusedInput(null)}
-            />
-            <ValidationMessage error={errors.email} />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={[
-                styles.input,
-                focusedInput === "phone" && styles.inputFocused,
-                errors.phone && styles.inputError,
-              ]}
-              placeholder="Phone Number (10 digits)"
-              placeholderTextColor={theme.textSecondary}
-              keyboardType="phone-pad"
-              value={formData.phone}
-              onChangeText={(text) => handleChange("phone", text)}
-              onFocus={() => setFocusedInput("phone")}
-              onBlur={() => setFocusedInput(null)}
-            />
-            <ValidationMessage error={errors.phone} />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <CustomDatePicker
-              selectedDate={formData.dob}
-              onDateChange={(date) => handleChange("dob", date)}
-              hasError={!!errors.dob}
-              placeholder="Select Date of Birth"
-            />
-            <ValidationMessage error={errors.dob} />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <GenderPicker
-              selectedValue={formData.gender}
-              onValueChange={(value) => handleChange("gender", value)}
-              hasError={!!errors.gender}
-            />
-            <ValidationMessage error={errors.gender} />
-          </View>
-        </View>
-
-        <View style={styles.formSection}>
-          <Text style={styles.sectionTitle}>Account Information</Text>
-
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={[
-                styles.input,
-                focusedInput === "username" && styles.inputFocused,
-                errors.username && styles.inputError,
-              ]}
-              placeholder="Username"
-              placeholderTextColor={theme.textSecondary}
-              autoCapitalize="none"
-              autoCorrect={false}
-              value={formData.username}
-              onChangeText={(text) => handleChange("username", text)}
-              onFocus={() => setFocusedInput("username")}
-              onBlur={() => setFocusedInput(null)}
-            />
-            <ValidationMessage error={errors.username} />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <PasswordInput
-              placeholder="Password (minimum 6 characters)"
-              value={formData.password}
-              onChangeText={(text) => handleChange("password", text)}
-              hasError={!!errors.password}
-              onFocus={() => setFocusedInput("password")}
-              onBlur={() => setFocusedInput(null)}
-            />
-            <ValidationMessage error={errors.password} />
-          </View>
-        </View>
-
-        <LoadingButton
-          title="Create Account"
-          onPress={handleRegister}
-          loading={loading}
-          variant="primary"
-        />
-
-        <View style={styles.linkContainer}>
-          <TouchableOpacity onPress={() => router.push("./loginScreen")}>
-            <Text style={styles.linkText}>
-              Already have an account? Sign in
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-
+            <View style={styles.linkContainer}>
+              <TouchableOpacity onPress={() => router.push("./loginScreen")}>
+                <Text style={styles.linkText}>
+                  Already have an account? Sign in
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
       <Modal
         visible={alertVisible}
         transparent

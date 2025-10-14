@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, Text, Switch, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "../../utils/theme-context";
 import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
-import { createUnifiedStyles } from "../../constants/styles/unifiedStyles";
+import { TermsConditionsModal } from "../common/TermsConditionsModal";
+import { createUnifiedStyles } from "@/constants/styles/unifiedStyles";
 
 interface ConsentFormProps {
   isConsented: boolean;
@@ -12,22 +13,34 @@ interface ConsentFormProps {
   setConsentedAt: (consentedAt: string) => void;
 }
 
-export function ConsentForm({ 
-  isConsented, 
-  setIsConsented, 
-  consentedAt, 
-  setConsentedAt 
+export function ConsentForm({
+  isConsented,
+  setIsConsented,
+  consentedAt,
+  setConsentedAt
 }: ConsentFormProps) {
   const { colorScheme } = useTheme();
   const isDark = colorScheme === "dark";
   const theme = isDark ? darkTheme : lightTheme;
   const styles = createUnifiedStyles(theme);
 
-  const handleConsentChange = (value: boolean) => {
-    setIsConsented(value);
-    if (value && !consentedAt) {
+  const [termsModalVisible, setTermsModalVisible] = useState(false);
+
+  const handleTermsPress = () => {
+    setTermsModalVisible(true);
+  };
+
+  const handleAcceptTerms = () => {
+    setIsConsented(true);
+    if (!consentedAt) {
       setConsentedAt(new Date().toISOString());
     }
+    setTermsModalVisible(false);
+  };
+
+  const handleDeclineTerms = () => {
+    setIsConsented(false);
+    setTermsModalVisible(false);
   };
 
   return (
@@ -36,7 +49,7 @@ export function ConsentForm({
         <View style={styles.sectionIconContainer}>
           <Feather name="file-text" size={18} color={theme.primary} />
         </View>
-        <Text style={styles.sectionTitle}>Consent Agreement</Text>
+        <Text style={styles.sectionTitle}>Final Agreement</Text>
       </View>
 
       <View style={styles.agreementCard}>
@@ -59,25 +72,23 @@ export function ConsentForm({
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.agreementTitle}>
-              {isConsented ? "Consent Provided" : "Consent Required"}
+              {isConsented ? "Agreement Accepted" : "Consent Required"}
             </Text>
             <Text style={styles.agreementSubtitle}>
               {isConsented
                 ? "You have agreed to receive medical donations"
-                : "Please confirm your consent to be a recipient"}
+                : "Please review and accept terms"}
             </Text>
           </View>
         </View>
 
-        <TouchableOpacity style={styles.termsButton}>
-          <Feather name="info" size={16} color={theme.primary} />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.termsButtonText}>Read Terms & Conditions</Text>
-            <Text style={styles.termsSubText}>
-              Understand your rights and responsibilities as a recipient
-            </Text>
-          </View>
-          <Feather name="external-link" size={14} color={theme.primary} />
+        <TouchableOpacity
+          style={styles.termsButton}
+          onPress={handleTermsPress}
+          activeOpacity={0.7}
+        >
+          <Feather name="eye" size={18} color={theme.primary} />
+          <Text style={styles.termsButtonText}>Read Terms & Conditions</Text>
         </TouchableOpacity>
 
         <View style={styles.consentToggle}>
@@ -86,7 +97,12 @@ export function ConsentForm({
           </Text>
           <Switch
             value={isConsented}
-            onValueChange={handleConsentChange}
+            onValueChange={(value) => {
+              setIsConsented(value);
+              if (value && !consentedAt) {
+                setConsentedAt(new Date().toISOString());
+              }
+            }}
             thumbColor={theme.primary}
             trackColor={{ false: theme.border, true: theme.primary + "50" }}
           />
@@ -102,13 +118,20 @@ export function ConsentForm({
               You're now ready to complete your recipient registration.
             </Text>
             {consentedAt && (
-              <Text style={[styles.termsSubText, { marginTop: 4 }]}>
+              <Text style={[styles.agreementSubtitle, { marginTop: 4 }]}>
                 Consented on: {new Date(consentedAt).toLocaleDateString()}
               </Text>
             )}
           </View>
         </View>
       )}
+
+      <TermsConditionsModal
+        visible={termsModalVisible}
+        onClose={handleDeclineTerms}
+        onAccept={handleAcceptTerms}
+        recipientMode={true}
+      />
     </View>
   );
 }

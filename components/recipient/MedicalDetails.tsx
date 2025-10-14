@@ -49,7 +49,6 @@ export function MedicalDetails(props: MedicalDetailsProps) {
         <Text style={styles.sectionTitle}>Medical Information</Text>
       </View>
 
-      {/* Primary Medical Information */}
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Medical Diagnosis *</Text>
         <TextInput
@@ -87,7 +86,6 @@ export function MedicalDetails(props: MedicalDetailsProps) {
         />
       </View>
 
-      {/* Vital Signs & Lab Results */}
       <Text style={styles.subSectionTitle}>Vital Signs & Lab Results</Text>
 
       <View style={styles.row}>
@@ -151,7 +149,7 @@ export function MedicalDetails(props: MedicalDetailsProps) {
           />
         </View>
         <View style={[styles.inputContainer, { flex: 1, marginLeft: 8 }]}>
-          <Text style={styles.label}>Cardiac Status</Text>
+          <Text style={styles.label}>Overall Cardiac Status</Text>
           <TextInput
             style={styles.input}
             placeholder="Normal"
@@ -173,9 +171,8 @@ export function MedicalDetails(props: MedicalDetailsProps) {
         />
       </View>
 
-      {/* Infectious Disease Section */}
       <Text style={styles.subSectionTitle}>Infectious Disease Information</Text>
-      
+
       <View style={styles.switchRow}>
         <Text style={styles.switchLabel}>Has Infectious Diseases?</Text>
         <Switch

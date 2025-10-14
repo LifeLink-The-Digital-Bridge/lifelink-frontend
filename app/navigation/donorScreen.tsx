@@ -22,7 +22,7 @@ import * as Location from "expo-location";
 import { StatusHeader } from "@/components/common/StatusHeader";
 import AppLayout from "@/components/AppLayout";
 
-const HEADER_HEIGHT = 140;
+const HEADER_HEIGHT = 180;
 
 const DonorScreen: React.FC = () => {
   const { colorScheme } = useTheme();

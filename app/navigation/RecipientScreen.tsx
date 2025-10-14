@@ -22,7 +22,7 @@ import { ValidationAlert } from "../../components/common/ValidationAlert";
 import { useRecipientFormState } from "../../hooks/useRecipientFormState";
 import { StatusHeader } from "@/components/common/StatusHeader";
 
-const HEADER_HEIGHT = 120;
+const HEADER_HEIGHT = 150;
 
 const RecipientScreen: React.FC = () => {
   const { colorScheme } = useTheme();

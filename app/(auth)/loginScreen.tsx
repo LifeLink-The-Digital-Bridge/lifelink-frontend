@@ -7,6 +7,10 @@ import {
   View,
   Modal,
   StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
 import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
@@ -181,67 +185,75 @@ export default function LoginScreen() {
 
   return (
     <AppLayout>
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.scrollContainer}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
       >
-        <View style={styles.headerContainer}>
-          <Text style={styles.title}>Welcome Back</Text>
-          <Text style={styles.subtitle}>Sign in to your LifeLink account</Text>
-        </View>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <ScrollView
+            style={styles.container}
+            contentContainerStyle={styles.scrollContainer}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.headerContainer}>
+              <Text style={styles.title}>Welcome Back</Text>
+              <Text style={styles.subtitle}>Sign in to your LifeLink account</Text>
+            </View>
 
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={[
-              styles.input,
-              focusedInput === "identifier" && styles.inputFocused,
-              errors.identifier && styles.inputError,
-            ]}
-            placeholder="Username or Email"
-            placeholderTextColor={theme.textSecondary}
-            autoCapitalize="none"
-            autoCorrect={false}
-            value={identifier}
-            onChangeText={(text) => {
-              setIdentifier(text);
-              clearError("identifier");
-            }}
-            onFocus={() => setFocusedInput("identifier")}
-            onBlur={() => setFocusedInput(null)}
-          />
-          <ValidationMessage error={errors.identifier} />
-        </View>
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={[
+                  styles.input,
+                  focusedInput === "identifier" && styles.inputFocused,
+                  errors.identifier && styles.inputError,
+                ]}
+                placeholder="Username or Email"
+                placeholderTextColor={theme.textSecondary}
+                autoCapitalize="none"
+                autoCorrect={false}
+                value={identifier}
+                onChangeText={(text) => {
+                  setIdentifier(text);
+                  clearError("identifier");
+                }}
+                onFocus={() => setFocusedInput("identifier")}
+                onBlur={() => setFocusedInput(null)}
+              />
+              <ValidationMessage error={errors.identifier} />
+            </View>
 
-        <View style={styles.inputContainer}>
-          <PasswordInput
-            placeholder="Password"
-            value={password}
-            onChangeText={(text) => {
-              setPassword(text);
-              clearError("password");
-            }}
-            hasError={!!errors.password}
-            onFocus={() => setFocusedInput("password")}
-            onBlur={() => setFocusedInput(null)}
-          />
-          <ValidationMessage error={errors.password} />
-        </View>
+            <View style={styles.inputContainer}>
+              <PasswordInput
+                placeholder="Password"
+                value={password}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  clearError("password");
+                }}
+                hasError={!!errors.password}
+                onFocus={() => setFocusedInput("password")}
+                onBlur={() => setFocusedInput(null)}
+              />
+              <ValidationMessage error={errors.password} />
+            </View>
 
-        <LoadingButton
-          title="Sign In"
-          onPress={handleLogin}
-          loading={loading}
-          variant="primary"
-        />
+            <LoadingButton
+              title="Sign In"
+              onPress={handleLogin}
+              loading={loading}
+              variant="primary"
+            />
 
-        <View style={styles.linkContainer}>
-          <TouchableOpacity onPress={() => router.push("./registerScreen")}>
-            <Text style={styles.linkText}>Don't have an account? Sign up</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+            <View style={styles.linkContainer}>
+              <TouchableOpacity onPress={() => router.push("./registerScreen")}>
+                <Text style={styles.linkText}>Don't have an account? Sign up</Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
 
       <Modal
         visible={alertVisible}
