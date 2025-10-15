@@ -916,6 +916,22 @@ export const createUnifiedStyles = (theme: any) =>
       paddingHorizontal: wp(1.5),
       marginBottom: hp(3),
     },
+    
+    infoLabel: {
+      fontSize: wp("3.75%"),
+      color: theme.textSecondary,
+      fontWeight: "500",
+      marginBottom: hp("0.5%"),
+      letterSpacing: 0.1,
+      lineHeight: wp("5%"),
+    },
 
+    infoValue: {
+      fontSize: wp("4%"),
+      color: theme.text,
+      fontWeight: "600",
+      letterSpacing: 0.1,
+      lineHeight: wp("5.5%"),
+    },
 
   });

@@ -39,7 +39,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
 
   return (
     <TouchableOpacity
-      style={[styles.sectionContainer, { paddingHorizontal: 24 }]}
+      style={styles.sectionContainer}
       onPress={() => onViewProfile(user.id, user.name)}
       activeOpacity={0.7}
     >

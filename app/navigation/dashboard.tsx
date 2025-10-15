@@ -62,6 +62,8 @@ const Dashboard = () => {
   const lastScrollY = useRef(0);
   const topBarTranslateY = useRef(new Animated.Value(0)).current;
 
+  const hasCheckedPermissions = useRef(false);
+
   useEffect(() => {
     if (!isAuthenticated) {
       router.replace("../(auth)/loginScreen");
@@ -86,7 +88,10 @@ const Dashboard = () => {
           userId: userId || "",
         });
 
-        await checkLocationPermission();
+        if (!hasCheckedPermissions.current) {
+          hasCheckedPermissions.current = true;
+          checkExistingLocationPermission();
+        }
       } catch (error) {
         console.error("Error loading user data:", error);
       } finally {
@@ -96,7 +101,23 @@ const Dashboard = () => {
     loadUserData();
   }, []);
 
-  const checkLocationPermission = async () => {
+  const checkExistingLocationPermission = async () => {
+    try {
+      const { status } = await Location.getForegroundPermissionsAsync();
+      
+      if (status === "granted") {
+        setLocationPermission(true);
+        getCurrentLocation();
+      } else {
+        setLocationPermission(false);
+      }
+    } catch (error) {
+      console.error("Error checking location permission:", error);
+      setLocationPermission(false);
+    }
+  };
+
+  const handleEnableLocation = async () => {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       
@@ -105,9 +126,13 @@ const Dashboard = () => {
         await getCurrentLocation();
       } else {
         setLocationPermission(false);
+        showValidationAlert(
+          "Permission Denied",
+          "Location permission is required to see nearby activity. Please enable it in your device settings."
+        );
       }
     } catch (error) {
-      console.error("Error checking location permission:", error);
+      console.error("Error requesting location permission:", error);
       setLocationPermission(false);
     }
   };
@@ -130,8 +155,8 @@ const Dashboard = () => {
   const fetchNearbyData = async (latitude: number, longitude: number) => {
     try {
       setLoadingNearby(true);
+    
       
-
       await new Promise(resolve => setTimeout(resolve, 1000));
       setNearbyData([]);
       
@@ -141,10 +166,6 @@ const Dashboard = () => {
     } finally {
       setLoadingNearby(false);
     }
-  };
-
-  const handleEnableLocation = async () => {
-    await checkLocationPermission();
   };
 
   const handleScroll = Animated.event(
@@ -369,7 +390,6 @@ const Dashboard = () => {
         >
           <WelcomeSection username={userData.username} />
 
-          {/* Nearby Donations/Requests Section */}
           <View style={nearbyStyles.sectionContainer}>
             <View style={nearbyStyles.sectionHeader}>
               <Text style={nearbyStyles.sectionTitle}>Nearby Activity</Text>
@@ -422,7 +442,6 @@ const Dashboard = () => {
                 </Text>
               </View>
             ) : (
-              // TODO: Render nearby donors/recipients list when API is ready
               <View>
                 {nearbyData.map((item, index) => (
                   <Text key={index}>{item.name}</Text>

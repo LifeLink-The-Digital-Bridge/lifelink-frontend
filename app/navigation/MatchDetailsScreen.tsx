@@ -23,11 +23,9 @@ import {
   recipientConfirmMatch,
   fetchDonationByIdWithAccess,
   fetchRequestByIdWithAccess,
-  getDonorDetailsByUserId,
-  getRecipientDetailsByUserId,
   getMatchConfirmationStatus,
-  getMyDonationDetails,
-  getMyRequestDetails,
+  getDonorSnapshotByDonation,
+  getRecipientSnapshotByRequest,
 } from "../api/matchingApi";
 import { ProfileCard } from "../../components/match/ProfileCard";
 import { MatchInfoCard } from "../../components/match/MatchInfoCard";
@@ -94,35 +92,26 @@ const MatchDetailsScreen = () => {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const [donorProfile, setDonorProfile] = useState<UserProfile | null>(null);
-  const [recipientProfile, setRecipientProfile] = useState<UserProfile | null>(
-    null
-  );
+  const [recipientProfile, setRecipientProfile] = useState<UserProfile | null>(null);
 
-  const [donorCurrentData, setDonorCurrentData] = useState<any>(null);
-  const [recipientCurrentData, setRecipientCurrentData] = useState<any>(null);
+  const [donorSnapshot, setDonorSnapshot] = useState<any>(null);
+  const [recipientSnapshot, setRecipientSnapshot] = useState<any>(null);
 
   const [yourDetails, setYourDetails] = useState<any>(null);
   const [loadingYourDetails, setLoadingYourDetails] = useState(false);
 
-  const [currentGpsLocation, setCurrentGpsLocation] =
-    useState<LocationCoordinates | null>(null);
-  const [registeredLocation, setRegisteredLocation] =
-    useState<LocationCoordinates | null>(null);
-  const [otherPartyLocation, setOtherPartyLocation] =
-    useState<LocationCoordinates | null>(null);
+  const [currentGpsLocation, setCurrentGpsLocation] = useState<LocationCoordinates | null>(null);
+  const [registeredLocation, setRegisteredLocation] = useState<LocationCoordinates | null>(null);
+  const [otherPartyLocation, setOtherPartyLocation] = useState<LocationCoordinates | null>(null);
   const [allLocations, setAllLocations] = useState<LocationCoordinates[]>([]);
-  const [calculatedDistance, setCalculatedDistance] = useState<number | null>(
-    null
-  );
+  const [calculatedDistance, setCalculatedDistance] = useState<number | null>(null);
   const [locationPermission, setLocationPermission] = useState<boolean>(false);
   const [loadingLocation, setLoadingLocation] = useState(false);
 
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
-  const [alertType, setAlertType] = useState<
-    "success" | "error" | "warning" | "info"
-  >("info");
+  const [alertType, setAlertType] = useState<"success" | "error" | "warning" | "info">("info");
 
   const showAlert = (
     title: string,
@@ -168,9 +157,9 @@ const MatchDetailsScreen = () => {
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos(lat1 * (Math.PI / 180)) *
-        Math.cos(lat2 * (Math.PI / 180)) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   };
@@ -210,9 +199,7 @@ const MatchDetailsScreen = () => {
     }
   };
 
-  const extractRegisteredLocation = (
-    userData: any
-  ): LocationCoordinates | null => {
+  const extractRegisteredLocation = (userData: any): LocationCoordinates | null => {
     if (!userData || !userData.locations || userData.locations.length === 0) {
       return null;
     }
@@ -223,10 +210,8 @@ const MatchDetailsScreen = () => {
         latitude: parseFloat(location.latitude.toString()),
         longitude: parseFloat(location.longitude.toString()),
         title: "Your Registered Location",
-        description: "Location from your profile",
-        address: `${location.addressLine || ""}, ${location.city || ""}`
-          .trim()
-          .replace(/^,\s*/, ""),
+        description: "Location from your profile at match time",
+        address: `${location.addressLine || ""}, ${location.city || ""}`.trim().replace(/^,\s*/, ""),
         type: "registered",
       };
     }
@@ -238,11 +223,7 @@ const MatchDetailsScreen = () => {
     otherPartyData: any,
     otherPartyRole: string
   ): LocationCoordinates | null => {
-    if (
-      !otherPartyData ||
-      !otherPartyData.locations ||
-      otherPartyData.locations.length === 0
-    ) {
+    if (!otherPartyData || !otherPartyData.locations || otherPartyData.locations.length === 0) {
       return null;
     }
 
@@ -252,10 +233,8 @@ const MatchDetailsScreen = () => {
         latitude: parseFloat(location.latitude.toString()),
         longitude: parseFloat(location.longitude.toString()),
         title: `${otherPartyRole} Location`,
-        address: `${location.addressLine || ""}, ${location.city || ""}`
-          .trim()
-          .replace(/^,\s*/, ""),
-        description: "Their registered location",
+        address: `${location.addressLine || ""}, ${location.city || ""}`.trim().replace(/^,\s*/, ""),
+        description: "Their registered location at match time",
         type: "other",
       };
     }
@@ -267,10 +246,8 @@ const MatchDetailsScreen = () => {
     if (!match || !currentUserId) return;
 
     const userRole = getUserRoleInMatch();
-    const currentUserData =
-      userRole === "donor" ? donorCurrentData : recipientCurrentData;
-    const otherPartyData =
-      userRole === "donor" ? recipientCurrentData : donorCurrentData;
+    const currentUserData = userRole === "donor" ? donorSnapshot : recipientSnapshot;
+    const otherPartyData = userRole === "donor" ? recipientSnapshot : donorSnapshot;
     const otherPartyRole = userRole === "donor" ? "Recipient" : "Donor";
 
     const registered = extractRegisteredLocation(currentUserData);
@@ -304,14 +281,9 @@ const MatchDetailsScreen = () => {
     return "unknown";
   };
 
-  const loadYourDetails = async (
-    matchData: MatchDetails,
-    userId: string | null,
-    donorData: any,
-    recipientData: any
-  ) => {
+  const loadYourDetails = async (matchData: MatchDetails, userId: string | null) => {
     if (!userId) {
-      console.log(" No userId provided");
+      console.log("No userId provided");
       return;
     }
     setLoadingYourDetails(true);
@@ -324,32 +296,14 @@ const MatchDetailsScreen = () => {
       }
 
       if (userRole === "donor") {
-        if (!donorData?.donorId) {
-          setYourDetails(null);
-          return;
-        }
-
-        const donationDetails = await getMyDonationDetails(
-          donorData.donorId,
-          matchData.donationId
-        );
-
+        const donationDetails = await fetchDonationByIdWithAccess(matchData.donationId);
         setYourDetails({ type: "donation", data: donationDetails });
       } else if (userRole === "recipient") {
-        if (!recipientData?.recipientId) {
-          setYourDetails(null);
-          return;
-        }
-
-        const requestDetails = await getMyRequestDetails(
-          recipientData.recipientId,
-          matchData.receiveRequestId
-        );
-
+        const requestDetails = await fetchRequestByIdWithAccess(matchData.receiveRequestId);
         setYourDetails({ type: "request", data: requestDetails });
-      } else {
       }
     } catch (error: any) {
+      console.error("Error loading your details:", error);
       setYourDetails(null);
     } finally {
       setLoadingYourDetails(false);
@@ -403,9 +357,7 @@ const MatchDetailsScreen = () => {
         const parsedMatch = JSON.parse(matchData as string);
 
         try {
-          const confirmed = await getMatchConfirmationStatus(
-            parsedMatch.matchResultId
-          );
+          const confirmed = await getMatchConfirmationStatus(parsedMatch.matchResultId);
           parsedMatch.isConfirmed = confirmed;
         } catch (error) {
           console.log("Could not verify match status, using passed data");
@@ -415,36 +367,36 @@ const MatchDetailsScreen = () => {
         setMatch(parsedMatch);
         setCurrentUserId(userId);
 
-        const [donorProfile, recipientProfile, donorDetails, recipientDetails] =
-          await Promise.all([
-            fetchUserById(parsedMatch.donorUserId),
-            fetchUserById(parsedMatch.recipientUserId),
-            getDonorDetailsByUserId(parsedMatch.donorUserId),
-            getRecipientDetailsByUserId(parsedMatch.recipientUserId),
-          ]);
+        const [donorProfile, recipientProfile] = await Promise.all([
+          fetchUserById(parsedMatch.donorUserId),
+          fetchUserById(parsedMatch.recipientUserId),
+        ]);
+
+        let donorSnapshotData = null;
+        let recipientSnapshotData = null;
+
+        if (userId === parsedMatch.donorUserId) {
+          recipientSnapshotData = await getRecipientSnapshotByRequest(parsedMatch.receiveRequestId);
+        } else if (userId === parsedMatch.recipientUserId) {
+          donorSnapshotData = await getDonorSnapshotByDonation(parsedMatch.donationId);
+        }
+
 
         setDonorProfile(donorProfile);
         setRecipientProfile(recipientProfile);
-        setDonorCurrentData(donorDetails);
-        setRecipientCurrentData(recipientDetails);
+        setDonorSnapshot(donorSnapshotData);
+        setRecipientSnapshot(recipientSnapshotData);
 
-        console.log("Current data loaded from matching service:", {
-          donorDetails: !!donorDetails,
-          recipientDetails: !!recipientDetails,
+        console.log("✅ Immutable snapshots loaded:", {
+          donorSnapshot: !!donorSnapshotData,
+          recipientSnapshot: !!recipientSnapshotData,
+          donationId: parsedMatch.donationId,
+          requestId: parsedMatch.receiveRequestId,
         });
 
-        await loadYourDetails(
-          parsedMatch,
-          userId,
-          donorDetails,
-          recipientDetails
-        );
+        await loadYourDetails(parsedMatch, userId);
       } catch (error: any) {
-        showAlert(
-          "Error",
-          error.message || "Failed to load match details",
-          "error"
-        );
+        showAlert("Error", error.message || "Failed to load match details", "error");
       } finally {
         setLoading(false);
       }
@@ -454,24 +406,10 @@ const MatchDetailsScreen = () => {
   }, [matchData]);
 
   useEffect(() => {
-    if (
-      match &&
-      currentUserId &&
-      donorProfile &&
-      recipientProfile &&
-      (donorCurrentData || recipientCurrentData)
-    ) {
+    if (match && currentUserId && donorProfile && recipientProfile && (donorSnapshot || recipientSnapshot)) {
       updateLocationData();
     }
-  }, [
-    match,
-    currentUserId,
-    donorProfile,
-    recipientProfile,
-    donorCurrentData,
-    recipientCurrentData,
-    currentGpsLocation,
-  ]);
+  }, [match, currentUserId, donorProfile, recipientProfile, donorSnapshot, recipientSnapshot, currentGpsLocation]);
 
   useEffect(() => {
     getCurrentUserLocation();
@@ -479,11 +417,7 @@ const MatchDetailsScreen = () => {
 
   const getCurrentUserRole = (): string => {
     const role = getUserRoleInMatch();
-    return role === "donor"
-      ? "Donor"
-      : role === "recipient"
-      ? "Recipient"
-      : "Unknown";
+    return role === "donor" ? "Donor" : role === "recipient" ? "Recipient" : "Unknown";
   };
 
   const getCurrentUserStatus = (): boolean => {
@@ -518,14 +452,14 @@ const MatchDetailsScreen = () => {
         userId: match.recipientUserId,
         role: "Recipient",
         profile: recipientProfile,
-        data: recipientCurrentData,
+        data: recipientSnapshot,
       };
     } else if (userRole === "recipient") {
       return {
         userId: match.donorUserId,
         role: "Donor",
         profile: donorProfile,
-        data: donorCurrentData,
+        data: donorSnapshot,
       };
     }
     return null;
@@ -595,10 +529,7 @@ const MatchDetailsScreen = () => {
       <AppLayout>
         <View style={styles.promptContainer}>
           <Text style={styles.promptTitle}>Match Not Found</Text>
-          <TouchableOpacity
-            style={styles.registerButton}
-            onPress={() => router.back()}
-          >
+          <TouchableOpacity style={styles.registerButton} onPress={() => router.back()}>
             <Feather name="arrow-left" size={16} color="#fff" />
             <Text style={styles.registerButtonText}>Go Back</Text>
           </TouchableOpacity>
@@ -663,7 +594,7 @@ const MatchDetailsScreen = () => {
               iconName={otherPartyInfo.role === "Donor" ? "heart" : "user"}
               onViewProfile={viewUserProfile}
               matchingServiceData={otherPartyInfo.data}
-              isHistorical={match.isConfirmed}
+              isHistorical={true}
             />
           )}
 
@@ -684,19 +615,14 @@ const MatchDetailsScreen = () => {
             onRequestLocation={getCurrentUserLocation}
             calculateDistance={calculateDistance}
             currentUserRole={getUserRoleInMatch()}
-            otherPartyRole={
-              otherPartyInfo?.role as "Donor" | "Recipient" | undefined
-            }
+            otherPartyRole={otherPartyInfo?.role as "Donor" | "Recipient" | undefined}
             matchType={match?.matchType}
           />
 
           {canConfirmMatch() && (
             <View style={{ marginTop: 20 }}>
               <TouchableOpacity
-                style={[
-                  styles.submitButton,
-                  confirmingMatch ? styles.submitButtonDisabled : null,
-                ]}
+                style={[styles.submitButton, confirmingMatch ? styles.submitButtonDisabled : null]}
                 onPress={handleConfirmMatch}
                 disabled={confirmingMatch}
                 activeOpacity={0.8}
@@ -704,9 +630,7 @@ const MatchDetailsScreen = () => {
                 {confirmingMatch ? (
                   <ActivityIndicator color="#fff" size="small" />
                 ) : (
-                  <Text style={styles.submitButtonText}>
-                    {getConfirmationButtonText()}
-                  </Text>
+                  <Text style={styles.submitButtonText}>{getConfirmationButtonText()}</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -746,7 +670,7 @@ const MatchDetailsScreen = () => {
                 fontWeight: "500",
               }}
             >
-              Loading Information...
+              Loading Profile...
             </Text>
           </View>
         </View>

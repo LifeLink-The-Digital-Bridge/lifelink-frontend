@@ -116,7 +116,7 @@ export const MapSection: React.FC<MapSectionProps> = ({
     switch (location.type) {
       case 'registered':
         return {
-          color: '#4CAF50', 
+          color: '#4CAF50',
           icon: 'home',
           backgroundColor: '#4CAF50'
         };
@@ -128,7 +128,7 @@ export const MapSection: React.FC<MapSectionProps> = ({
         };
       case 'other':
         return {
-          color: '#FF5722', 
+          color: '#FF5722',
           icon: otherPartyRole === 'Donor' ? 'heart' : 'user',
           backgroundColor: '#FF5722'
         };
@@ -146,19 +146,19 @@ export const MapSection: React.FC<MapSectionProps> = ({
 
     const points = [];
     const steps = 10;
-    
+
     for (let i = 0; i <= steps; i++) {
       const ratio = i / steps;
       const lat = registeredLocation.latitude + (otherPartyLocation.latitude - registeredLocation.latitude) * ratio;
       const lng = registeredLocation.longitude + (otherPartyLocation.longitude - registeredLocation.longitude) * ratio;
-      
+
       const curveFactor = Math.sin(ratio * Math.PI) * 0.001;
       points.push({
         latitude: lat + curveFactor,
         longitude: lng + curveFactor,
       });
     }
-    
+
     return points;
   };
 
@@ -167,12 +167,12 @@ export const MapSection: React.FC<MapSectionProps> = ({
 
     const latitudes = allLocations.map(loc => loc.latitude);
     const longitudes = allLocations.map(loc => loc.longitude);
-    
+
     const minLat = Math.min(...latitudes);
     const maxLat = Math.max(...latitudes);
     const minLng = Math.min(...longitudes);
     const maxLng = Math.max(...longitudes);
-    
+
     const region = {
       latitude: (minLat + maxLat) / 2,
       longitude: (minLng + maxLng) / 2,
@@ -183,10 +183,10 @@ export const MapSection: React.FC<MapSectionProps> = ({
     const route = generateRoute();
 
     return (
-      <TouchableOpacity 
-        style={{ 
-          height: fullscreen ? '100%' : 250, 
-          borderRadius: fullscreen ? 0 : 12, 
+      <TouchableOpacity
+        style={{
+          height: fullscreen ? '100%' : 250,
+          borderRadius: fullscreen ? 0 : 12,
           overflow: 'hidden'
         }}
         onPress={fullscreen ? undefined : () => setIsFullscreen(true)}
@@ -229,14 +229,14 @@ export const MapSection: React.FC<MapSectionProps> = ({
               lineDashPattern={[5, 5]}
             />
           )}
-          
+
           {otherPartyLocation && currentGpsLocation && (
             <Polyline
               coordinates={[
                 { latitude: currentGpsLocation.latitude, longitude: currentGpsLocation.longitude },
                 { latitude: otherPartyLocation.latitude, longitude: otherPartyLocation.longitude }
               ]}
-              strokeColor={isDark ? "#4f8df5" : "#007AFF"} 
+              strokeColor={isDark ? "#4f8df5" : "#007AFF"}
               strokeWidth={3}
               lineDashPattern={[10, 5]}
             />
@@ -293,12 +293,12 @@ export const MapSection: React.FC<MapSectionProps> = ({
     if (!otherPartyLocation) return null;
 
     const info = [];
-    
+
     if (registeredLocation) {
       const distance = calculateDistance(
-        registeredLocation.latitude, 
+        registeredLocation.latitude,
         registeredLocation.longitude,
-        otherPartyLocation.latitude, 
+        otherPartyLocation.latitude,
         otherPartyLocation.longitude
       );
       info.push({
@@ -310,13 +310,13 @@ export const MapSection: React.FC<MapSectionProps> = ({
 
     if (currentGpsLocation && registeredLocation) {
       const distance = calculateDistance(
-        currentGpsLocation.latitude, 
+        currentGpsLocation.latitude,
         currentGpsLocation.longitude,
-        otherPartyLocation.latitude, 
+        otherPartyLocation.latitude,
         otherPartyLocation.longitude
       );
       info.push({
-        label: "From Current Location", 
+        label: "From Current Location",
         value: `${distance.toFixed(2)} km`,
         color: isDark ? '#4f8df5' : '#007AFF'
       });
@@ -341,7 +341,7 @@ export const MapSection: React.FC<MapSectionProps> = ({
           borderBottomWidth: 1,
           borderBottomColor: isDark ? '#2a3441' : '#e0e0e0',
         }}>
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={() => setIsFullscreen(false)}
             style={{
               backgroundColor: isDark ? 'rgba(79, 141, 245, 0.2)' : 'rgba(79, 141, 245, 0.1)',
@@ -358,7 +358,7 @@ export const MapSection: React.FC<MapSectionProps> = ({
               fontSize: 18,
               fontWeight: '700',
             }}>
-              Route to {otherPartyRole} 
+              Route to {otherPartyRole}
             </Text>
             <Text style={{
               color: theme.textSecondary,
@@ -419,16 +419,16 @@ export const MapSection: React.FC<MapSectionProps> = ({
 
   if (locationPermission && allLocations.length > 0) {
     const distanceInfo = getDistanceInfo();
-    
+
     return (
-      <View style={[styles.sectionContainer, { paddingHorizontal: 24 }]}>
+      <View style={styles.sectionContainer}>
         <View style={styles.sectionHeader}>
           <View style={styles.sectionIconContainer}>
             <Feather name="map-pin" size={18} color={theme.primary} />
           </View>
           <Text style={styles.sectionTitle}>Locations & Distance</Text>
         </View>
-        
+
         <View style={{ marginBottom: 16 }}>
           {renderMap()}
         </View>
@@ -454,7 +454,7 @@ export const MapSection: React.FC<MapSectionProps> = ({
               </Text>
             </View>
           )}
-          
+
           {currentGpsLocation && (
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
               <View style={{
@@ -475,7 +475,7 @@ export const MapSection: React.FC<MapSectionProps> = ({
               </Text>
             </View>
           )}
-          
+
           {otherPartyLocation && (
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <View style={{
@@ -489,21 +489,21 @@ export const MapSection: React.FC<MapSectionProps> = ({
                 borderWidth: 2,
                 borderColor: '#ffffff',
               }}>
-                <Feather 
-                  name={otherPartyRole === 'Donor' ? 'heart' : 'user'} 
-                  size={12} 
-                  color="#ffffff" 
+                <Feather
+                  name={otherPartyRole === 'Donor' ? 'heart' : 'user'}
+                  size={12}
+                  color="#ffffff"
                 />
               </View>
               <Text style={[styles.text, { fontSize: 14, color: theme.text, fontWeight: '500' }]}>
-                {otherPartyRole} location 
+                {otherPartyRole} location
               </Text>
             </View>
           )}
         </View>
-        
+
         {distanceInfo && distanceInfo.map((info, index) => (
-          <InfoRow 
+          <InfoRow
             key={index}
             label={info.label}
             value={info.value}
@@ -518,19 +518,18 @@ export const MapSection: React.FC<MapSectionProps> = ({
   }
 
   return (
-    <View style={[styles.sectionContainer, { paddingHorizontal: 24 }]}>
-      <View style={styles.sectionHeader}>
+    <View style={styles.sectionHeader}>      <View style={styles.sectionHeader}>
         <View style={styles.sectionIconContainer}>
           <Feather name="map-pin" size={18} color={theme.primary} />
         </View>
         <Text style={styles.sectionTitle}>Location & Distance</Text>
       </View>
-      
-      <View style={{ 
-        height: 200, 
+
+      <View style={{
+        height: 200,
         backgroundColor: theme.card,
-        borderRadius: 12, 
-        justifyContent: 'center', 
+        borderRadius: 12,
+        justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 16
       }}>
@@ -545,7 +544,7 @@ export const MapSection: React.FC<MapSectionProps> = ({
             <Text style={[styles.text, { color: theme.text, marginTop: 8, textAlign: 'center' }]}>
               Location permission required to show map and distance
             </Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={onRequestLocation}
               style={{
                 backgroundColor: theme.primary,
@@ -562,7 +561,7 @@ export const MapSection: React.FC<MapSectionProps> = ({
           <>
             <Feather name="map-pin" size={32} color={theme.textSecondary} />
             <Text style={[styles.text, { color: theme.text, marginTop: 8, textAlign: 'center' }]}>
-              {otherPartyRole} location not available 
+              {otherPartyRole} location not available
             </Text>
           </>
         ) : (
@@ -574,12 +573,12 @@ export const MapSection: React.FC<MapSectionProps> = ({
           </>
         )}
       </View>
-      
+
       {calculatedDistance && (
-        <InfoRow 
-          label="Distance" 
-          value={`${calculatedDistance.toFixed(2)} km`} 
-          isLast 
+        <InfoRow
+          label="Distance"
+          value={`${calculatedDistance.toFixed(2)} km`}
+          isLast
         />
       )}
     </View>

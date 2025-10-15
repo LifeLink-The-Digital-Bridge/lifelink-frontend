@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Alert,
   Animated,
+  RefreshControl,
 } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import { useAuth } from "../../utils/auth-context";
@@ -20,47 +21,25 @@ import { Feather } from "@expo/vector-icons";
 import {
   getMyMatchesAsDonor,
   getMyMatchesAsRecipient,
-  fetchDonationByIdWithAccess,
-  fetchRequestByIdWithAccess,
+  getMyDonations,
+  getMyRequests,
   MatchResponse,
+  DonationDTO,
+  ReceiveRequestDTO,
 } from "../api/matchingApi";
 import { StatusHeader } from "@/components/common/StatusHeader";
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
 
-const HEADER_HEIGHT = 140;
-
-interface DonationItem {
-  id: string;
-  donationType: string;
-  donationDate: string;
-  status: string;
-  quantity?: number;
-  bloodType?: string;
-  organType?: string;
-  tissueType?: string;
-  stemCellType?: string;
-}
-
-interface RequestItem {
-  id: string;
-  requestType: string;
-  requestDate: string;
-  status: string;
-  quantity?: number;
-  bloodType?: string;
-  organType?: string;
-  tissueType?: string;
-  stemCellType?: string;
-}
+const HEADER_HEIGHT = 180;
 
 const StatusScreen = () => {
-  const [donations, setDonations] = useState<DonationItem[]>([]);
-  const [requests, setRequests] = useState<RequestItem[]>([]);
+  const [donations, setDonations] = useState<DonationDTO[]>([]);
+  const [requests, setRequests] = useState<ReceiveRequestDTO[]>([]);
   const [donorMatches, setDonorMatches] = useState<MatchResponse[]>([]);
   const [recipientMatches, setRecipientMatches] = useState<MatchResponse[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"donations" | "requests">(
-    "donations"
-  );
+  const [refreshing, setRefreshing] = useState(false);
+  const [activeTab, setActiveTab] = useState<"donations" | "requests">("donations");
   const { isAuthenticated } = useAuth();
   const { colorScheme } = useTheme();
   const isDark = colorScheme === "dark";
@@ -92,9 +71,9 @@ const StatusScreen = () => {
     lastScrollY.current = currentScrollY;
   };
 
-const handleBackPress = () => {
-  router.back();
-};
+  const handleBackPress = () => {
+    router.back();
+  };
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -106,112 +85,65 @@ const handleBackPress = () => {
     fetchData();
   }, []);
 
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = async (isRefreshing = false) => {
+    if (isRefreshing) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
+
     try {
       const rolesString = await SecureStore.getItemAsync("roles");
       const roles: string[] = rolesString ? JSON.parse(rolesString) : [];
 
-      let donationsData: DonationItem[] = [];
-      let requestsData: RequestItem[] = [];
+      let donationsData: DonationDTO[] = [];
+      let requestsData: ReceiveRequestDTO[] = [];
+      let donorMatchesData: MatchResponse[] = [];
+      let recipientMatchesData: MatchResponse[] = [];
 
       if (roles.includes("DONOR")) {
         try {
-          const matches = await getMyMatchesAsDonor();
-          setDonorMatches(matches);
-
-          const donationPromises = matches.map(async (match) => {
-            try {
-              const donation = await fetchDonationByIdWithAccess(
-                match.donationId
-              );
-              return {
-                id: donation.id || match.donationId,
-                donationType:
-                  donation.donationType || match.donationType || "N/A",
-                donationDate: donation.donationDate || match.matchedAt,
-                status: donation.status || "MATCHED",
-                quantity: donation.quantity,
-                bloodType: donation.bloodType || match.bloodType,
-                organType: donation.organType,
-                tissueType: donation.tissueType,
-                stemCellType: donation.stemCellType,
-              };
-            } catch (error) {
-              console.log(
-                `Could not fetch donation ${match.donationId}:`,
-                error
-              );
-              return {
-                id: match.donationId,
-                donationType: match.donationType || "N/A",
-                donationDate: match.matchedAt,
-                status: "MATCHED",
-                bloodType: match.bloodType,
-              };
-            }
-          });
-
-          donationsData = await Promise.all(donationPromises);
+          const [donationsResult, matchesResult] = await Promise.all([
+            getMyDonations(),
+            getMyMatchesAsDonor(),
+          ]);
+          
+          donationsData = donationsResult;
+          donorMatchesData = matchesResult;
+          
           setDonations(donationsData);
+          setDonorMatches(donorMatchesData);
         } catch (error: any) {
           if (error.message === "NOT_REGISTERED_AS_DONOR") {
             console.log("User not registered as donor");
           } else {
             console.error("Failed to fetch donor data:", error);
           }
-          setDonorMatches([]);
           setDonations([]);
+          setDonorMatches([]);
         }
       }
 
       if (roles.includes("RECIPIENT")) {
         try {
-          const matches = await getMyMatchesAsRecipient();
-          setRecipientMatches(matches);
-
-          const requestPromises = matches.map(async (match) => {
-            try {
-              const request = await fetchRequestByIdWithAccess(
-                match.receiveRequestId
-              );
-              return {
-                id: request.id || match.receiveRequestId,
-                requestType: request.requestType || match.requestType || "N/A",
-                requestDate: request.requestDate || match.matchedAt,
-                status: request.status || "MATCHED",
-                quantity: request.quantity,
-                bloodType: request.requestedBloodType || match.bloodType,
-                organType: request.requestedOrgan,
-                tissueType: request.requestedTissue,
-                stemCellType: request.requestedStemCellType,
-              };
-            } catch (error) {
-              console.log(
-                `Could not fetch request ${match.receiveRequestId}:`,
-                error
-              );
-              return {
-                id: match.receiveRequestId,
-                requestType: match.requestType || "N/A",
-                requestDate: match.matchedAt,
-                status: "MATCHED",
-                bloodType: match.bloodType,
-              };
-            }
-          });
-
-          requestsData = await Promise.all(requestPromises);
+          const [requestsResult, matchesResult] = await Promise.all([
+            getMyRequests(),
+            getMyMatchesAsRecipient(),
+          ]);
+          
+          requestsData = requestsResult;
+          recipientMatchesData = matchesResult;
+          
           setRequests(requestsData);
+          setRecipientMatches(recipientMatchesData);
         } catch (error: any) {
           if (error.message === "NOT_REGISTERED_AS_RECIPIENT") {
             console.log("User not registered as recipient");
           } else {
             console.error("Failed to fetch recipient data:", error);
           }
-          setRecipientMatches([]);
           setRequests([]);
-
+          setRecipientMatches([]);
         }
       }
 
@@ -225,31 +157,55 @@ const handleBackPress = () => {
     } catch (error) {
       console.error("Failed to fetch data:", error);
       Alert.alert("Error", "Failed to load status data");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
-    setLoading(false);
   };
 
-  const getMatchForItem = (itemId: string, type: "donation" | "request") => {
-    if (type === "donation") {
-      return donorMatches.find((match) => match.donationId === itemId);
-    } else {
-      return recipientMatches.find(
-        (match) => match.receiveRequestId === itemId
-      );
-    }
+  const onRefresh = () => {
+    fetchData(true);
+  };
+
+  const getMatchForDonation = (donationId: string): MatchResponse | undefined => {
+    return donorMatches.find((match) => match.donationId === donationId);
+  };
+
+  const getMatchForRequest = (requestId: string): MatchResponse | undefined => {
+    return recipientMatches.find((match) => match.receiveRequestId === requestId);
   };
 
   const handleViewMatches = () => {
     router.push("/navigation/MatchResultsScreen");
   };
 
-  const handleItemPress = (itemId: string, type: "donation" | "request") => {
-    const match = getMatchForItem(itemId, type);
+  const handleDonationPress = (donation: DonationDTO) => {
+    const match = getMatchForDonation(donation.id);
     if (match) {
       router.push({
         pathname: "/navigation/MatchDetailsScreen",
         params: { matchData: JSON.stringify(match) },
       });
+    } else {
+      Alert.alert(
+        "Donation Details",
+        `Status: ${donation.status}\nType: ${donation.donationType}\nDate: ${new Date(donation.donationDate).toLocaleDateString()}`
+      );
+    }
+  };
+
+  const handleRequestPress = (request: ReceiveRequestDTO) => {
+    const match = getMatchForRequest(request.id);
+    if (match) {
+      router.push({
+        pathname: "/navigation/MatchDetailsScreen",
+        params: { matchData: JSON.stringify(match) },
+      });
+    } else {
+      Alert.alert(
+        "Request Details",
+        `Status: ${request.status}\nType: ${request.requestType}\nUrgency: ${request.urgencyLevel}\nDate: ${new Date(request.requestDate).toLocaleDateString()}`
+      );
     }
   };
 
@@ -257,14 +213,33 @@ const handleBackPress = () => {
     return donorMatches.length + recipientMatches.length;
   };
 
-  const renderDonationItem = (donation: DonationItem) => {
-    const match = getMatchForItem(donation.id, "donation");
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "AVAILABLE":
+      case "PENDING":
+        return "#f59e0b";
+      case "COMPLETED":
+      case "FULFILLED":
+      case "MATCHED":
+        return theme.success;
+      case "CANCELLED":
+      case "EXPIRED":
+      case "REJECTED":
+        return theme.error;
+      default:
+        return theme.textSecondary;
+    }
+  };
+
+  const renderDonationItem = (donation: DonationDTO) => {
+    const match = getMatchForDonation(donation.id);
+    const hasMatch = !!match;
 
     return (
       <TouchableOpacity
         key={donation.id}
-        style={[styles.card, { marginBottom: 12 }]}
-        onPress={() => handleItemPress(donation.id, "donation")}
+        style={[styles.card, { marginBottom: hp("1.5%") }]}
+        onPress={() => handleDonationPress(donation)}
         activeOpacity={0.7}
       >
         <View style={statusStyles.cardHeader}>
@@ -272,15 +247,12 @@ const handleBackPress = () => {
           <View
             style={[
               styles.statusBadge,
-              donation.status === "PENDING"
-                ? statusStyles.statusPending
-                : donation.status === "COMPLETED" ||
-                  donation.status === "MATCHED"
-                ? statusStyles.statusCompleted
-                : statusStyles.statusRejected,
+              { backgroundColor: getStatusColor(donation.status) + "20", borderColor: getStatusColor(donation.status) + "40" },
             ]}
           >
-            <Text style={styles.statusText}>{donation.status}</Text>
+            <Text style={[styles.statusText, { color: getStatusColor(donation.status) }]}>
+              {donation.status}
+            </Text>
           </View>
         </View>
 
@@ -288,68 +260,63 @@ const handleBackPress = () => {
           Date: {new Date(donation.donationDate).toLocaleDateString()}
         </Text>
 
-        {donation.quantity && (
-          <Text style={statusStyles.cardDetail}>
-            Quantity: {donation.quantity}
-          </Text>
-        )}
         {donation.bloodType && (
-          <Text style={statusStyles.cardDetail}>
-            Blood Type: {donation.bloodType}
-          </Text>
+          <Text style={statusStyles.cardDetail}>Blood Type: {donation.bloodType}</Text>
+        )}
+        {donation.quantity && (
+          <Text style={statusStyles.cardDetail}>Quantity: {donation.quantity} units</Text>
         )}
         {donation.organType && (
-          <Text style={statusStyles.cardDetail}>
-            Organ: {donation.organType}
-          </Text>
+          <Text style={statusStyles.cardDetail}>Organ: {donation.organType}</Text>
         )}
         {donation.tissueType && (
-          <Text style={statusStyles.cardDetail}>
-            Tissue: {donation.tissueType}
-          </Text>
+          <Text style={statusStyles.cardDetail}>Tissue: {donation.tissueType}</Text>
         )}
         {donation.stemCellType && (
-          <Text style={statusStyles.cardDetail}>
-            Stem Cell: {donation.stemCellType}
-          </Text>
+          <Text style={statusStyles.cardDetail}>Stem Cell: {donation.stemCellType}</Text>
         )}
 
-        {match && (
+        {hasMatch && (
           <View
             style={{
               flexDirection: "row",
               alignItems: "center",
-              marginTop: 12,
-              paddingTop: 12,
+              justifyContent: "space-between",
+              marginTop: hp("1.5%"),
+              paddingTop: hp("1.5%"),
               borderTopWidth: 1,
               borderTopColor: theme.border + "30",
             }}
           >
-            <Feather name="users" size={16} color={theme.success} />
-            <Text
-              style={{
-                color: theme.success,
-                fontSize: 14,
-                fontWeight: "600",
-                marginLeft: 8,
-              }}
-            >
-              Matched - Tap to view details
-            </Text>
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Feather name="check-circle" size={wp("4%")} color={theme.success} />
+              <Text
+                style={{
+                  color: theme.success,
+                  fontSize: wp("3.5%"),
+                  fontWeight: "600",
+                  marginLeft: wp("2%"),
+                }}
+              >
+                Matched
+              </Text>
+            </View>
+            <Feather name="chevron-right" size={wp("5%")} color={theme.primary} />
           </View>
         )}
       </TouchableOpacity>
     );
   };
 
-  const renderRequestItem = (request: RequestItem) => {
-    const match = getMatchForItem(request.id, "request");
+  const renderRequestItem = (request: ReceiveRequestDTO) => {
+    const match = getMatchForRequest(request.id);
+    const hasMatch = !!match;
 
     return (
       <TouchableOpacity
         key={request.id}
-        style={[styles.card, { marginBottom: 12 }]}
-        onPress={() => handleItemPress(request.id, "request")}
+        style={[styles.card, { marginBottom: hp("1.5%") }]}
+        onPress={() => handleRequestPress(request)}
         activeOpacity={0.7}
       >
         <View style={statusStyles.cardHeader}>
@@ -357,14 +324,12 @@ const handleBackPress = () => {
           <View
             style={[
               styles.statusBadge,
-              request.status === "PENDING"
-                ? statusStyles.statusPending
-                : request.status === "FULFILLED" || request.status === "MATCHED"
-                ? statusStyles.statusCompleted
-                : statusStyles.statusRejected,
+              { backgroundColor: getStatusColor(request.status) + "20", borderColor: getStatusColor(request.status) + "40" },
             ]}
           >
-            <Text style={styles.statusText}>{request.status}</Text>
+            <Text style={[styles.statusText, { color: getStatusColor(request.status) }]}>
+              {request.status}
+            </Text>
           </View>
         </View>
 
@@ -372,54 +337,83 @@ const handleBackPress = () => {
           Date: {new Date(request.requestDate).toLocaleDateString()}
         </Text>
 
+        <View
+          style={[
+            styles.statusBadge,
+            { 
+              backgroundColor: 
+                request.urgencyLevel === "CRITICAL" ? theme.error + "20" :
+                request.urgencyLevel === "HIGH" ? "#FF6B35" + "20" :
+                request.urgencyLevel === "MEDIUM" ? "#f59e0b" + "20" : 
+                theme.success + "20",
+              borderColor:
+                request.urgencyLevel === "CRITICAL" ? theme.error + "40" :
+                request.urgencyLevel === "HIGH" ? "#FF6B35" + "40" :
+                request.urgencyLevel === "MEDIUM" ? "#f59e0b" + "40" :
+                theme.success + "40",
+              marginTop: hp("1%"),
+              alignSelf: "flex-start",
+            },
+          ]}
+        >
+          <Text
+            style={[
+              styles.statusText,
+              {
+                color:
+                  request.urgencyLevel === "CRITICAL" ? theme.error :
+                  request.urgencyLevel === "HIGH" ? "#FF6B35" :
+                  request.urgencyLevel === "MEDIUM" ? "#f59e0b" :
+                  theme.success,
+              },
+            ]}
+          >
+            Urgency: {request.urgencyLevel}
+          </Text>
+        </View>
+
+        {request.requestedBloodType && (
+          <Text style={statusStyles.cardDetail}>Blood Type: {request.requestedBloodType}</Text>
+        )}
         {request.quantity && (
-          <Text style={statusStyles.cardDetail}>
-            Quantity: {request.quantity}
-          </Text>
+          <Text style={statusStyles.cardDetail}>Quantity: {request.quantity} units</Text>
         )}
-        {request.bloodType && (
-          <Text style={statusStyles.cardDetail}>
-            Blood Type: {request.bloodType}
-          </Text>
+        {request.requestedOrgan && (
+          <Text style={statusStyles.cardDetail}>Organ: {request.requestedOrgan}</Text>
         )}
-        {request.organType && (
-          <Text style={statusStyles.cardDetail}>
-            Organ: {request.organType}
-          </Text>
+        {request.requestedTissue && (
+          <Text style={statusStyles.cardDetail}>Tissue: {request.requestedTissue}</Text>
         )}
-        {request.tissueType && (
-          <Text style={statusStyles.cardDetail}>
-            Tissue: {request.tissueType}
-          </Text>
-        )}
-        {request.stemCellType && (
-          <Text style={statusStyles.cardDetail}>
-            Stem Cell: {request.stemCellType}
-          </Text>
+        {request.requestedStemCellType && (
+          <Text style={statusStyles.cardDetail}>Stem Cell: {request.requestedStemCellType}</Text>
         )}
 
-        {match && (
+        {hasMatch && (
           <View
             style={{
               flexDirection: "row",
               alignItems: "center",
-              marginTop: 12,
-              paddingTop: 12,
+              justifyContent: "space-between",
+              marginTop: hp("1.5%"),
+              paddingTop: hp("1.5%"),
               borderTopWidth: 1,
               borderTopColor: theme.border + "30",
             }}
           >
-            <Feather name="users" size={16} color={theme.success} />
-            <Text
-              style={{
-                color: theme.success,
-                fontSize: 14,
-                fontWeight: "600",
-                marginLeft: 8,
-              }}
-            >
-              Matched - Tap to view details
-            </Text>
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Feather name="check-circle" size={wp("4%")} color={theme.success} />
+              <Text
+                style={{
+                  color: theme.success,
+                  fontSize: wp("3.5%"),
+                  fontWeight: "600",
+                  marginLeft: wp("2%"),
+                }}
+              >
+                Matched
+              </Text>
+            </View>
+            <Feather name="chevron-right" size={wp("5%")} color={theme.primary} />
           </View>
         )}
       </TouchableOpacity>
@@ -502,21 +496,29 @@ const handleBackPress = () => {
 
         <ScrollView
           contentContainerStyle={{
-            paddingTop: HEADER_HEIGHT + 70,
-            paddingHorizontal: 20,
-            paddingBottom: 40,
+            paddingTop: HEADER_HEIGHT + hp("8.75%"),
+            paddingHorizontal: wp("5%"),
+            paddingBottom: hp("5%"),
           }}
           onScroll={handleScroll}
           scrollEventThrottle={16}
           showsVerticalScrollIndicator={false}
           style={{ flex: 1 }}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[theme.primary]}
+              tintColor={theme.primary}
+            />
+          }
         >
           {activeTab === "donations" ? (
             donations.length > 0 ? (
               donations.map(renderDonationItem)
             ) : (
               <View style={statusStyles.emptyContainer}>
-                <Feather name="heart" size={48} color={theme.textSecondary} />
+                <Feather name="heart" size={wp("12%")} color={theme.textSecondary} />
                 <Text style={statusStyles.emptyText}>No donations found</Text>
                 <Text style={statusStyles.emptySubtext}>
                   Register as a donor to start making donations
@@ -527,7 +529,7 @@ const handleBackPress = () => {
             requests.map(renderRequestItem)
           ) : (
             <View style={statusStyles.emptyContainer}>
-              <Feather name="inbox" size={48} color={theme.textSecondary} />
+              <Feather name="inbox" size={wp("12%")} color={theme.textSecondary} />
               <Text style={statusStyles.emptyText}>No requests found</Text>
               <Text style={statusStyles.emptySubtext}>
                 Register as a recipient to create requests
