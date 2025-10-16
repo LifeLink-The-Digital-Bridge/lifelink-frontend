@@ -42,11 +42,15 @@ export interface DonorFormProps {
   setLaboratoryName: (value: string) => void;
   certificationNumber: string;
   setCertificationNumber: (value: string) => void;
-  
+
   hemoglobinLevel: string;
   setHemoglobinLevel: (value: string) => void;
   bloodPressure: string;
   setBloodPressure: (value: string) => void;
+  bloodGlucoseLevel: string;
+  setBloodGlucoseLevel: (value: string) => void;
+  hasDiabetes: boolean;
+  setHasDiabetes: (value: boolean) => void;
   hasDiseases: boolean;
   setHasDiseases: (value: boolean) => void;
   diseaseDescription: string;
@@ -147,6 +151,10 @@ export const DonorForm: React.FC<DonorFormProps> = (props) => {
         setHemoglobinLevel={props.setHemoglobinLevel}
         bloodPressure={props.bloodPressure}
         setBloodPressure={props.setBloodPressure}
+        bloodGlucoseLevel={props.bloodGlucoseLevel}
+        setBloodGlucoseLevel={props.setBloodGlucoseLevel}
+        hasDiabetes={props.hasDiabetes}
+        setHasDiabetes={props.setHasDiabetes}
         hasDiseases={props.hasDiseases}
         setHasDiseases={props.setHasDiseases}
         diseaseDescription={props.diseaseDescription}
@@ -207,7 +215,7 @@ export const DonorForm: React.FC<DonorFormProps> = (props) => {
         setLastDonationDate={props.setLastDonationDate}
       />
 
-<LocationDetails
+      <LocationDetails
         addressLine={props.addressLine}
         setAddressLine={props.setAddressLine}
         landmark={props.landmark}
@@ -231,7 +239,7 @@ export const DonorForm: React.FC<DonorFormProps> = (props) => {
         onResetLocation={props.onResetLocation}
         manualLocationSet={props.manualLocationSet}
       />
-      
+
       <HlaProfile
         hlaA1={props.hlaA1}
         setHlaA1={props.setHlaA1}

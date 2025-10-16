@@ -9,7 +9,8 @@ import { DonationType } from '../../app/api/donationApi';
 interface DonationTypeSelectorProps {
   donationType: DonationType;
   setDonationType: (type: DonationType) => void;
-  onTypeChange: () => void;
+  onTypeChange: (type: DonationType) => void;
+  hlaProfile: any;
 }
 
 const DONATION_TYPES: { type: DonationType; label: string; icon: string }[] = [
@@ -19,15 +20,14 @@ const DONATION_TYPES: { type: DonationType; label: string; icon: string }[] = [
   { type: 'STEM_CELL', label: 'Stem Cell', icon: 'circle' },
 ];
 
-export function DonationTypeSelector({ donationType, setDonationType, onTypeChange }: DonationTypeSelectorProps) {
+export function DonationTypeSelector({ donationType, setDonationType, onTypeChange, hlaProfile }: DonationTypeSelectorProps) {
   const { colorScheme } = useTheme();
   const isDark = colorScheme === 'dark';
   const theme = isDark ? darkTheme : lightTheme;
   const styles = createUnifiedStyles(theme);
 
   const handleTypeChange = (type: DonationType) => {
-    setDonationType(type);
-    onTypeChange();
+    onTypeChange(type);
   };
 
   return (
@@ -40,40 +40,51 @@ export function DonationTypeSelector({ donationType, setDonationType, onTypeChan
       </View>
 
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
-        {DONATION_TYPES.map((type) => (
-          <TouchableOpacity
-            key={type.type}
-            style={[
-              {
-                flex: 1,
-                minWidth: '45%',
-                backgroundColor: donationType === type.type ? theme.primary : theme.card,
-                borderRadius: 12,
-                padding: 16,
-                alignItems: 'center',
-                borderWidth: 2,
-                borderColor: donationType === type.type ? theme.primary : theme.border,
-              }
-            ]}
-            onPress={() => handleTypeChange(type.type)}
-          >
-            <Feather
-              name={type.icon as any}
-              size={24}
-              color={donationType === type.type ? '#fff' : theme.primary}
-            />
-            <Text
-              style={{
-                marginTop: 8,
-                fontSize: 14,
-                fontWeight: '600',
-                color: donationType === type.type ? '#fff' : theme.text,
-              }}
+        {DONATION_TYPES.map((type) => {
+          const isDisabled = type.type !== 'BLOOD' && !hlaProfile;
+          
+          return (
+            <TouchableOpacity
+              key={type.type}
+              style={[
+                {
+                  flex: 1,
+                  minWidth: '45%',
+                  backgroundColor: donationType === type.type ? theme.primary : theme.card,
+                  borderRadius: 12,
+                  padding: 16,
+                  alignItems: 'center',
+                  borderWidth: 2,
+                  borderColor: donationType === type.type ? theme.primary : theme.border,
+                  opacity: isDisabled ? 0.5 : 1,
+                }
+              ]}
+              onPress={() => handleTypeChange(type.type)}
+              disabled={isDisabled}
             >
-              {type.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
+              <Feather
+                name={type.icon as any}
+                size={24}
+                color={donationType === type.type ? '#fff' : theme.primary}
+              />
+              <Text
+                style={{
+                  marginTop: 8,
+                  fontSize: 14,
+                  fontWeight: '600',
+                  color: donationType === type.type ? '#fff' : theme.text,
+                }}
+              >
+                {type.label}
+              </Text>
+              {isDisabled && (
+                <Text style={{ fontSize: 10, color: theme.textSecondary, marginTop: 4 }}>
+                  HLA Required
+                </Text>
+              )}
+            </TouchableOpacity>
+          );
+        })}
       </View>
     </View>
   );

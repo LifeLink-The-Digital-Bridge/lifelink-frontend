@@ -101,6 +101,8 @@ export interface HLAProfileDTO {
 export interface DonorMedicalDetailsDTO {
   medicalDetailsId: number;
   hemoglobinLevel?: number;
+  bloodGlucoseLevel?: number | null;
+  hasDiabetes?: boolean;
   bloodPressure?: string;
   hasDiseases?: boolean;
   takingMedication?: boolean;
@@ -157,6 +159,8 @@ export interface DonorDTO {
 export interface RecipientMedicalDetailsDTO {
   medicalDetailsId: number;
   hemoglobinLevel?: number;
+  bloodGlucoseLevel?: number | null;
+  hasDiabetes?: boolean;
   bloodPressure?: string;
   diagnosis?: string;
   allergies?: string;

@@ -202,8 +202,8 @@ const DetailedProfileScreen = () => {
                     value={
                       serviceData.registrationDate
                         ? new Date(
-                            serviceData.registrationDate
-                          ).toLocaleDateString()
+                          serviceData.registrationDate
+                        ).toLocaleDateString()
                         : "N/A"
                     }
                     isLast
@@ -247,6 +247,28 @@ const DetailedProfileScreen = () => {
                 label="Blood Pressure"
                 value={serviceData.medicalDetails.bloodPressure || "N/A"}
               />
+
+              {serviceData.medicalDetails.bloodGlucoseLevel && (
+                <InfoRow
+                  label="Blood Glucose Level"
+                  value={`${serviceData.medicalDetails.bloodGlucoseLevel} mg/dL`}
+                  valueColor={
+                    serviceData.medicalDetails.bloodGlucoseLevel > 125
+                      ? theme.error
+                      : serviceData.medicalDetails.bloodGlucoseLevel < 70
+                        ? '#FFA500'
+                        : theme.success
+                  }
+                />
+              )}
+              {serviceData.medicalDetails.hasDiabetes !== undefined && (
+                <InfoRow
+                  label="Diabetes Status"
+                  value={serviceData.medicalDetails.hasDiabetes ? 'Yes' : 'No'}
+                  valueColor={serviceData.medicalDetails.hasDiabetes ? theme.error : theme.success}
+                />
+              )}
+
               <InfoRow
                 label="Overall Health Status"
                 value={serviceData.medicalDetails.overallHealthStatus || "N/A"}
@@ -340,8 +362,8 @@ const DetailedProfileScreen = () => {
                 value={
                   serviceData.eligibilityCriteria.dob
                     ? new Date(
-                        serviceData.eligibilityCriteria.dob
-                      ).toLocaleDateString()
+                      serviceData.eligibilityCriteria.dob
+                    ).toLocaleDateString()
                     : "N/A"
                 }
               />
@@ -477,35 +499,31 @@ const DetailedProfileScreen = () => {
 
               <InfoRow
                 label="HLA-A"
-                value={`${serviceData.hlaProfile.hlaA1 || "N/A"}, ${
-                  serviceData.hlaProfile.hlaA2 || "N/A"
-                }`}
+                value={`${serviceData.hlaProfile.hlaA1 || "N/A"}, ${serviceData.hlaProfile.hlaA2 || "N/A"
+                  }`}
               />
               <InfoRow
                 label="HLA-B"
-                value={`${serviceData.hlaProfile.hlaB1 || "N/A"}, ${
-                  serviceData.hlaProfile.hlaB2 || "N/A"
-                }`}
+                value={`${serviceData.hlaProfile.hlaB1 || "N/A"}, ${serviceData.hlaProfile.hlaB2 || "N/A"
+                  }`}
               />
               <InfoRow
                 label="HLA-C"
-                value={`${serviceData.hlaProfile.hlaC1 || "N/A"}, ${
-                  serviceData.hlaProfile.hlaC2 || "N/A"
-                }`}
+                value={`${serviceData.hlaProfile.hlaC1 || "N/A"}, ${serviceData.hlaProfile.hlaC2 || "N/A"
+                  }`}
               />
               <InfoRow
                 label="HLA-DP"
-                value={`${serviceData.hlaProfile.hlaDP1 || "N/A"}, ${
-                  serviceData.hlaProfile.hlaDP2 || "N/A"
-                }`}
+                value={`${serviceData.hlaProfile.hlaDP1 || "N/A"}, ${serviceData.hlaProfile.hlaDP2 || "N/A"
+                  }`}
               />
               <InfoRow
                 label="Testing Date"
                 value={
                   serviceData.hlaProfile.testingDate
                     ? new Date(
-                        serviceData.hlaProfile.testingDate
-                      ).toLocaleDateString()
+                      serviceData.hlaProfile.testingDate
+                    ).toLocaleDateString()
                     : "N/A"
                 }
               />
@@ -573,8 +591,8 @@ const DetailedProfileScreen = () => {
                     value={
                       theirDetails.donationDate
                         ? new Date(
-                            theirDetails.donationDate
-                          ).toLocaleDateString()
+                          theirDetails.donationDate
+                        ).toLocaleDateString()
                         : "N/A"
                     }
                     isLast
@@ -617,10 +635,10 @@ const DetailedProfileScreen = () => {
                       theirDetails.urgencyLevel === "CRITICAL"
                         ? theme.error
                         : theirDetails.urgencyLevel === "HIGH"
-                        ? "#FF6B35"
-                        : theirDetails.urgencyLevel === "MEDIUM"
-                        ? "#FFA500"
-                        : theme.success
+                          ? "#FF6B35"
+                          : theirDetails.urgencyLevel === "MEDIUM"
+                            ? "#FFA500"
+                            : theme.success
                     }
                   />
                   <InfoRow
@@ -636,8 +654,8 @@ const DetailedProfileScreen = () => {
                     value={
                       theirDetails.requestDate
                         ? new Date(
-                            theirDetails.requestDate
-                          ).toLocaleDateString()
+                          theirDetails.requestDate
+                        ).toLocaleDateString()
                         : "N/A"
                     }
                   />

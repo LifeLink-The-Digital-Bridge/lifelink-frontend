@@ -312,145 +312,156 @@ const DonorScreen: React.FC = () => {
     router.replace("/(tabs)/donate");
   };
 
-  const handleSubmit = async (): Promise<void> => {
-    if (!formState.isFormValid()) {
-      showAlert(
-        "Incomplete Form",
-        "Please fill all required fields.",
-        "warning"
-      );
-      return;
+const handleSubmit = async (): Promise<void> => {
+  if (!formState.isFormValid()) {
+    showAlert(
+      "Incomplete Form",
+      "Please fill all required fields.",
+      "warning"
+    );
+    return;
+  }
+
+  setLoading(true);
+  try {
+    const addressData: any = {
+      addressLine: formState.addressLine,
+      landmark: formState.landmark,
+      area: formState.area,
+      city: formState.city,
+      district: formState.district,
+      state: formState.stateVal,
+      country: formState.country,
+      pincode: formState.pincode,
+      latitude: formState.location?.latitude || 0,
+      longitude: formState.location?.longitude || 0,
+    };
+
+    if (formState.addressId) {
+      addressData.id = formState.addressId;
     }
 
-    setLoading(true);
-    try {
-      const addressData: any = {
-        addressLine: formState.addressLine,
-        landmark: formState.landmark,
-        area: formState.area,
-        city: formState.city,
-        district: formState.district,
-        state: formState.stateVal,
-        country: formState.country,
-        pincode: formState.pincode,
-        latitude: formState.location?.latitude || 0,
-        longitude: formState.location?.longitude || 0,
-      };
+    const payload = {
+      registrationDate: new Date().toISOString().slice(0, 10),
+      status: "ACTIVE",
+      medicalDetails: {
+        hemoglobinLevel: Number(formState.hemoglobinLevel),
+        bloodPressure: formState.bloodPressure,
+        bloodGlucoseLevel: formState.bloodGlucoseLevel ? Number(formState.bloodGlucoseLevel) : null,
+        hasDiabetes: formState.hasDiabetes,
+        hasDiseases: formState.hasDiseases,
+        takingMedication: formState.takingMedication,
+        diseaseDescription: formState.hasDiseases
+          ? formState.diseaseDescription
+          : null,
+        currentMedications: formState.takingMedication
+          ? formState.currentMedications
+          : null,
+        lastMedicalCheckup: formState.lastMedicalCheckup,
+        medicalHistory: formState.medicalHistory,
+        hasInfectiousDiseases: formState.hasInfectiousDiseases,
+        infectiousDiseaseDetails: formState.hasInfectiousDiseases
+          ? formState.infectiousDiseaseDetails
+          : null,
+        creatinineLevel: Number(formState.creatinineLevel),
+        liverFunctionTests: formState.liverFunctionTests,
+        cardiacStatus: formState.cardiacStatus,
+        pulmonaryFunction: Number(formState.pulmonaryFunction),
+        overallHealthStatus: formState.overallHealthStatus,
+      },
+      eligibilityCriteria: {
+        ageEligible: formState.age !== null ? formState.age >= 18 : false,
+        age: formState.age !== null ? formState.age : 0,
+        dob: formState.dob,
+        weightEligible: formState.weightEligible,
+        weight: Number(formState.weight),
+        medicalClearance: formState.medicalClearance,
+        recentTattooOrPiercing: formState.recentTattooOrPiercing,
+        recentTravelDetails: formState.recentTravelDetails,
+        recentVaccination: formState.recentVaccination,
+        recentSurgery: formState.recentSurgery,
+        chronicDiseases: formState.chronicDiseases,
+        allergies: formState.allergies,
+        lastDonationDate: formState.lastDonationDate || null,
+        height: Number(formState.height),
+        bodyMassIndex: Number(formState.bodyMassIndex),
+        bodySize: formState.bodySize,
+        isLivingDonor: formState.isLivingDonor,
+      },
+      consentForm: {
+        userId: formState.userId,
+        isConsented: formState.isConsented,
+        consentedAt: new Date().toISOString(),
+      },
+      addresses: [addressData],
+      hlaProfile:
+        formState.hlaA1 &&
+        formState.hlaA2 &&
+        formState.hlaB1 &&
+        formState.hlaB2 &&
+        formState.testingDate &&
+        formState.laboratoryName
+          ? {
+              hlaA1: formState.hlaA1,
+              hlaA2: formState.hlaA2,
+              hlaB1: formState.hlaB1,
+              hlaB2: formState.hlaB2,
+              hlaC1: formState.hlaC1 || undefined,
+              hlaC2: formState.hlaC2 || undefined,
+              hlaDR1: formState.hlaDR1 || undefined,
+              hlaDR2: formState.hlaDR2 || undefined,
+              hlaDQ1: formState.hlaDQ1 || undefined,
+              hlaDQ2: formState.hlaDQ2 || undefined,
+              hlaDP1: formState.hlaDP1 || undefined,
+              hlaDP2: formState.hlaDP2 || undefined,
+              testingDate: formState.testingDate,
+              testingMethod: formState.testingMethod || "NGS_SEQUENCING",
+              laboratoryName: formState.laboratoryName,
+              certificationNumber: formState.certificationNumber || undefined,
+              hlaString: `${formState.hlaA1},${formState.hlaA2},${formState.hlaB1},${formState.hlaB2},${formState.hlaC1 || ""},${formState.hlaC2 || ""},${formState.hlaDR1 || ""},${formState.hlaDR2 || ""},${formState.hlaDQ1 || ""},${formState.hlaDQ2 || ""},${formState.hlaDP1 || ""},${formState.hlaDP2 || ""}`,
+              isHighResolution: true,
+            }
+          : undefined,
+    };
 
-      if (formState.addressId) {
-        addressData.id = formState.addressId;
+    const response = await registerDonor(payload);
+    if (response?.id) {
+      await SecureStore.setItemAsync("donorId", response.id);
+      await SecureStore.setItemAsync("donorData", JSON.stringify(response));
+
+      if (
+        response.addresses &&
+        response.addresses.length > 0 &&
+        !formState.addressId
+      ) {
+        formState.setAddressId(response.addresses[0].id);
       }
 
-      const payload = {
-        registrationDate: new Date().toISOString().slice(0, 10),
-        status: "ACTIVE",
-        medicalDetails: {
-          hemoglobinLevel: Number(formState.hemoglobinLevel),
-          bloodPressure: formState.bloodPressure,
-          hasDiseases: formState.hasDiseases,
-          takingMedication: formState.takingMedication,
-          diseaseDescription: formState.hasDiseases
-            ? formState.diseaseDescription
-            : null,
-          currentMedications: formState.takingMedication
-            ? formState.currentMedications
-            : null,
-          lastMedicalCheckup: formState.lastMedicalCheckup,
-          medicalHistory: formState.medicalHistory,
-          hasInfectiousDiseases: formState.hasInfectiousDiseases,
-          infectiousDiseaseDetails: formState.hasInfectiousDiseases
-            ? formState.infectiousDiseaseDetails
-            : null,
-          creatinineLevel: Number(formState.creatinineLevel),
-          liverFunctionTests: formState.liverFunctionTests,
-          cardiacStatus: formState.cardiacStatus,
-          pulmonaryFunction: Number(formState.pulmonaryFunction),
-          overallHealthStatus: formState.overallHealthStatus,
-        },
-        eligibilityCriteria: {
-          ageEligible: formState.age !== null ? formState.age >= 18 : false,
-          age: formState.age !== null ? formState.age : 0,
-          dob: formState.dob,
-          weightEligible: formState.weightEligible,
-          weight: Number(formState.weight),
-          medicalClearance: formState.medicalClearance,
-          recentTattooOrPiercing: formState.recentTattooOrPiercing,
-          recentTravelDetails: formState.recentTravelDetails,
-          recentVaccination: formState.recentVaccination,
-          recentSurgery: formState.recentSurgery,
-          chronicDiseases: formState.chronicDiseases,
-          allergies: formState.allergies,
-          lastDonationDate: formState.lastDonationDate || null,
-          height: Number(formState.height),
-          bodyMassIndex: Number(formState.bodyMassIndex),
-          bodySize: formState.bodySize,
-          isLivingDonor: formState.isLivingDonor,
-        },
-        consentForm: {
-          userId: formState.userId,
-          isConsented: formState.isConsented,
-          consentedAt: new Date().toISOString(),
-        },
-        addresses: [addressData],
-        hlaProfile: {
-          hlaA1: formState.hlaA1,
-          hlaA2: formState.hlaA2,
-          hlaB1: formState.hlaB1,
-          hlaB2: formState.hlaB2,
-          hlaC1: formState.hlaC1,
-          hlaC2: formState.hlaC2,
-          hlaDR1: formState.hlaDR1,
-          hlaDR2: formState.hlaDR2,
-          hlaDQ1: formState.hlaDQ1,
-          hlaDQ2: formState.hlaDQ2,
-          hlaDP1: formState.hlaDP1,
-          hlaDP2: formState.hlaDP2,
-          testingDate: formState.testingDate,
-          testingMethod: formState.testingMethod,
-          laboratoryName: formState.laboratoryName,
-          certificationNumber: formState.certificationNumber,
-          hlaString: `${formState.hlaA1},${formState.hlaA2},${formState.hlaB1},${formState.hlaB2},${formState.hlaC1},${formState.hlaC2},${formState.hlaDR1},${formState.hlaDR2},${formState.hlaDQ1},${formState.hlaDQ2},${formState.hlaDP1},${formState.hlaDP2}`,
-          isHighResolution: true,
-        },
-      };
-
-      const response = await registerDonor(payload);
-      if (response?.id) {
-        await SecureStore.setItemAsync("donorId", response.id);
-        await SecureStore.setItemAsync("donorData", JSON.stringify(response));
-
-        if (
-          response.addresses &&
-          response.addresses.length > 0 &&
-          !formState.addressId
-        ) {
-          formState.setAddressId(response.addresses[0].id);
-        }
-
-        showAlert(
-          "Registration Successful!",
-          "Your donor registration has been completed successfully.",
-          "success"
-        );
-
-        setTimeout(() => {
-          router.replace("/(tabs)/donate");
-        }, 2000);
-      } else {
-        throw new Error(
-          "Registration succeeded but donorId missing in response."
-        );
-      }
-    } catch (error: any) {
       showAlert(
-        "Registration Failed",
-        error.message || "Something went wrong during registration.",
-        "error"
+        "Registration Successful!",
+        "Your donor registration has been completed successfully.",
+        "success"
       );
-    } finally {
-      setLoading(false);
+
+      setTimeout(() => {
+        router.replace("/(tabs)/donate");
+      }, 2000);
+    } else {
+      throw new Error(
+        "Registration succeeded but donorId missing in response."
+      );
     }
-  };
+  } catch (error: any) {
+    showAlert(
+      "Registration Failed",
+      error.message || "Something went wrong during registration.",
+      "error"
+    );
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   if (roleLoading || locationLoading) {
     const loadingMessage = roleLoading

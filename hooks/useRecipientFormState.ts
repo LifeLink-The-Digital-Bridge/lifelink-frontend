@@ -11,6 +11,10 @@ export interface RecipientFormState {
   setHemoglobinLevel: (hemoglobinLevel: string) => void;
   bloodPressure: string;
   setBloodPressure: (bloodPressure: string) => void;
+  bloodGlucoseLevel: string;
+  setBloodGlucoseLevel: (bloodGlucoseLevel: string) => void;
+  hasDiabetes: boolean;
+  setHasDiabetes: (hasDiabetes: boolean) => void;
   diagnosis: string;
   setDiagnosis: (diagnosis: string) => void;
   allergies: string;
@@ -138,6 +142,9 @@ export function useRecipientFormState(): RecipientFormState {
 
   const [hemoglobinLevel, setHemoglobinLevel] = useState<string>("");
   const [bloodPressure, setBloodPressure] = useState<string>("");
+  const [bloodGlucoseLevel, setBloodGlucoseLevel] = useState<string>('');
+  const [hasDiabetes, setHasDiabetes] = useState<boolean>(false);
+
   const [diagnosis, setDiagnosis] = useState<string>("");
   const [allergies, setAllergies] = useState<string>("");
   const [currentMedications, setCurrentMedications] = useState<string>("");
@@ -224,6 +231,8 @@ export function useRecipientFormState(): RecipientFormState {
               recipient.medicalDetails.hemoglobinLevel?.toString() || ""
             );
             setBloodPressure(recipient.medicalDetails.bloodPressure || "");
+            setBloodGlucoseLevel(recipient.medicalDetails.bloodGlucoseLevel?.toString() || "");
+            setHasDiabetes(recipient.medicalDetails.hasDiabetes || false);
             setCreatinineLevel(
               recipient.medicalDetails.creatinineLevel?.toString() || ""
             );
@@ -342,7 +351,13 @@ export function useRecipientFormState(): RecipientFormState {
 
   const isFormValid = (): boolean => {
     return !!(
-      diagnosis &&
+      hemoglobinLevel &&
+      bloodPressure &&
+      bloodGlucoseLevel &&
+      weight &&
+      height &&
+      creatinineLevel &&
+      age &&
       addressLine &&
       city &&
       stateVal &&
@@ -363,6 +378,10 @@ export function useRecipientFormState(): RecipientFormState {
     setHemoglobinLevel,
     bloodPressure,
     setBloodPressure,
+    bloodGlucoseLevel,
+    setBloodGlucoseLevel,
+    hasDiabetes,
+    setHasDiabetes,
     diagnosis,
     setDiagnosis,
     allergies,

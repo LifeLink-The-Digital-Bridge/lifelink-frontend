@@ -29,6 +29,9 @@ export function useDonorFormState() {
 
   const [hemoglobinLevel, setHemoglobinLevel] = useState<string>("");
   const [bloodPressure, setBloodPressure] = useState<string>("");
+  const [bloodGlucoseLevel, setBloodGlucoseLevel] = useState<string>('');
+  const [hasDiabetes, setHasDiabetes] = useState<boolean>(false);
+
   const [hasDiseases, setHasDiseases] = useState<boolean>(false);
   const [diseaseDescription, setDiseaseDescription] = useState<string>("");
   const [takingMedication, setTakingMedication] = useState<boolean>(false);
@@ -108,7 +111,7 @@ export function useDonorFormState() {
       try {
         const storedData = await SecureStore.getItemAsync("donorData");
         const hasManualLocation = location !== null;
-        const hasFormData = addressLine || hemoglobinLevel || bloodPressure;
+        const hasFormData = addressLine || hemoglobinLevel || bloodPressure || bloodGlucoseLevel || hasDiabetes;
         if (storedData && !hasManualLocation && !hasFormData) {
           console.log("📂 Loading existing donor data from storage");
           const donor = JSON.parse(storedData);
@@ -116,6 +119,8 @@ export function useDonorFormState() {
             setHemoglobinLevel(
               donor.medicalDetails.hemoglobinLevel?.toString() || ""
             );
+            setBloodGlucoseLevel(donor.medicalDetails.bloodGlucoseLevel?.toString() || "");
+            setHasDiabetes(donor.medicalDetails.hasDiabetes || false);
             setBloodPressure(donor.medicalDetails.bloodPressure || "");
             setHasDiseases(donor.medicalDetails.hasDiseases || false);
             setDiseaseDescription(
@@ -130,7 +135,7 @@ export function useDonorFormState() {
             );
             setMedicalHistory(
               donor.medicalDetails.medicalHistory ||
-                "No significant medical history"
+              "No significant medical history"
             );
             setHasInfectiousDiseases(
               donor.medicalDetails.hasInfectiousDiseases || false
@@ -168,7 +173,7 @@ export function useDonorFormState() {
             );
             setRecentTravelDetails(
               donor.eligibilityCriteria.recentTravelDetails ||
-                "No recent travel"
+              "No recent travel"
             );
             setRecentVaccination(
               donor.eligibilityCriteria.recentVaccination || false
@@ -303,6 +308,7 @@ export function useDonorFormState() {
     return !!(
       hemoglobinLevel &&
       bloodPressure &&
+      bloodGlucoseLevel &&
       weight &&
       height &&
       creatinineLevel &&
@@ -329,6 +335,10 @@ export function useDonorFormState() {
     setHemoglobinLevel,
     bloodPressure,
     setBloodPressure,
+    bloodGlucoseLevel,
+    setBloodGlucoseLevel,
+    hasDiabetes,
+    setHasDiabetes,
     hasDiseases,
     setHasDiseases,
     diseaseDescription,

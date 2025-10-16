@@ -10,6 +10,10 @@ interface MedicalDetailsProps {
   setHemoglobinLevel: (value: string) => void;
   bloodPressure: string;
   setBloodPressure: (value: string) => void;
+  bloodGlucoseLevel: string;
+  setBloodGlucoseLevel: (value: string) => void;
+  hasDiabetes: boolean;
+  setHasDiabetes: (value: boolean) => void;
   hasDiseases: boolean;
   setHasDiseases: (value: boolean) => void;
   diseaseDescription: string;
@@ -44,6 +48,10 @@ export function MedicalDetails({
   setHemoglobinLevel,
   bloodPressure,
   setBloodPressure,
+  bloodGlucoseLevel,
+  setBloodGlucoseLevel,
+  hasDiabetes,
+  setHasDiabetes,
   hasDiseases,
   setHasDiseases,
   diseaseDescription,
@@ -78,7 +86,7 @@ export function MedicalDetails({
   const styles = createUnifiedStyles(theme);
 
   return (
-    
+
     <View style={styles.sectionContainer}>
       <View style={styles.sectionHeader}>
         <View style={styles.sectionIconContainer}>
@@ -86,7 +94,7 @@ export function MedicalDetails({
         </View>
         <Text style={styles.sectionTitle}>Medical Details</Text>
       </View>
-      
+
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Hemoglobin Level (g/dL)</Text>
         <TextInput
@@ -98,7 +106,7 @@ export function MedicalDetails({
           onChangeText={setHemoglobinLevel}
         />
       </View>
-      
+
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Blood Pressure</Text>
         <TextInput
@@ -109,6 +117,29 @@ export function MedicalDetails({
           onChangeText={setBloodPressure}
         />
       </View>
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Blood Glucose Level (mg/dL)</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter blood glucose level"
+          placeholderTextColor={theme.textSecondary}
+          keyboardType="numeric"
+          value={bloodGlucoseLevel}
+          onChangeText={setBloodGlucoseLevel}
+        />
+      </View>
+
+      <View style={styles.switchRow}>
+        <Text style={styles.switchLabel}>Has Diabetes?</Text>
+        <Switch
+          value={hasDiabetes}
+          onValueChange={setHasDiabetes}
+          thumbColor={theme.primary}
+          trackColor={{ false: theme.border, true: theme.primary + '50' }}
+        />
+      </View>
+
 
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Creatinine Level (mg/dL)</Text>
@@ -190,7 +221,7 @@ export function MedicalDetails({
           numberOfLines={3}
         />
       </View>
-      
+
       <View style={styles.switchRow}>
         <Text style={styles.switchLabel}>Any diseases?</Text>
         <Switch
@@ -200,7 +231,7 @@ export function MedicalDetails({
           trackColor={{ false: theme.border, true: theme.primary + '50' }}
         />
       </View>
-      
+
       {hasDiseases && (
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Disease Description</Text>
@@ -240,7 +271,7 @@ export function MedicalDetails({
           />
         </View>
       )}
-      
+
       <View style={styles.switchRow}>
         <Text style={styles.switchLabel}>Taking Medication?</Text>
         <Switch

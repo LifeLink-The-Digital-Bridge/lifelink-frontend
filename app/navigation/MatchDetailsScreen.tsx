@@ -252,15 +252,18 @@ const MatchDetailsScreen = () => {
 
     const registered = extractRegisteredLocation(currentUserData);
     setRegisteredLocation(registered);
+    console.log("Registered location:", registered);
 
     const otherLocation = getOtherPartyLocation(otherPartyData, otherPartyRole);
     setOtherPartyLocation(otherLocation);
+    console.log("Other party location:", otherLocation);
 
     const locations: LocationCoordinates[] = [];
-    if (otherLocation) locations.push(otherLocation);
     if (registered) locations.push(registered);
     if (currentGpsLocation) locations.push(currentGpsLocation);
+    if (otherLocation) locations.push(otherLocation);
 
+    console.log("All locations to display:", locations);
     setAllLocations(locations);
 
     if (registered && otherLocation) {
@@ -271,6 +274,7 @@ const MatchDetailsScreen = () => {
         otherLocation.longitude
       );
       setCalculatedDistance(distance);
+      console.log("Distance calculated:", distance);
     }
   };
 
@@ -375,24 +379,22 @@ const MatchDetailsScreen = () => {
         let donorSnapshotData = null;
         let recipientSnapshotData = null;
 
-        if (userId === parsedMatch.donorUserId) {
-          recipientSnapshotData = await getRecipientSnapshotByRequest(parsedMatch.receiveRequestId);
-        } else if (userId === parsedMatch.recipientUserId) {
+        try {
           donorSnapshotData = await getDonorSnapshotByDonation(parsedMatch.donationId);
+        } catch (error) {
+          console.error("Failed to load donor snapshot:", error);
         }
 
+        try {
+          recipientSnapshotData = await getRecipientSnapshotByRequest(parsedMatch.receiveRequestId);
+        } catch (error) {
+          console.error("Failed to load recipient snapshot:", error);
+        }
 
         setDonorProfile(donorProfile);
         setRecipientProfile(recipientProfile);
         setDonorSnapshot(donorSnapshotData);
         setRecipientSnapshot(recipientSnapshotData);
-
-        console.log("✅ Immutable snapshots loaded:", {
-          donorSnapshot: !!donorSnapshotData,
-          recipientSnapshot: !!recipientSnapshotData,
-          donationId: parsedMatch.donationId,
-          requestId: parsedMatch.receiveRequestId,
-        });
 
         await loadYourDetails(parsedMatch, userId);
       } catch (error: any) {

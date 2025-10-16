@@ -44,8 +44,10 @@ const RecipientRequestScreen = () => {
 
   const [loading, setLoading] = useState(false);
   const [roleLoading, setRoleLoading] = useState(true);
+  const [checkingHLA, setCheckingHLA] = useState(false);
   const [recipientId, setRecipientId] = useState("");
   const [locationId, setLocationId] = useState("");
+  const [hlaProfile, setHlaProfile] = useState<any>(null);
 
   const [requestType, setRequestType] = useState<RequestType>("BLOOD");
   const [requestedBloodType, setRequestedBloodType] = useState<BloodType | "">(
@@ -100,6 +102,22 @@ const RecipientRequestScreen = () => {
     lastScrollY.current = currentScrollY;
   };
 
+  const handleTypeChange = (newType: RequestType) => {
+    if (newType !== "BLOOD" && !hlaProfile) {
+      showAlert(
+        "HLA Profile Required",
+        "Organ, Tissue, and Stem Cell requests require an HLA profile. Please complete your recipient registration first.",
+        "warning"
+      );
+      return;
+    }
+
+    setRequestType(newType);
+    setRequestedOrgan("" as OrganType);
+    setRequestedTissue("" as TissueType);
+    setRequestedStemCellType("" as StemCellType);
+  };
+
   useEffect(() => {
     if (!isAuthenticated) {
       router.replace("../(auth)/loginScreen");
@@ -109,6 +127,7 @@ const RecipientRequestScreen = () => {
   useEffect(() => {
     const checkRecipientRole = async () => {
       setRoleLoading(true);
+      setCheckingHLA(true);
       try {
         const rolesString = await SecureStore.getItemAsync("roles");
         let roles: string[] = [];
@@ -129,19 +148,21 @@ const RecipientRequestScreen = () => {
         }
 
         const id = await SecureStore.getItemAsync("recipientId");
-        if (id) setRecipientId(id);
+        if (id) {
+          setRecipientId(id);
 
-        const recipientDataStr = await SecureStore.getItemAsync(
-          "recipientData"
-        );
-        if (recipientDataStr) {
-          try {
-            const recipientData = JSON.parse(recipientDataStr);
-            if (recipientData?.addresses?.[0]?.id) {
-              setLocationId(recipientData.addresses[0].id);
+          const recipientDataStr = await SecureStore.getItemAsync("recipientData");
+          if (recipientDataStr) {
+            try {
+              const recipientData = JSON.parse(recipientDataStr);
+              setHlaProfile(recipientData.hlaProfile || null);
+              
+              if (recipientData?.addresses?.[0]?.id) {
+                setLocationId(recipientData.addresses[0].id);
+              }
+            } catch (e) {
+              console.error("Error parsing recipient data:", e);
             }
-          } catch (e) {
-            console.error("Error parsing recipient data:", e);
           }
         }
       } catch (error: any) {
@@ -154,6 +175,7 @@ const RecipientRequestScreen = () => {
         return;
       } finally {
         setRoleLoading(false);
+        setCheckingHLA(false);
       }
     };
     checkRecipientRole();
@@ -166,6 +188,10 @@ const RecipientRequestScreen = () => {
 
   const isFormValid = () => {
     if (!recipientId || !locationId || !quantity || !requestDate) return false;
+
+    if (requestType !== "BLOOD" && !hlaProfile) {
+      return false;
+    }
 
     switch (requestType) {
       case "BLOOD":
@@ -182,6 +208,15 @@ const RecipientRequestScreen = () => {
   };
 
   const handleSubmit = async () => {
+    if (requestType !== "BLOOD" && !hlaProfile) {
+      showAlert(
+        "Profile Incomplete",
+        "You need to complete your HLA profile before requesting organs, tissue, or stem cells. Please update your recipient registration.",
+        "error"
+      );
+      return;
+    }
+
     if (!isFormValid()) {
       showAlert(
         "Validation Error",
@@ -235,12 +270,14 @@ const RecipientRequestScreen = () => {
     router.replace("/(tabs)/receive");
   };
 
-  if (roleLoading) {
+  if (roleLoading || checkingHLA) {
     return (
       <AppLayout>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.primary} />
-          <Text style={styles.loadingText}>Loading...</Text>
+          <Text style={styles.loadingText}>
+            {checkingHLA ? "Checking profile..." : "Loading..."}
+          </Text>
         </View>
       </AppLayout>
     );
@@ -285,7 +322,10 @@ const RecipientRequestScreen = () => {
           <RequestTypeSelector
             requestType={requestType}
             setRequestType={setRequestType}
+            onTypeChange={handleTypeChange}
+            hlaProfile={hlaProfile}
           />
+          
           <LocationSelector
             selectedLocationId={locationId}
             onLocationSelect={setLocationId}

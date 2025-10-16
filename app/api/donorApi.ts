@@ -6,6 +6,8 @@ const BASE_URL = Constants.expoConfig?.extra?.API_URL;
 export interface MedicalDetailsDTO {
   hemoglobinLevel: number;
   bloodPressure: string;
+  bloodGlucoseLevel?: number | null;
+  hasDiabetes?: boolean;
   hasDiseases: boolean;
   takingMedication: boolean;
   diseaseDescription: string | null;
@@ -65,18 +67,18 @@ export interface HlaProfileDTO {
   hlaA2: string;
   hlaB1: string;
   hlaB2: string;
-  hlaC1: string;
-  hlaC2: string;
-  hlaDR1: string;
-  hlaDR2: string;
-  hlaDQ1: string;
-  hlaDQ2: string;
-  hlaDP1: string;
-  hlaDP2: string;
+  hlaC1?: string | undefined;
+  hlaC2?: string | undefined;
+  hlaDR1?: string | undefined;
+  hlaDR2?: string | undefined;
+  hlaDQ1?: string | undefined;
+  hlaDQ2?: string | undefined;
+  hlaDP1?: string | undefined;
+  hlaDP2?: string | undefined;
   testingDate: string;
   testingMethod: string;
   laboratoryName: string;
-  certificationNumber: string;
+  certificationNumber?: string | undefined;
   hlaString: string;
   isHighResolution: boolean;
 }
@@ -88,7 +90,7 @@ export interface RegisterDonorRequest {
   eligibilityCriteria: EligibilityCriteriaDTO;
   consentForm: ConsentFormDTO;
   addresses: AddressDTO[];
-  hlaProfile: HlaProfileDTO;
+  hlaProfile?: HlaProfileDTO;
 }
 
 export const registerDonor = async (payload: RegisterDonorRequest) => {
@@ -109,7 +111,7 @@ export const registerDonor = async (payload: RegisterDonorRequest) => {
     try {
       const errorData = await response.text();
       errorMessage = errorData || errorMessage;
-    } catch {}
+    } catch { }
     throw new Error(errorMessage);
   }
 

@@ -1,6 +1,7 @@
-import React from 'react';
-import { View, Text } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import * as Clipboard from 'expo-clipboard';
 import { createUnifiedStyles } from '../../constants/styles/unifiedStyles';
 import { useTheme } from '../../utils/theme-context';
 import { lightTheme, darkTheme } from '../../constants/styles/authStyles';
@@ -26,9 +27,71 @@ export const MatchInfoCard: React.FC<MatchInfoCardProps> = ({
   const { colorScheme } = useTheme();
   const theme = colorScheme === 'dark' ? darkTheme : lightTheme;
   const styles = createUnifiedStyles(theme);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const userConfirmed = getCurrentUserStatus();
   const otherPartyConfirmed = getOtherPartyStatus();
+
+  const copyToClipboard = async (id: string, label: string) => {
+    try {
+      await Clipboard.setStringAsync(id);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to copy to clipboard');
+    }
+  };
+
+  const renderCopyableRow = (label: string, id: string, isLast: boolean = false) => {
+    const isCopied = copiedId === id;
+    
+    return (
+      <View
+        style={[
+          {
+            flexDirection: 'row',
+            paddingVertical: 12,
+            borderBottomWidth: isLast ? 0 : 1,
+            borderBottomColor: theme.border,
+            alignItems: 'center',
+          }
+        ]}
+      >
+        <Text style={[styles.text, { flex: 0.4, color: theme.textSecondary }]}>
+          {label}
+        </Text>
+        <View style={{ flex: 0.6, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end' }}>
+          <Text
+            style={[
+              styles.text,
+              {
+                color: theme.text,
+                fontWeight: '500',
+                marginRight: 8,
+              }
+            ]}
+          >
+            {id.slice(0, 8)}...
+          </Text>
+          <TouchableOpacity
+            onPress={() => copyToClipboard(id, label)}
+            style={{
+              backgroundColor: isCopied ? theme.success + '20' : theme.primary + '20',
+              borderRadius: 6,
+              padding: 6,
+            }}
+            activeOpacity={0.7}
+          >
+            <Feather
+              name={isCopied ? 'check' : 'copy'}
+              size={14}
+              color={isCopied ? theme.success : theme.primary}
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  };
 
   return (
     <View style={styles.sectionContainer}>
@@ -87,15 +150,8 @@ export const MatchInfoCard: React.FC<MatchInfoCardProps> = ({
         value={formatDate(match.matchedAt)}
       />
 
-      <InfoRow
-        label="Donation ID"
-        value={match.donationId.slice(0, 8) + '...'}
-      />
-      <InfoRow
-        label="Request ID"
-        value={match.receiveRequestId.slice(0, 8) + '...'}
-        isLast
-      />
+      {renderCopyableRow('Donation ID', match.donationId)}
+      {renderCopyableRow('Request ID', match.receiveRequestId, true)}
     </View>
   );
 };

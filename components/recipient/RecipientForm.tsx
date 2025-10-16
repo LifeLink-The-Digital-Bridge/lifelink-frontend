@@ -15,6 +15,10 @@ export interface RecipientFormProps {
   setHemoglobinLevel: (value: string) => void;
   bloodPressure: string;
   setBloodPressure: (value: string) => void;
+  bloodGlucoseLevel: string;
+  setBloodGlucoseLevel: (value: string) => void;
+  hasDiabetes: boolean;
+  setHasDiabetes: (value: boolean) => void;
   diagnosis: string;
   setDiagnosis: (value: string) => void;
   allergies: string;
@@ -134,6 +138,10 @@ export const RecipientForm: React.FC<RecipientFormProps> = (props) => {
         setHemoglobinLevel={props.setHemoglobinLevel}
         bloodPressure={props.bloodPressure}
         setBloodPressure={props.setBloodPressure}
+        bloodGlucoseLevel={props.bloodGlucoseLevel}
+        setBloodGlucoseLevel={props.setBloodGlucoseLevel}
+        hasDiabetes={props.hasDiabetes}
+        setHasDiabetes={props.setHasDiabetes}
         diagnosis={props.diagnosis}
         setDiagnosis={props.setDiagnosis}
         allergies={props.allergies}

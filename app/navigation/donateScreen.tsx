@@ -33,7 +33,7 @@ import AppLayout from "@/components/AppLayout";
 import { LocationSelector } from "@/components/donation/LocationSelector";
 import { StatusHeader } from "@/components/common/StatusHeader";
 
-const HEADER_HEIGHT = 120;
+const HEADER_HEIGHT = 180;
 
 const DonationScreen = () => {
   const { colorScheme } = useTheme();
@@ -47,12 +47,14 @@ const DonationScreen = () => {
   const headerTranslateY = useRef(new Animated.Value(0)).current;
 
   const [loading, setLoading] = useState(false);
+  const [checkingHLA, setCheckingHLA] = useState(false);
   const [donorId, setDonorId] = useState("");
   const [locationId, setLocationId] = useState("");
   const [donationType, setDonationType] = useState<DonationType>("BLOOD");
   const [donationDate, setDonationDate] = useState("");
   const [bloodType, setBloodType] = useState<BloodType>("" as BloodType);
   const [quantity, setQuantity] = useState("");
+  const [hlaProfile, setHlaProfile] = useState<any>(null);
 
   const [organType, setOrganType] = useState<OrganType | "">("" as OrganType);
   const [isCompatible, setIsCompatible] = useState(false);
@@ -112,7 +114,17 @@ const DonationScreen = () => {
     lastScrollY.current = currentScrollY;
   };
 
-  const handleTypeChange = () => {
+  const handleTypeChange = (newType: DonationType) => {
+    if (newType !== "BLOOD" && !hlaProfile) {
+      showAlert(
+        "HLA Profile Required",
+        "Organ, Tissue, and Stem Cell donations require an HLA profile. Please complete your donor registration first.",
+        "warning"
+      );
+      return;
+    }
+
+    setDonationType(newType);
     setQuantity("");
     setOrganType("" as OrganType);
     setTissueType("" as TissueType);
@@ -134,8 +146,23 @@ const DonationScreen = () => {
     setDonationDate(today.toISOString().slice(0, 10));
 
     const fetchData = async () => {
-      const id = await SecureStore.getItemAsync("donorId");
-      if (id) setDonorId(id);
+      setCheckingHLA(true);
+      try {
+        const id = await SecureStore.getItemAsync("donorId");
+        if (id) {
+          setDonorId(id);
+
+          const donorData = await SecureStore.getItemAsync("donorData");
+          if (donorData) {
+            const donor = JSON.parse(donorData);
+            setHlaProfile(donor.hlaProfile || null);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching donor data:", error);
+      } finally {
+        setCheckingHLA(false);
+      }
     };
     fetchData();
   }, []);
@@ -148,6 +175,10 @@ const DonationScreen = () => {
       !locationId ||
       !bloodType
     ) {
+      return false;
+    }
+
+    if (donationType !== "BLOOD" && !hlaProfile) {
       return false;
     }
 
@@ -172,6 +203,15 @@ const DonationScreen = () => {
   };
 
   const handleSubmit = async () => {
+    if (donationType !== "BLOOD" && !hlaProfile) {
+      showAlert(
+        "Profile Incomplete",
+        "You need to complete your HLA profile before donating organs, tissue, or stem cells. Please update your donor registration.",
+        "error"
+      );
+      return;
+    }
+
     if (!isFormValid()) {
       showAlert(
         "Validation Error",
@@ -246,6 +286,17 @@ const DonationScreen = () => {
     router.replace("/(tabs)/donate");
   };
 
+  if (checkingHLA) {
+    return (
+      <AppLayout>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.primary} />
+          <Text style={styles.loadingText}>Checking profile...</Text>
+        </View>
+      </AppLayout>
+    );
+  }
+
   return (
     <AppLayout>
       <View style={{ flex: 1, overflow: "hidden" }}>
@@ -286,6 +337,7 @@ const DonationScreen = () => {
             donationType={donationType}
             setDonationType={setDonationType}
             onTypeChange={handleTypeChange}
+            hlaProfile={hlaProfile}
           />
           <LocationSelector
             selectedLocationId={locationId}
@@ -377,11 +429,7 @@ const DonationScreen = () => {
               {loading ? (
                 <ActivityIndicator color="#fff" size="small" />
               ) : (
-                <Text style={styles.submitButtonText}>
-                  {alertType === "success"
-                    ? "Donation Submitted!"
-                    : "Submit Donation"}
-                </Text>
+                <Text style={styles.submitButtonText}>Submit Donation</Text>
               )}
             </TouchableOpacity>
           </View>

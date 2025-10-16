@@ -5,6 +5,8 @@ const BASE_URL = Constants.expoConfig?.extra?.API_URL;
 
 export interface MedicalDetails {
   hemoglobinLevel?: number;
+  bloodGlucoseLevel?: number | null;
+  hasDiabetes?: boolean;
   bloodPressure?: string;
   diagnosis: string;
   allergies?: string;
@@ -57,7 +59,7 @@ export interface HlaProfile {
 }
 
 export interface Address {
-    id?: string;
+  id?: string;
   addressLine: string;
   landmark: string;
   area: string;
@@ -135,9 +137,9 @@ export const registerRecipient = async (
   const token = await SecureStore.getItemAsync("jwt");
   const userId = await SecureStore.getItemAsync("userId");
   if (!token || !userId) throw new Error("Not authenticated");
-  
+
   console.log('Sending recipient payload:', JSON.stringify(payload, null, 2));
-  
+
   const response = await fetch(`${BASE_URL}/recipients/profile`, {
     method: "POST",
     headers: {
@@ -147,13 +149,13 @@ export const registerRecipient = async (
     },
     body: JSON.stringify(payload),
   });
-  
+
   if (!response.ok) {
     const errorText = await response.text();
     console.error('Recipient registration error:', response.status, errorText);
     throw new Error(errorText || `Registration failed with status ${response.status}`);
   }
-  
+
   return await response.json();
 };
 
@@ -163,9 +165,9 @@ export const updateRecipient = async (
   const token = await SecureStore.getItemAsync("jwt");
   const userId = await SecureStore.getItemAsync("userId");
   if (!token || !userId) throw new Error("Not authenticated");
-  
+
   console.log('Updating recipient payload:', JSON.stringify(payload, null, 2));
-  
+
   const response = await fetch(`${BASE_URL}/recipients/profile`, {
     method: "PUT",
     headers: {
@@ -175,13 +177,13 @@ export const updateRecipient = async (
     },
     body: JSON.stringify(payload),
   });
-  
+
   if (!response.ok) {
     const errorText = await response.text();
     console.error('Recipient update error:', response.status, errorText);
     throw new Error(errorText || `Update failed with status ${response.status}`);
   }
-  
+
   return await response.json();
 };
 
@@ -191,9 +193,9 @@ export const createReceiveRequest = async (
   const token = await SecureStore.getItemAsync("jwt");
   const userId = await SecureStore.getItemAsync("userId");
   if (!token || !userId) throw new Error("Not authenticated");
-  
+
   console.log('Creating receive request:', JSON.stringify(payload, null, 2));
-  
+
   const response = await fetch(`${BASE_URL}/recipients/request`, {
     method: "POST",
     headers: {
@@ -203,13 +205,13 @@ export const createReceiveRequest = async (
     },
     body: JSON.stringify(payload),
   });
-  
+
   if (!response.ok) {
     const errorText = await response.text();
     console.error('Create request error:', response.status, errorText);
     throw new Error(errorText || `Failed to create receive request with status ${response.status}`);
   }
-  
+
   return await response.json();
 };
 
@@ -217,41 +219,41 @@ export const getRecipientByUserId = async (): Promise<RecipientDTO> => {
   const token = await SecureStore.getItemAsync("jwt");
   const userId = await SecureStore.getItemAsync("userId");
   if (!token || !userId) throw new Error("Not authenticated");
-  
+
   const response = await fetch(`${BASE_URL}/recipients/by-userId`, {
     headers: {
       Authorization: `Bearer ${token}`,
       id: userId,
     },
   });
-  
+
   if (!response.ok) {
     if (response.status === 404) {
       throw new Error("Recipient not found");
     }
     throw new Error(`Failed to fetch recipient data with status ${response.status}`);
   }
-  
+
   return await response.json();
 };
 
 export const getRecipientById = async (id: string): Promise<RecipientDTO> => {
   const token = await SecureStore.getItemAsync("jwt");
   if (!token) throw new Error("Not authenticated");
-  
+
   const response = await fetch(`${BASE_URL}/recipients/${id}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
   });
-  
+
   if (!response.ok) {
     if (response.status === 404) {
       throw new Error("Recipient not found");
     }
     throw new Error(`Failed to fetch recipient with status ${response.status}`);
   }
-  
+
   return await response.json();
 };
 
@@ -261,21 +263,21 @@ export const getRecipientRequests = async (
   const token = await SecureStore.getItemAsync("jwt");
   const userId = await SecureStore.getItemAsync("userId");
   if (!token || !userId) throw new Error("Not authenticated");
-  
+
   const response = await fetch(`${BASE_URL}/recipients/${recipientId}/requests`, {
     headers: {
       Authorization: `Bearer ${token}`,
       id: userId,
     },
   });
-  
+
   if (!response.ok) {
     if (response.status === 403) {
       return [];
     }
     throw new Error(`Failed to get recipient requests with status ${response.status}`);
   }
-  
+
   return await response.json();
 };
 
@@ -284,18 +286,18 @@ export const getMyRequests = async (): Promise<ReceiveRequestDTO[]> => {
   const token = await SecureStore.getItemAsync("jwt");
   const userId = await SecureStore.getItemAsync("userId");
   if (!token || !userId) throw new Error("Not authenticated");
-  
+
   const response = await fetch(`${BASE_URL}/recipients/my-requests`, {
     headers: {
       Authorization: `Bearer ${token}`,
       id: userId,
     },
-  }); 
-  
+  });
+
   if (!response.ok) {
     throw new Error(`Failed to get my requests with status ${response.status}`);
   }
-  
+
   return await response.json();
 };
 
@@ -326,7 +328,7 @@ export const addRecipientRole = async (): Promise<string> => {
   const token = await SecureStore.getItemAsync("jwt");
   const userId = await SecureStore.getItemAsync("userId");
   if (!token || !userId) throw new Error("Not authenticated");
-  
+
   const response = await fetch(`${BASE_URL}/recipients/addRole`, {
     method: "PUT",
     headers: {
@@ -334,12 +336,12 @@ export const addRecipientRole = async (): Promise<string> => {
       id: userId,
     },
   });
-  
+
   if (!response.ok) {
     const errorText = await response.text();
     throw new Error(errorText || `Failed to add recipient role with status ${response.status}`);
   }
-  
+
   return await response.text();
 };
 
@@ -350,7 +352,7 @@ export const updateRequestStatus = async (
   const token = await SecureStore.getItemAsync("jwt");
   const userId = await SecureStore.getItemAsync("userId");
   if (!token || !userId) throw new Error("Not authenticated");
-  
+
   const response = await fetch(`${BASE_URL}/recipients/requests/${requestId}/status`, {
     method: "PUT",
     headers: {
@@ -360,7 +362,7 @@ export const updateRequestStatus = async (
     },
     body: JSON.stringify({ status }),
   });
-  
+
   if (!response.ok) {
     throw new Error(`Failed to update request status with status ${response.status}`);
   }
@@ -370,21 +372,21 @@ export const getRequestById = async (requestId: string): Promise<ReceiveRequestD
   const token = await SecureStore.getItemAsync("jwt");
   const userId = await SecureStore.getItemAsync("userId");
   if (!token || !userId) throw new Error("Not authenticated");
-  
+
   const response = await fetch(`${BASE_URL}/recipients/requests/${requestId}`, {
     headers: {
       Authorization: `Bearer ${token}`,
       id: userId,
     },
   });
-  
+
   if (!response.ok) {
     if (response.status === 404) {
       throw new Error("Request not found");
     }
     throw new Error(`Failed to fetch request with status ${response.status}`);
   }
-  
+
   return await response.json();
 };
 
@@ -393,7 +395,7 @@ export const getRequestById = async (requestId: string): Promise<ReceiveRequestD
 export async function fetchRecipientAddresses(recipientId: string): Promise<any[]> {
   const token = await SecureStore.getItemAsync('jwt');
   const userId = await SecureStore.getItemAsync('userId');
-  
+
   if (!token || !recipientId) {
     throw new Error('Missing authentication or recipient ID');
   }
@@ -414,14 +416,14 @@ export async function fetchRecipientAddresses(recipientId: string): Promise<any[
     const errorText = await response.text();
     throw new Error(`Failed to fetch addresses: ${errorText}`);
   }
-  
+
   return await response.json();
 }
 
 export async function addRecipientAddress(recipientId: string, locationData: any): Promise<any> {
   const token = await SecureStore.getItemAsync('jwt');
   const userId = await SecureStore.getItemAsync('userId');
-  
+
   const response = await fetch(`${BASE_URL}/recipients/${recipientId}/addresses`, {
     method: 'POST',
     headers: {
@@ -436,6 +438,6 @@ export async function addRecipientAddress(recipientId: string, locationData: any
     const errorText = await response.text();
     throw new Error(`Failed to add address: ${errorText}`);
   }
-  
+
   return await response.json();
 }

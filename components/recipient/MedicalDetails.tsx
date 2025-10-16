@@ -10,6 +10,10 @@ interface MedicalDetailsProps {
   setHemoglobinLevel: (value: string) => void;
   bloodPressure: string;
   setBloodPressure: (value: string) => void;
+  bloodGlucoseLevel: string;
+  setBloodGlucoseLevel: (value: string) => void;
+  hasDiabetes: boolean;
+  setHasDiabetes: (value: boolean) => void;
   diagnosis: string;
   setDiagnosis: (value: string) => void;
   allergies: string;
@@ -157,6 +161,34 @@ export function MedicalDetails(props: MedicalDetailsProps) {
             value={props.cardiacStatus}
             onChangeText={props.setCardiacStatus}
           />
+        </View>
+      </View>
+
+      <View style={styles.row}>
+        <View style={[styles.inputContainer, { flex: 1, marginRight: 8 }]}>
+          <Text style={styles.label}>Blood Glucose (mg/dL)</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="100"
+            placeholderTextColor={theme.textSecondary}
+            value={props.bloodGlucoseLevel}
+            onChangeText={props.setBloodGlucoseLevel}
+            keyboardType="numeric"
+          />
+        </View>
+      </View>
+      
+      <View style={styles.row}>
+        <View style={[styles.inputContainer, { flex: 1, marginLeft: 8 }]}>
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Has Diabetes?</Text>
+            <Switch
+              value={props.hasDiabetes}
+              onValueChange={props.setHasDiabetes}
+              thumbColor={theme.primary}
+              trackColor={{ false: theme.border, true: theme.primary + '50' }}
+            />
+          </View>
         </View>
       </View>
 

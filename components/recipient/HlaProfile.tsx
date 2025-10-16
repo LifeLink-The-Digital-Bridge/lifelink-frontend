@@ -55,6 +55,37 @@ export function HlaProfile(props: HlaProfileProps) {
         <Text style={styles.sectionTitle}>HLA Profile</Text>
       </View>
 
+      <View style={{
+        backgroundColor: theme.primary + '15',
+        padding: 12,
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: theme.primary + '30',
+        marginBottom: 16,
+      }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Feather name="info" size={16} color={theme.primary} />
+          <Text style={{
+            marginLeft: 8,
+            fontSize: 13,
+            color: theme.primary,
+            fontWeight: '600',
+            flex: 1,
+          }}>
+            HLA Profile is optional for blood requests
+          </Text>
+        </View>
+        <Text style={{
+          marginTop: 4,
+          marginLeft: 24,
+          fontSize: 12,
+          color: theme.textSecondary,
+          lineHeight: 16,
+        }}>
+          Required only for organ, tissue, and stem cell requests. You can complete this later if not available now.
+        </Text>
+      </View>
+
       <Text style={styles.subSectionTitle}>HLA Class I Alleles</Text>
 
       <View style={styles.row}>

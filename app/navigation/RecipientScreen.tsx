@@ -342,6 +342,10 @@ const RecipientScreen: React.FC = () => {
             ? Number(formState.hemoglobinLevel)
             : undefined,
           bloodPressure: formState.bloodPressure || undefined,
+          bloodGlucoseLevel: formState.bloodGlucoseLevel
+            ? Number(formState.bloodGlucoseLevel)
+            : undefined,
+          hasDiabetes: formState.hasDiabetes,
           diagnosis: formState.diagnosis,
           allergies: formState.allergies || undefined,
           currentMedications: formState.currentMedications || undefined,
@@ -382,37 +386,33 @@ const RecipientScreen: React.FC = () => {
         },
         hlaProfile:
           formState.hlaA1 ||
-          formState.hlaA2 ||
-          formState.hlaB1 ||
-          formState.hlaB2
+            formState.hlaA2 ||
+            formState.hlaB1 ||
+            formState.hlaB2
             ? {
-                hlaA1: formState.hlaA1 || undefined,
-                hlaA2: formState.hlaA2 || undefined,
-                hlaB1: formState.hlaB1 || undefined,
-                hlaB2: formState.hlaB2 || undefined,
-                hlaC1: formState.hlaC1 || undefined,
-                hlaC2: formState.hlaC2 || undefined,
-                hlaDR1: formState.hlaDR1 || undefined,
-                hlaDR2: formState.hlaDR2 || undefined,
-                hlaDQ1: formState.hlaDQ1 || undefined,
-                hlaDQ2: formState.hlaDQ2 || undefined,
-                hlaDP1: formState.hlaDP1 || undefined,
-                hlaDP2: formState.hlaDP2 || undefined,
-                testingDate: formState.testingDate || undefined,
-                testingMethod: formState.testingMethod || undefined,
-                laboratoryName: formState.laboratoryName || undefined,
-                certificationNumber: formState.certificationNumber || undefined,
-                hlaString: `${formState.hlaA1 || ""},${formState.hlaA2 || ""},${
-                  formState.hlaB1 || ""
-                },${formState.hlaB2 || ""},${formState.hlaC1 || ""},${
-                  formState.hlaC2 || ""
-                },${formState.hlaDR1 || ""},${formState.hlaDR2 || ""},${
-                  formState.hlaDQ1 || ""
-                },${formState.hlaDQ2 || ""},${formState.hlaDP1 || ""},${
-                  formState.hlaDP2 || ""
+              hlaA1: formState.hlaA1 || undefined,
+              hlaA2: formState.hlaA2 || undefined,
+              hlaB1: formState.hlaB1 || undefined,
+              hlaB2: formState.hlaB2 || undefined,
+              hlaC1: formState.hlaC1 || undefined,
+              hlaC2: formState.hlaC2 || undefined,
+              hlaDR1: formState.hlaDR1 || undefined,
+              hlaDR2: formState.hlaDR2 || undefined,
+              hlaDQ1: formState.hlaDQ1 || undefined,
+              hlaDQ2: formState.hlaDQ2 || undefined,
+              hlaDP1: formState.hlaDP1 || undefined,
+              hlaDP2: formState.hlaDP2 || undefined,
+              testingDate: formState.testingDate || undefined,
+              testingMethod: formState.testingMethod || undefined,
+              laboratoryName: formState.laboratoryName || undefined,
+              certificationNumber: formState.certificationNumber || undefined,
+              hlaString: `${formState.hlaA1 || ""},${formState.hlaA2 || ""},${formState.hlaB1 || ""
+                },${formState.hlaB2 || ""},${formState.hlaC1 || ""},${formState.hlaC2 || ""
+                },${formState.hlaDR1 || ""},${formState.hlaDR2 || ""},${formState.hlaDQ1 || ""
+                },${formState.hlaDQ2 || ""},${formState.hlaDP1 || ""},${formState.hlaDP2 || ""
                 }`,
-                isHighResolution: true,
-              }
+              isHighResolution: true,
+            }
             : undefined,
         consentForm: {
           isConsented: formState.isConsented,
