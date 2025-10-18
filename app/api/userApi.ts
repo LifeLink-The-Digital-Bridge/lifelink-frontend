@@ -118,3 +118,18 @@ export const getFollowingCount = async (userId: string): Promise<number> => {
     return 0;
   }
 };
+export const getFollowers = async (userId: string): Promise<UserProfile[]> => {
+  try {
+    return await fetchWithAuth(`/users/follow/${userId}/followers`);
+  } catch (error: any) {
+    throw new Error(error.message || 'Failed to fetch followers');
+  }
+};
+
+export const getFollowing = async (userId: string): Promise<UserProfile[]> => {
+  try {
+    return await fetchWithAuth(`/users/follow/${userId}/following`);
+  } catch (error: any) {
+    throw new Error(error.message || 'Failed to fetch following');
+  }
+};
