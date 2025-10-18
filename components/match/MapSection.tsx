@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, Alert, Modal } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from 'react-native-maps';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, Text, TouchableOpacity, ActivityIndicator, Modal } from 'react-native';
+import MapView, { Marker, Polyline, PROVIDER_DEFAULT } from 'react-native-maps';
 import { Feather } from '@expo/vector-icons';
+import axios from 'axios';
 import { useTheme } from '../../utils/theme-context';
 import { lightTheme, darkTheme } from '../../constants/styles/authStyles';
 import { createUnifiedStyles } from '../../constants/styles/unifiedStyles';
@@ -49,9 +50,14 @@ export const MapSection: React.FC<MapSectionProps> = ({
   const isDark = colorScheme === 'dark';
   const theme = isDark ? darkTheme : lightTheme;
   const styles = createUnifiedStyles(theme);
+  const mapRef = useRef<MapView>(null);
 
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [routeCoordinates, setRouteCoordinates] = useState<any[]>([]);
+  const [routeCoordinates, setRouteCoordinates] = useState<{latitude: number, longitude: number}[]>([]);
+  const [currentRouteCoordinates, setCurrentRouteCoordinates] = useState<{latitude: number, longitude: number}[]>([]);
+  const [loadingRoute, setLoadingRoute] = useState(false);
+  const [realDistanceFromRegistered, setRealDistanceFromRegistered] = useState<number | null>(null);
+  const [realDistanceFromCurrent, setRealDistanceFromCurrent] = useState<number | null>(null);
 
   const appDarkBlueMapStyle = [
     {
@@ -112,6 +118,63 @@ export const MapSection: React.FC<MapSectionProps> = ({
     }
   ];
 
+  useEffect(() => {
+    if (registeredLocation && otherPartyLocation) {
+      fetchRoute(registeredLocation, otherPartyLocation, 'registered');
+    }
+    if (currentGpsLocation && otherPartyLocation) {
+      fetchRoute(currentGpsLocation, otherPartyLocation, 'current');
+    }
+  }, [registeredLocation, currentGpsLocation, otherPartyLocation]);
+
+  const fetchRoute = async (start: LocationCoordinates, end: LocationCoordinates, type: 'registered' | 'current') => {
+    setLoadingRoute(true);
+    try {
+      const startCoord = `${start.longitude},${start.latitude}`;
+      const endCoord = `${end.longitude},${end.latitude}`;
+      
+      const response = await axios.get(
+        `https://router.project-osrm.org/route/v1/driving/${startCoord};${endCoord}`,
+        {
+          params: {
+            overview: 'full',
+            geometries: 'geojson'
+          }
+        }
+      );
+
+      if (response.data.routes && response.data.routes.length > 0) {
+        const coords = response.data.routes[0].geometry.coordinates;
+        
+        const routePoints = coords.map((coord: number[]) => ({
+          latitude: coord[1],
+          longitude: coord[0]
+        }));
+        
+        const distance = response.data.routes[0].distance / 1000;
+
+        if (type === 'registered') {
+          setRouteCoordinates(routePoints);
+          setRealDistanceFromRegistered(distance);
+        } else {
+          setCurrentRouteCoordinates(routePoints);
+          setRealDistanceFromCurrent(distance);
+        }
+        
+        console.log(`✅ ${type} route loaded:`, routePoints.length, 'points', distance.toFixed(2), 'km');
+      }
+    } catch (error) {
+      console.error(`❌ Failed to fetch ${type} route from OSRM:`, error);
+      if (type === 'registered') {
+        setRouteCoordinates([]);
+      } else {
+        setCurrentRouteCoordinates([]);
+      }
+    } finally {
+      setLoadingRoute(false);
+    }
+  };
+
   const getMarkerConfig = (location: LocationCoordinates) => {
     switch (location.type) {
       case 'registered':
@@ -141,27 +204,6 @@ export const MapSection: React.FC<MapSectionProps> = ({
     }
   };
 
-  const generateRoute = () => {
-    if (!registeredLocation || !otherPartyLocation) return [];
-
-    const points = [];
-    const steps = 10;
-
-    for (let i = 0; i <= steps; i++) {
-      const ratio = i / steps;
-      const lat = registeredLocation.latitude + (otherPartyLocation.latitude - registeredLocation.latitude) * ratio;
-      const lng = registeredLocation.longitude + (otherPartyLocation.longitude - registeredLocation.longitude) * ratio;
-
-      const curveFactor = Math.sin(ratio * Math.PI) * 0.001;
-      points.push({
-        latitude: lat + curveFactor,
-        longitude: lng + curveFactor,
-      });
-    }
-
-    return points;
-  };
-
   const renderMap = (fullscreen = false) => {
     if (!locationPermission || allLocations.length === 0) return null;
 
@@ -173,14 +215,15 @@ export const MapSection: React.FC<MapSectionProps> = ({
     const minLng = Math.min(...longitudes);
     const maxLng = Math.max(...longitudes);
 
+    const latDelta = Math.max((maxLat - minLat) * 2, 0.05);
+    const lngDelta = Math.max((maxLng - minLng) * 2, 0.05);
+
     const region = {
       latitude: (minLat + maxLat) / 2,
       longitude: (minLng + maxLng) / 2,
-      latitudeDelta: Math.max((maxLat - minLat) * 1.5, 0.01),
-      longitudeDelta: Math.max((maxLng - minLng) * 1.5, 0.01),
+      latitudeDelta: latDelta,
+      longitudeDelta: lngDelta,
     };
-
-    const route = generateRoute();
 
     return (
       <TouchableOpacity
@@ -193,52 +236,37 @@ export const MapSection: React.FC<MapSectionProps> = ({
         activeOpacity={fullscreen ? 1 : 0.8}
       >
         <MapView
-          provider={PROVIDER_GOOGLE}
+          ref={mapRef}
           style={{ flex: 1 }}
-          region={region}
+          provider={PROVIDER_DEFAULT}
+          initialRegion={region}
           customMapStyle={isDark ? appDarkBlueMapStyle : []}
-          showsUserLocation={false}
-          showsMyLocationButton={false}
-          showsPointsOfInterest={true}
-          showsBuildings={true}
           scrollEnabled={fullscreen}
           zoomEnabled={fullscreen}
           pitchEnabled={fullscreen}
           rotateEnabled={fullscreen}
-          mapType="standard"
+          showsUserLocation={false}
+          showsMyLocationButton={false}
+          showsPointsOfInterest={true}
+          showsBuildings={true}
         >
-          {route.length > 0 && (
+          {routeCoordinates.length > 0 && (
             <Polyline
-              coordinates={route}
-              strokeColor={theme.primary}
-              strokeWidth={4}
-              lineDashPattern={[0]}
-              lineJoin="round"
-              lineCap="round"
-            />
-          )}
-
-          {otherPartyLocation && registeredLocation && (
-            <Polyline
-              coordinates={[
-                { latitude: registeredLocation.latitude, longitude: registeredLocation.longitude },
-                { latitude: otherPartyLocation.latitude, longitude: otherPartyLocation.longitude }
-              ]}
+              coordinates={routeCoordinates}
               strokeColor={isDark ? "#66BB6A" : "#4CAF50"}
-              strokeWidth={3}
-              lineDashPattern={[5, 5]}
+              strokeWidth={4}
+              lineCap="round"
+              lineJoin="round"
             />
           )}
 
-          {otherPartyLocation && currentGpsLocation && (
+          {currentRouteCoordinates.length > 0 && (
             <Polyline
-              coordinates={[
-                { latitude: currentGpsLocation.latitude, longitude: currentGpsLocation.longitude },
-                { latitude: otherPartyLocation.latitude, longitude: otherPartyLocation.longitude }
-              ]}
+              coordinates={currentRouteCoordinates}
               strokeColor={isDark ? "#4f8df5" : "#007AFF"}
-              strokeWidth={3}
-              lineDashPattern={[10, 5]}
+              strokeWidth={4}
+              lineCap="round"
+              lineJoin="round"
             />
           )}
 
@@ -285,6 +313,24 @@ export const MapSection: React.FC<MapSectionProps> = ({
             <Feather name="maximize-2" size={16} color={theme.primary} />
           </View>
         )}
+
+        {loadingRoute && (
+          <View style={{
+            position: 'absolute',
+            top: 10,
+            left: 10,
+            backgroundColor: 'rgba(0,0,0,0.7)',
+            padding: 8,
+            borderRadius: 8,
+            flexDirection: 'row',
+            alignItems: 'center',
+          }}>
+            <ActivityIndicator size="small" color="#fff" />
+            <Text style={{ color: '#fff', fontSize: 12, marginLeft: 8 }}>
+              Loading route...
+            </Text>
+          </View>
+        )}
       </TouchableOpacity>
     );
   };
@@ -294,30 +340,18 @@ export const MapSection: React.FC<MapSectionProps> = ({
 
     const info = [];
 
-    if (registeredLocation) {
-      const distance = calculateDistance(
-        registeredLocation.latitude,
-        registeredLocation.longitude,
-        otherPartyLocation.latitude,
-        otherPartyLocation.longitude
-      );
+    if (registeredLocation && realDistanceFromRegistered) {
       info.push({
-        label: "From Registered Location",
-        value: `${distance.toFixed(2)} km`,
+        label: "From Registered Location (via roads)",
+        value: `${realDistanceFromRegistered.toFixed(2)} km`,
         color: isDark ? '#66BB6A' : '#4CAF50'
       });
     }
 
-    if (currentGpsLocation && registeredLocation) {
-      const distance = calculateDistance(
-        currentGpsLocation.latitude,
-        currentGpsLocation.longitude,
-        otherPartyLocation.latitude,
-        otherPartyLocation.longitude
-      );
+    if (currentGpsLocation && realDistanceFromCurrent) {
       info.push({
-        label: "From Current Location",
-        value: `${distance.toFixed(2)} km`,
+        label: "From Current Location (via roads)",
+        value: `${realDistanceFromCurrent.toFixed(2)} km`,
         color: isDark ? '#4f8df5' : '#007AFF'
       });
     }
@@ -364,7 +398,9 @@ export const MapSection: React.FC<MapSectionProps> = ({
               color: theme.textSecondary,
               fontSize: 14,
             }}>
-              {calculatedDistance ? `${calculatedDistance.toFixed(2)} km away` : 'Distance calculating...'}
+              {realDistanceFromRegistered 
+                ? `${realDistanceFromRegistered.toFixed(2)} km (via roads)` 
+                : 'Calculating...'}
             </Text>
           </View>
         </View>
@@ -373,7 +409,7 @@ export const MapSection: React.FC<MapSectionProps> = ({
           {renderMap(true)}
         </View>
 
-        {calculatedDistance && (
+        {realDistanceFromRegistered && (
           <View style={{
             backgroundColor: isDark ? '#1a1f2e' : '#ffffff',
             padding: 20,
@@ -401,13 +437,13 @@ export const MapSection: React.FC<MapSectionProps> = ({
                   fontSize: 16,
                   fontWeight: '600',
                 }}>
-                  Distance: {calculatedDistance.toFixed(2)} km
+                  Distance: {realDistanceFromRegistered.toFixed(2)} km
                 </Text>
                 <Text style={{
                   color: theme.textSecondary,
                   fontSize: 14,
                 }}>
-                  Estimated route shown
+                  Driving route shown
                 </Text>
               </View>
             </View>
@@ -518,7 +554,8 @@ export const MapSection: React.FC<MapSectionProps> = ({
   }
 
   return (
-    <View style={styles.sectionHeader}>      <View style={styles.sectionHeader}>
+    <View style={styles.sectionContainer}>
+      <View style={styles.sectionHeader}>
         <View style={styles.sectionIconContainer}>
           <Feather name="map-pin" size={18} color={theme.primary} />
         </View>
@@ -574,10 +611,10 @@ export const MapSection: React.FC<MapSectionProps> = ({
         )}
       </View>
 
-      {calculatedDistance && (
+      {realDistanceFromRegistered && (
         <InfoRow
-          label="Distance"
-          value={`${calculatedDistance.toFixed(2)} km`}
+          label="Distance (via roads)"
+          value={`${realDistanceFromRegistered.toFixed(2)} km`}
           isLast
         />
       )}

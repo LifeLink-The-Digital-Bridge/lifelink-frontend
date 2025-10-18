@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   View,
   TouchableOpacity,
@@ -6,7 +6,7 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
-import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
+import MapView, { Marker, PROVIDER_DEFAULT } from "react-native-maps";
 import * as Location from "expo-location";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Feather } from "@expo/vector-icons";
@@ -24,6 +24,7 @@ const MapScreen = () => {
   const isDark = colorScheme === "dark";
   const theme = isDark ? darkTheme : lightTheme;
   const styles = createUnifiedStyles(theme);
+  const mapRef = useRef<MapView>(null);
 
   const [region, setRegion] = useState<{
     latitude: number;
@@ -263,11 +264,14 @@ const MapScreen = () => {
         longitude: location.coords.longitude,
       };
       setSelectedLocation(newLocation);
-      setRegion({
-        ...newLocation,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
-      });
+      
+      if (mapRef.current) {
+        mapRef.current.animateToRegion({
+          ...newLocation,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        }, 1000);
+      }
     } catch (error) {
       Alert.alert("Error", "Failed to get current location");
     } finally {
@@ -311,7 +315,8 @@ const MapScreen = () => {
 
         <View style={{ flex: 1 }}>
           <MapView
-            provider={PROVIDER_GOOGLE}
+            ref={mapRef}
+            provider={PROVIDER_DEFAULT}
             style={{ flex: 1 }}
             region={region}
             onPress={handleMapPress}
@@ -328,7 +333,6 @@ const MapScreen = () => {
             scrollEnabled={true}
             zoomEnabled={true}
             loadingEnabled={true}
-            mapType="standard"
             customMapStyle={isDark ? appDarkBlueMapStyle : appLightMapStyle}
           >
             {selectedLocation && (
