@@ -1,28 +1,30 @@
-import React, { useState, useEffect, useRef } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-  RefreshControl,
-  Animated,
-} from "react-native";
+import { StatusHeader } from "@/components/common/StatusHeader";
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useTheme } from "../../utils/theme-context";
-import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
+import * as SecureStore from "expo-secure-store";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Animated,
+  RefreshControl,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import AppLayout from "../../components/AppLayout";
+import { ValidationAlert } from "../../components/common/ValidationAlert";
+import { darkTheme, lightTheme } from "../../constants/styles/authStyles";
 import { createUnifiedStyles } from "../../constants/styles/unifiedStyles";
+import { useTheme } from "../../utils/theme-context";
 import {
   getMyMatchesAsDonor,
   getMyMatchesAsRecipient,
 } from "../api/matchingApi";
-import * as SecureStore from "expo-secure-store";
-import { ValidationAlert } from "../../components/common/ValidationAlert";
-import AppLayout from "../../components/AppLayout";
-import { StatusHeader } from "@/components/common/StatusHeader";
+import { getStatusColor, formatStatusDisplay } from "../../utils/statusHelpers";
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
 
-const HEADER_HEIGHT = 120;
+const HEADER_HEIGHT = 135;
 
 interface MatchResult {
   matchResultId: string;
@@ -34,6 +36,7 @@ interface MatchResult {
   requestType?: string;
   bloodType?: string;
   matchType: string;
+  status?: string;
   isConfirmed: boolean;
   donorConfirmed: boolean;
   recipientConfirmed: boolean;
@@ -41,7 +44,13 @@ interface MatchResult {
   recipientConfirmedAt?: string;
   matchedAt: string;
   distance?: number;
+  expiredAt?: string;
+  expiryReason?: string;
+  completedAt?: string;
+  canConfirmCompletion?: boolean;
 }
+
+type FilterType = "all" | "active" | "completed" | "cancelled";
 
 const MatchResultsScreen = () => {
   const { colorScheme } = useTheme();
@@ -56,18 +65,16 @@ const MatchResultsScreen = () => {
   const [donorMatches, setDonorMatches] = useState<MatchResult[]>([]);
   const [recipientMatches, setRecipientMatches] = useState<MatchResult[]>([]);
   const [activeTab, setActiveTab] = useState<"donor" | "recipient">("donor");
+  const [filterType, setFilterType] = useState<FilterType>("all");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [userRoles, setUserRoles] = useState<string[]>([]);
   const [isDonor, setIsDonor] = useState(false);
   const [isRecipient, setIsRecipient] = useState(false);
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
-  const [alertType, setAlertType] = useState<
-    "success" | "error" | "warning" | "info"
-  >("info");
+  const [alertType, setAlertType] = useState<"success" | "error" | "warning" | "info">("info");
 
   const showAlert = (
     title: string,
@@ -108,7 +115,6 @@ const MatchResultsScreen = () => {
       const roles = rolesString ? JSON.parse(rolesString) : [];
 
       setCurrentUserId(userId);
-      setUserRoles(roles);
 
       let donorData: MatchResult[] = [];
       let recipientData: MatchResult[] = [];
@@ -196,19 +202,36 @@ const MatchResultsScreen = () => {
     });
   };
 
-  const getStatusColor = (match: MatchResult) => {
-    const isConfirmed = match.isConfirmed;
-    return isConfirmed ? theme.success : theme.error;
+  const isActiveMatch = (match: MatchResult) => {
+    const activeStatuses = ["PENDING", "MATCHED", "CONFIRMED"];
+    return activeStatuses.includes(match.status || "");
   };
 
-  const getStatusText = (match: MatchResult) => {
-    const isConfirmed = match.isConfirmed;
-    if (isConfirmed) return "Fully Confirmed";
-    if (match.donorConfirmed && match.recipientConfirmed)
-      return "Both Confirmed";
-    if (match.donorConfirmed || match.recipientConfirmed)
-      return "Partially Confirmed";
-    return "Pending";
+  const isCompletedMatch = (match: MatchResult) => {
+    return match.status === "COMPLETED";
+  };
+
+  const isCancelledMatch = (match: MatchResult) => {
+    const cancelledStatuses = ["REJECTED", "EXPIRED", "CANCELLED_BY_DONOR", "CANCELLED_BY_RECIPIENT", "WITHDRAWN"];
+    return cancelledStatuses.includes(match.status || "");
+  };
+
+  const getFilteredMatches = (matches: MatchResult[]) => {
+    switch (filterType) {
+      case "active":
+        return matches.filter(isActiveMatch);
+      case "completed":
+        return matches.filter(isCompletedMatch);
+      case "cancelled":
+        return matches.filter(isCancelledMatch);
+      default:
+        return matches;
+    }
+  };
+
+  const getCurrentMatches = () => {
+    const matches = activeTab === "donor" ? donorMatches : recipientMatches;
+    return getFilteredMatches(matches);
   };
 
   const getUserRoleInMatch = (match: MatchResult) => {
@@ -222,24 +245,6 @@ const MatchResultsScreen = () => {
     if (userRole === "donor") return "Recipient";
     if (userRole === "recipient") return "Donor";
     return "Other Party";
-  };
-
-  const getMyStatus = (match: MatchResult) => {
-    const userRole = getUserRoleInMatch(match);
-    if (userRole === "donor") return match.donorConfirmed;
-    if (userRole === "recipient") return match.recipientConfirmed;
-    return false;
-  };
-
-  const getOtherPartyStatus = (match: MatchResult) => {
-    const userRole = getUserRoleInMatch(match);
-    if (userRole === "donor") return match.recipientConfirmed;
-    if (userRole === "recipient") return match.donorConfirmed;
-    return false;
-  };
-
-  const getCurrentMatches = () => {
-    return activeTab === "donor" ? donorMatches : recipientMatches;
   };
 
   const getTotalMatchCount = () => {
@@ -289,8 +294,8 @@ const MatchResultsScreen = () => {
             <View
               style={{
                 flexDirection: "row",
-                marginHorizontal: 20,
-                marginBottom: 16,
+                marginHorizontal: wp("5%"),
+                marginBottom: hp("2%"),
                 backgroundColor: theme.card,
                 borderRadius: 12,
                 padding: 4,
@@ -301,23 +306,19 @@ const MatchResultsScreen = () => {
                   style={[
                     {
                       flex: 1,
-                      paddingVertical: 12,
-                      paddingHorizontal: 16,
+                      paddingVertical: hp("1.5%"),
+                      paddingHorizontal: wp("4%"),
                       borderRadius: 8,
                       alignItems: "center",
                     },
-                    activeTab === "donor"
-                      ? { backgroundColor: theme.primary }
-                      : {},
+                    activeTab === "donor" ? { backgroundColor: theme.primary } : {},
                   ]}
                   onPress={() => setActiveTab("donor")}
                 >
                   <Text
                     style={[
-                      { fontSize: 14, fontWeight: "600" },
-                      activeTab === "donor"
-                        ? { color: "#fff" }
-                        : { color: theme.text },
+                      { fontSize: wp("3.5%"), fontWeight: "600" },
+                      activeTab === "donor" ? { color: "#fff" } : { color: theme.text },
                     ]}
                   >
                     As Donor ({donorMatches.length})
@@ -329,23 +330,19 @@ const MatchResultsScreen = () => {
                   style={[
                     {
                       flex: 1,
-                      paddingVertical: 12,
-                      paddingHorizontal: 16,
+                      paddingVertical: hp("1.5%"),
+                      paddingHorizontal: wp("4%"),
                       borderRadius: 8,
                       alignItems: "center",
                     },
-                    activeTab === "recipient"
-                      ? { backgroundColor: theme.primary }
-                      : {},
+                    activeTab === "recipient" ? { backgroundColor: theme.primary } : {},
                   ]}
                   onPress={() => setActiveTab("recipient")}
                 >
                   <Text
                     style={[
-                      { fontSize: 14, fontWeight: "600" },
-                      activeTab === "recipient"
-                        ? { color: "#fff" }
-                        : { color: theme.text },
+                      { fontSize: wp("3.5%"), fontWeight: "600" },
+                      activeTab === "recipient" ? { color: "#fff" } : { color: theme.text },
                     ]}
                   >
                     As Recipient ({recipientMatches.length})
@@ -354,13 +351,61 @@ const MatchResultsScreen = () => {
               )}
             </View>
           )}
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{
+              paddingHorizontal: wp("5%"),
+              paddingBottom: hp("2%"),
+              gap: wp("2%"),
+            }}
+          >
+            {[
+              { key: "all", label: "All", icon: "list" },
+              { key: "active", label: "Active", icon: "activity" },
+              { key: "completed", label: "Completed", icon: "check-circle" },
+              { key: "cancelled", label: "Cancelled", icon: "x-circle" },
+            ].map((filter) => (
+              <TouchableOpacity
+                key={filter.key}
+                style={{
+                  paddingVertical: hp("1%"),
+                  paddingHorizontal: wp("4%"),
+                  borderRadius: 20,
+                  backgroundColor: filterType === filter.key ? theme.primary + "20" : theme.card,
+                  borderWidth: 1,
+                  borderColor: filterType === filter.key ? theme.primary : theme.border + "40",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: wp("1.5%"),
+                }}
+                onPress={() => setFilterType(filter.key as FilterType)}
+              >
+                <Feather
+                  name={filter.icon as any}
+                  size={wp("4%")}
+                  color={filterType === filter.key ? theme.primary : theme.textSecondary}
+                />
+                <Text
+                  style={{
+                    fontSize: wp("3.5%"),
+                    fontWeight: filterType === filter.key ? "600" : "400",
+                    color: filterType === filter.key ? theme.primary : theme.text,
+                  }}
+                >
+                  {filter.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </Animated.View>
 
         <ScrollView
           contentContainerStyle={{
-            paddingTop: HEADER_HEIGHT + 70,
-            paddingHorizontal: 20,
-            paddingBottom: 40,
+            paddingTop: HEADER_HEIGHT + hp("15%"),
+            paddingHorizontal: wp("5%"),
+            paddingBottom: hp("5%"),
           }}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -373,14 +418,15 @@ const MatchResultsScreen = () => {
           {getCurrentMatches().length === 0 ? (
             <View style={styles.promptContainer}>
               <View style={styles.promptIconContainer}>
-                <Feather name="search" size={40} color={theme.textSecondary} />
+                <Feather name="search" size={wp("10%")} color={theme.textSecondary} />
               </View>
               <Text style={styles.promptTitle}>
-                Still Searching for Matches
+                No {filterType !== "all" ? filterType : ""} Matches Found
               </Text>
               <Text style={styles.promptSubtitle}>
-                We're actively looking for compatible matches for you. Check
-                back regularly for updates.
+                {filterType === "all"
+                  ? "We're actively looking for compatible matches for you."
+                  : `You don't have any ${filterType} matches at the moment.`}
               </Text>
             </View>
           ) : (
@@ -396,7 +442,7 @@ const MatchResultsScreen = () => {
                     flexDirection: "row",
                     justifyContent: "space-between",
                     alignItems: "flex-start",
-                    marginBottom: 16,
+                    marginBottom: hp("2%"),
                   }}
                 >
                   <View style={{ flex: 1 }}>
@@ -412,18 +458,18 @@ const MatchResultsScreen = () => {
                     style={[
                       styles.statusBadge,
                       {
-                        backgroundColor: getStatusColor(match) + "20",
-                        borderColor: getStatusColor(match) + "40",
+                        backgroundColor: getStatusColor(match.status || "PENDING", theme) + "20",
+                        borderColor: getStatusColor(match.status || "PENDING", theme) + "40",
                       },
                     ]}
                   >
                     <Text
                       style={[
                         styles.statusText,
-                        { color: getStatusColor(match) },
+                        { color: getStatusColor(match.status || "PENDING", theme) },
                       ]}
                     >
-                      {getStatusText(match)}
+                      {formatStatusDisplay(match.status || "PENDING").text}
                     </Text>
                   </View>
                 </View>
@@ -431,9 +477,7 @@ const MatchResultsScreen = () => {
                 <View style={styles.infoRow}>
                   <Text style={styles.labelText}>Your Role:</Text>
                   <Text style={styles.valueText}>
-                    {getUserRoleInMatch(match) === "donor"
-                      ? "Donor"
-                      : "Recipient"}
+                    {getUserRoleInMatch(match) === "donor" ? "Donor" : "Recipient"}
                   </Text>
                 </View>
 
@@ -441,38 +485,6 @@ const MatchResultsScreen = () => {
                   <Text style={styles.labelText}>Distance:</Text>
                   <Text style={styles.valueText}>
                     {match.distance ? `${match.distance.toFixed(1)} km` : "N/A"}
-                  </Text>
-                </View>
-
-                <View style={styles.infoRow}>
-                  <Text style={styles.labelText}>Your Status:</Text>
-                  <Text
-                    style={[
-                      styles.valueText,
-                      {
-                        color: getMyStatus(match) ? theme.success : theme.error,
-                      },
-                    ]}
-                  >
-                    {getMyStatus(match) ? "✓ Confirmed" : "⏳ Pending"}
-                  </Text>
-                </View>
-
-                <View style={styles.infoRow}>
-                  <Text style={styles.labelText}>
-                    {getOtherPartyRole(match)} Status:
-                  </Text>
-                  <Text
-                    style={[
-                      styles.valueText,
-                      {
-                        color: getOtherPartyStatus(match)
-                          ? theme.success
-                          : theme.error,
-                      },
-                    ]}
-                  >
-                    {getOtherPartyStatus(match) ? "✓ Confirmed" : "⏳ Pending"}
                   </Text>
                 </View>
 
@@ -487,17 +499,17 @@ const MatchResultsScreen = () => {
                   style={{
                     flexDirection: "row",
                     alignItems: "center",
-                    marginTop: 16,
-                    paddingTop: 16,
+                    marginTop: hp("2%"),
+                    paddingTop: hp("2%"),
                     borderTopWidth: 1,
                     borderTopColor: theme.border + "30",
                   }}
                 >
-                  <Feather name="eye" size={16} color={theme.primary} />
+                  <Feather name="eye" size={wp("4%")} color={theme.primary} />
                   <Text
                     style={[
                       styles.labelText,
-                      { marginLeft: 8, color: theme.primary },
+                      { marginLeft: wp("2%"), color: theme.primary },
                     ]}
                   >
                     Tap to view details

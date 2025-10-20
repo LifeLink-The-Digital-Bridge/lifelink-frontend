@@ -5,7 +5,6 @@ import {
   ScrollView,
   ActivityIndicator,
   TouchableOpacity,
-  Alert,
   Animated,
   RefreshControl,
 } from "react-native";
@@ -17,20 +16,49 @@ import { createStatusStyles } from "../../constants/styles/statusStyles";
 import { useTheme } from "../../utils/theme-context";
 import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
 import Applayout from "../../components/AppLayout";
+import { ValidationAlert } from "../../components/common/ValidationAlert";
 import { Feather } from "@expo/vector-icons";
 import {
   getMyMatchesAsDonor,
   getMyMatchesAsRecipient,
-  getMyDonations,
-  getMyRequests,
   MatchResponse,
-  DonationDTO,
-  ReceiveRequestDTO,
 } from "../api/matchingApi";
+import {
+  getMyDonations,
+  canCancelDonation,
+  cancelDonation,
+  CancellationRequestDTO as DonationCancellationDTO,
+} from "../api/donationApi";
+import {
+  getMyRequests,
+  canCancelRequest,
+  cancelRequest,
+  CancellationRequestDTO as RequestCancellationDTO,
+  ReceiveRequestDTO,
+} from "../api/requestApi";
 import { StatusHeader } from "@/components/common/StatusHeader";
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
+import { DonationCard } from "../../components/status/DonationCard";
+import { RequestCard } from "../../components/status/RequestCard";
+import { CancellationModal } from "../../components/status/CancellationModal";
+import { EmptyState } from "../../components/status/EmptyState";
 
-const HEADER_HEIGHT = 180;
+const HEADER_HEIGHT = 135;
+
+interface DonationDTO {
+  id: string;
+  donorId: string;
+  donationType: string;
+  donationDate: string;
+  status: string;
+  bloodType?: string;
+  quantity?: number;
+  organType?: string;
+  tissueType?: string;
+  stemCellType?: string;
+}
+
+type FilterType = "all" | "active" | "completed" | "cancelled";
 
 const StatusScreen = () => {
   const [donations, setDonations] = useState<DonationDTO[]>([]);
@@ -40,6 +68,20 @@ const StatusScreen = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<"donations" | "requests">("donations");
+  const [filterType, setFilterType] = useState<FilterType>("all");
+
+  const [cancelModalVisible, setCancelModalVisible] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+  const [cancelAdditionalNotes, setCancelAdditionalNotes] = useState("");
+  const [selectedItemId, setSelectedItemId] = useState<string>("");
+  const [selectedItemType, setSelectedItemType] = useState<"donation" | "request">("donation");
+  const [cancelling, setCancelling] = useState(false);
+
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertType, setAlertType] = useState<"success" | "error" | "warning" | "info">("info");
+
   const { isAuthenticated } = useAuth();
   const { colorScheme } = useTheme();
   const isDark = colorScheme === "dark";
@@ -107,10 +149,10 @@ const StatusScreen = () => {
             getMyDonations(),
             getMyMatchesAsDonor(),
           ]);
-          
+
           donationsData = donationsResult;
           donorMatchesData = matchesResult;
-          
+
           setDonations(donationsData);
           setDonorMatches(donorMatchesData);
         } catch (error: any) {
@@ -130,10 +172,10 @@ const StatusScreen = () => {
             getMyRequests(),
             getMyMatchesAsRecipient(),
           ]);
-          
+
           requestsData = requestsResult;
           recipientMatchesData = matchesResult;
-          
+
           setRequests(requestsData);
           setRecipientMatches(recipientMatchesData);
         } catch (error: any) {
@@ -156,7 +198,7 @@ const StatusScreen = () => {
       }
     } catch (error) {
       console.error("Failed to fetch data:", error);
-      Alert.alert("Error", "Failed to load status data");
+      showAlert("Error", "Failed to load status data", "error");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -165,6 +207,57 @@ const StatusScreen = () => {
 
   const onRefresh = () => {
     fetchData(true);
+  };
+
+  const showAlert = (
+    title: string,
+    message: string,
+    type: "success" | "error" | "warning" | "info" = "info"
+  ) => {
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertType(type);
+    setAlertVisible(true);
+  };
+
+  const isActiveItem = (status: string) => {
+    const activeStatuses = ["PENDING", "AVAILABLE", "ACTIVE", "MATCHED", "IN_PROGRESS"];
+    return activeStatuses.includes(status);
+  };
+
+  const isCompletedItem = (status: string) => {
+    return status === "COMPLETED" || status === "FULFILLED";
+  };
+
+  const isCancelledItem = (status: string) => {
+    const cancelledStatuses = ["CANCELLED_BY_DONOR", "CANCELLED_BY_RECIPIENT", "CANCELLED_DUE_TO_MATCH_FAILURE", "EXPIRED", "WITHDRAWN"];
+    return cancelledStatuses.includes(status);
+  };
+
+  const getFilteredDonations = () => {
+    switch (filterType) {
+      case "active":
+        return donations.filter((d) => isActiveItem(d.status));
+      case "completed":
+        return donations.filter((d) => isCompletedItem(d.status));
+      case "cancelled":
+        return donations.filter((d) => isCancelledItem(d.status));
+      default:
+        return donations;
+    }
+  };
+
+  const getFilteredRequests = () => {
+    switch (filterType) {
+      case "active":
+        return requests.filter((r) => isActiveItem(r.status));
+      case "completed":
+        return requests.filter((r) => isCompletedItem(r.status));
+      case "cancelled":
+        return requests.filter((r) => isCancelledItem(r.status));
+      default:
+        return requests;
+    }
   };
 
   const getMatchForDonation = (donationId: string): MatchResponse | undefined => {
@@ -186,11 +279,6 @@ const StatusScreen = () => {
         pathname: "/navigation/MatchDetailsScreen",
         params: { matchData: JSON.stringify(match) },
       });
-    } else {
-      Alert.alert(
-        "Donation Details",
-        `Status: ${donation.status}\nType: ${donation.donationType}\nDate: ${new Date(donation.donationDate).toLocaleDateString()}`
-      );
     }
   };
 
@@ -201,223 +289,93 @@ const StatusScreen = () => {
         pathname: "/navigation/MatchDetailsScreen",
         params: { matchData: JSON.stringify(match) },
       });
-    } else {
-      Alert.alert(
-        "Request Details",
-        `Status: ${request.status}\nType: ${request.requestType}\nUrgency: ${request.urgencyLevel}\nDate: ${new Date(request.requestDate).toLocaleDateString()}`
+    }
+  };
+
+  const handleCancelPress = async (itemId: string, itemType: "donation" | "request") => {
+    try {
+      let canCancel = false;
+
+      if (itemType === "donation") {
+        canCancel = await canCancelDonation(itemId);
+      } else {
+        canCancel = await canCancelRequest(itemId);
+      }
+
+      if (!canCancel) {
+        showAlert(
+          "Cannot Cancel",
+          itemType === "donation"
+            ? "This donation cannot be cancelled. It may already be in progress or completed."
+            : "This request cannot be cancelled. It may already be in progress or fulfilled.",
+          "warning"
+        );
+        return;
+      }
+
+      setSelectedItemId(itemId);
+      setSelectedItemType(itemType);
+      setCancelModalVisible(true);
+    } catch (error: any) {
+      showAlert("Error", error.message || "Failed to check cancellation status", "error");
+    }
+  };
+
+  const handleConfirmCancel = async () => {
+    if (cancelReason.trim().length < 10) {
+      showAlert(
+        "Invalid Reason",
+        "Please provide a reason with at least 10 characters",
+        "warning"
       );
+      return;
+    }
+
+    setCancelling(true);
+
+    try {
+      const cancellationData = {
+        reason: cancelReason.trim(),
+        additionalNotes: cancelAdditionalNotes.trim() || undefined,
+      };
+
+      if (selectedItemType === "donation") {
+        const response = await cancelDonation(
+          selectedItemId,
+          cancellationData as DonationCancellationDTO
+        );
+        showAlert(
+          "Donation Cancelled",
+          `${response.message}\n\nExpired Matches: ${response.expiredMatchesCount}`,
+          "success"
+        );
+      } else {
+        const response = await cancelRequest(
+          selectedItemId,
+          cancellationData as RequestCancellationDTO
+        );
+        showAlert(
+          "Request Cancelled",
+          `${response.message}\n\nExpired Matches: ${response.expiredMatchesCount}`,
+          "success"
+        );
+      }
+
+      setCancelModalVisible(false);
+      setCancelReason("");
+      setCancelAdditionalNotes("");
+      setSelectedItemId("");
+
+      fetchData();
+    } catch (error: any) {
+      showAlert("Cancellation Failed", error.message || "Failed to cancel", "error");
+    } finally {
+      setCancelling(false);
     }
   };
 
   const getTotalMatches = () => {
     return donorMatches.length + recipientMatches.length;
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "AVAILABLE":
-      case "PENDING":
-        return "#f59e0b";
-      case "COMPLETED":
-      case "FULFILLED":
-      case "MATCHED":
-        return theme.success;
-      case "CANCELLED":
-      case "EXPIRED":
-      case "REJECTED":
-        return theme.error;
-      default:
-        return theme.textSecondary;
-    }
-  };
-
-  const renderDonationItem = (donation: DonationDTO) => {
-    const match = getMatchForDonation(donation.id);
-    const hasMatch = !!match;
-
-    return (
-      <TouchableOpacity
-        key={donation.id}
-        style={[styles.card, { marginBottom: hp("1.5%") }]}
-        onPress={() => handleDonationPress(donation)}
-        activeOpacity={0.7}
-      >
-        <View style={statusStyles.cardHeader}>
-          <Text style={statusStyles.cardTitle}>{donation.donationType}</Text>
-          <View
-            style={[
-              styles.statusBadge,
-              { backgroundColor: getStatusColor(donation.status) + "20", borderColor: getStatusColor(donation.status) + "40" },
-            ]}
-          >
-            <Text style={[styles.statusText, { color: getStatusColor(donation.status) }]}>
-              {donation.status}
-            </Text>
-          </View>
-        </View>
-
-        <Text style={statusStyles.cardSubtitle}>
-          Date: {new Date(donation.donationDate).toLocaleDateString()}
-        </Text>
-
-        {donation.bloodType && (
-          <Text style={statusStyles.cardDetail}>Blood Type: {donation.bloodType}</Text>
-        )}
-        {donation.quantity && (
-          <Text style={statusStyles.cardDetail}>Quantity: {donation.quantity} units</Text>
-        )}
-        {donation.organType && (
-          <Text style={statusStyles.cardDetail}>Organ: {donation.organType}</Text>
-        )}
-        {donation.tissueType && (
-          <Text style={statusStyles.cardDetail}>Tissue: {donation.tissueType}</Text>
-        )}
-        {donation.stemCellType && (
-          <Text style={statusStyles.cardDetail}>Stem Cell: {donation.stemCellType}</Text>
-        )}
-
-        {hasMatch && (
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginTop: hp("1.5%"),
-              paddingTop: hp("1.5%"),
-              borderTopWidth: 1,
-              borderTopColor: theme.border + "30",
-            }}
-          >
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <Feather name="check-circle" size={wp("4%")} color={theme.success} />
-              <Text
-                style={{
-                  color: theme.success,
-                  fontSize: wp("3.5%"),
-                  fontWeight: "600",
-                  marginLeft: wp("2%"),
-                }}
-              >
-                Matched
-              </Text>
-            </View>
-            <Feather name="chevron-right" size={wp("5%")} color={theme.primary} />
-          </View>
-        )}
-      </TouchableOpacity>
-    );
-  };
-
-  const renderRequestItem = (request: ReceiveRequestDTO) => {
-    const match = getMatchForRequest(request.id);
-    const hasMatch = !!match;
-
-    return (
-      <TouchableOpacity
-        key={request.id}
-        style={[styles.card, { marginBottom: hp("1.5%") }]}
-        onPress={() => handleRequestPress(request)}
-        activeOpacity={0.7}
-      >
-        <View style={statusStyles.cardHeader}>
-          <Text style={statusStyles.cardTitle}>{request.requestType}</Text>
-          <View
-            style={[
-              styles.statusBadge,
-              { backgroundColor: getStatusColor(request.status) + "20", borderColor: getStatusColor(request.status) + "40" },
-            ]}
-          >
-            <Text style={[styles.statusText, { color: getStatusColor(request.status) }]}>
-              {request.status}
-            </Text>
-          </View>
-        </View>
-
-        <Text style={statusStyles.cardSubtitle}>
-          Date: {new Date(request.requestDate).toLocaleDateString()}
-        </Text>
-
-        <View
-          style={[
-            styles.statusBadge,
-            { 
-              backgroundColor: 
-                request.urgencyLevel === "CRITICAL" ? theme.error + "20" :
-                request.urgencyLevel === "HIGH" ? "#FF6B35" + "20" :
-                request.urgencyLevel === "MEDIUM" ? "#f59e0b" + "20" : 
-                theme.success + "20",
-              borderColor:
-                request.urgencyLevel === "CRITICAL" ? theme.error + "40" :
-                request.urgencyLevel === "HIGH" ? "#FF6B35" + "40" :
-                request.urgencyLevel === "MEDIUM" ? "#f59e0b" + "40" :
-                theme.success + "40",
-              marginTop: hp("1%"),
-              alignSelf: "flex-start",
-            },
-          ]}
-        >
-          <Text
-            style={[
-              styles.statusText,
-              {
-                color:
-                  request.urgencyLevel === "CRITICAL" ? theme.error :
-                  request.urgencyLevel === "HIGH" ? "#FF6B35" :
-                  request.urgencyLevel === "MEDIUM" ? "#f59e0b" :
-                  theme.success,
-              },
-            ]}
-          >
-            Urgency: {request.urgencyLevel}
-          </Text>
-        </View>
-
-        {request.requestedBloodType && (
-          <Text style={statusStyles.cardDetail}>Blood Type: {request.requestedBloodType}</Text>
-        )}
-        {request.quantity && (
-          <Text style={statusStyles.cardDetail}>Quantity: {request.quantity} units</Text>
-        )}
-        {request.requestedOrgan && (
-          <Text style={statusStyles.cardDetail}>Organ: {request.requestedOrgan}</Text>
-        )}
-        {request.requestedTissue && (
-          <Text style={statusStyles.cardDetail}>Tissue: {request.requestedTissue}</Text>
-        )}
-        {request.requestedStemCellType && (
-          <Text style={statusStyles.cardDetail}>Stem Cell: {request.requestedStemCellType}</Text>
-        )}
-
-        {hasMatch && (
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginTop: hp("1.5%"),
-              paddingTop: hp("1.5%"),
-              borderTopWidth: 1,
-              borderTopColor: theme.border + "30",
-            }}
-          >
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <Feather name="check-circle" size={wp("4%")} color={theme.success} />
-              <Text
-                style={{
-                  color: theme.success,
-                  fontSize: wp("3.5%"),
-                  fontWeight: "600",
-                  marginLeft: wp("2%"),
-                }}
-              >
-                Matched
-              </Text>
-            </View>
-            <Feather name="chevron-right" size={wp("5%")} color={theme.primary} />
-          </View>
-        )}
-      </TouchableOpacity>
-    );
   };
 
   if (loading) {
@@ -430,6 +388,9 @@ const StatusScreen = () => {
       </Applayout>
     );
   }
+
+  const filteredDonations = getFilteredDonations();
+  const filteredRequests = getFilteredRequests();
 
   return (
     <Applayout>
@@ -447,7 +408,7 @@ const StatusScreen = () => {
         >
           <StatusHeader
             title="Activity Status"
-            subtitle="Track your donations & requests"
+            subtitle="Your donations & requests"
             iconName="activity"
             statusText={`${getTotalMatches()} Matches`}
             onStatusPress={handleViewMatches}
@@ -459,10 +420,7 @@ const StatusScreen = () => {
           {(donations.length > 0 || requests.length > 0) && (
             <View style={statusStyles.tabContainer}>
               <TouchableOpacity
-                style={[
-                  statusStyles.tab,
-                  activeTab === "donations" && statusStyles.activeTab,
-                ]}
+                style={[statusStyles.tab, activeTab === "donations" && statusStyles.activeTab]}
                 onPress={() => setActiveTab("donations")}
               >
                 <Text
@@ -475,10 +433,7 @@ const StatusScreen = () => {
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[
-                  statusStyles.tab,
-                  activeTab === "requests" && statusStyles.activeTab,
-                ]}
+                style={[statusStyles.tab, activeTab === "requests" && statusStyles.activeTab]}
                 onPress={() => setActiveTab("requests")}
               >
                 <Text
@@ -492,11 +447,59 @@ const StatusScreen = () => {
               </TouchableOpacity>
             </View>
           )}
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{
+              paddingHorizontal: wp("5%"),
+              paddingBottom: hp("2%"),
+              gap: wp("2%"),
+            }}
+          >
+            {[
+              { key: "all", label: "All", icon: "list" },
+              { key: "active", label: "Active", icon: "activity" },
+              { key: "completed", label: "Completed", icon: "check-circle" },
+              { key: "cancelled", label: "Cancelled", icon: "x-circle" },
+            ].map((filter) => (
+              <TouchableOpacity
+                key={filter.key}
+                style={{
+                  paddingVertical: hp("1%"),
+                  paddingHorizontal: wp("4%"),
+                  borderRadius: 20,
+                  backgroundColor: filterType === filter.key ? theme.primary + "20" : theme.card,
+                  borderWidth: 1,
+                  borderColor: filterType === filter.key ? theme.primary : theme.border + "40",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: wp("1.5%"),
+                }}
+                onPress={() => setFilterType(filter.key as FilterType)}
+              >
+                <Feather
+                  name={filter.icon as any}
+                  size={wp("4%")}
+                  color={filterType === filter.key ? theme.primary : theme.textSecondary}
+                />
+                <Text
+                  style={{
+                    fontSize: wp("3.5%"),
+                    fontWeight: filterType === filter.key ? "600" : "400",
+                    color: filterType === filter.key ? theme.primary : theme.text,
+                  }}
+                >
+                  {filter.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </Animated.View>
 
         <ScrollView
           contentContainerStyle={{
-            paddingTop: HEADER_HEIGHT + hp("8.75%"),
+            paddingTop: HEADER_HEIGHT + hp("17%"),
             paddingHorizontal: wp("5%"),
             paddingBottom: hp("5%"),
           }}
@@ -514,29 +517,64 @@ const StatusScreen = () => {
           }
         >
           {activeTab === "donations" ? (
-            donations.length > 0 ? (
-              donations.map(renderDonationItem)
+            filteredDonations.length > 0 ? (
+              filteredDonations.map((donation) => (
+                <DonationCard
+                  key={donation.id}
+                  donation={donation}
+                  hasMatch={!!getMatchForDonation(donation.id)}
+                  theme={theme}
+                  styles={styles}
+                  statusStyles={statusStyles}
+                  onPress={() => handleDonationPress(donation)}
+                  onCancelPress={() => handleCancelPress(donation.id, "donation")}
+                />
+              ))
             ) : (
-              <View style={statusStyles.emptyContainer}>
-                <Feather name="heart" size={wp("12%")} color={theme.textSecondary} />
-                <Text style={statusStyles.emptyText}>No donations found</Text>
-                <Text style={statusStyles.emptySubtext}>
-                  Register as a donor to start making donations
-                </Text>
-              </View>
+              <EmptyState type="donations" theme={theme} statusStyles={statusStyles} />
             )
-          ) : requests.length > 0 ? (
-            requests.map(renderRequestItem)
+          ) : filteredRequests.length > 0 ? (
+            filteredRequests.map((request) => (
+              <RequestCard
+                key={request.id}
+                request={request}
+                hasMatch={!!getMatchForRequest(request.id)}
+                theme={theme}
+                styles={styles}
+                statusStyles={statusStyles}
+                onPress={() => handleRequestPress(request)}
+                onCancelPress={() => handleCancelPress(request.id, "request")}
+              />
+            ))
           ) : (
-            <View style={statusStyles.emptyContainer}>
-              <Feather name="inbox" size={wp("12%")} color={theme.textSecondary} />
-              <Text style={statusStyles.emptyText}>No requests found</Text>
-              <Text style={statusStyles.emptySubtext}>
-                Register as a recipient to create requests
-              </Text>
-            </View>
+            <EmptyState type="requests" theme={theme} statusStyles={statusStyles} />
           )}
         </ScrollView>
+
+        <CancellationModal
+          visible={cancelModalVisible}
+          itemType={selectedItemType}
+          reason={cancelReason}
+          additionalNotes={cancelAdditionalNotes}
+          cancelling={cancelling}
+          theme={theme}
+          onClose={() => {
+            setCancelModalVisible(false);
+            setCancelReason("");
+            setCancelAdditionalNotes("");
+          }}
+          onReasonChange={setCancelReason}
+          onNotesChange={setCancelAdditionalNotes}
+          onConfirm={handleConfirmCancel}
+        />
+
+        <ValidationAlert
+          visible={alertVisible}
+          title={alertTitle}
+          message={alertMessage}
+          type={alertType}
+          onClose={() => setAlertVisible(false)}
+        />
       </View>
     </Applayout>
   );

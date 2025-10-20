@@ -1,37 +1,49 @@
-import React, { useEffect, useState, useRef } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-  Alert,
-  Animated,
-} from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router";
-import { Feather } from "@expo/vector-icons";
-import * as SecureStore from "expo-secure-store";
-import * as Location from "expo-location";
-import { useTheme } from "../../utils/theme-context";
-import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
-import { createUnifiedStyles } from "../../constants/styles/unifiedStyles";
 import AppLayout from "@/components/AppLayout";
-import { ValidationAlert } from "../../components/common/ValidationAlert";
+import { StatusHeader } from "@/components/common/StatusHeader";
+import { Feather } from "@expo/vector-icons";
+import * as Location from "expo-location";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import * as SecureStore from "expo-secure-store";
+import React, { useEffect, useRef, useState } from "react";
 import {
-  fetchUserById,
+  ActivityIndicator,
+  Animated,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { ValidationAlert } from "../../components/common/ValidationAlert";
+import { MapSection } from "../../components/match/MapSection";
+import { MatchInfoCard } from "../../components/match/MatchInfoCard";
+import { ProfileCard } from "../../components/match/ProfileCard";
+import { YourDetailsCard } from "../../components/match/YourDetailsCard";
+import { ActionButtons } from "../../components/match/ActionButtons";
+import { RejectModal } from "../../components/match/RejectModal";
+import { WithdrawModal } from "../../components/match/WithdrawModal";
+import { CompletionModal } from "../../components/match/CompletionModal";
+import { darkTheme, lightTheme } from "../../constants/styles/authStyles";
+import { createUnifiedStyles } from "../../constants/styles/unifiedStyles";
+import { useTheme } from "../../utils/theme-context";
+import { getStatusColor, formatStatusDisplay } from "../../utils/statusHelpers";
+import {
   donorConfirmMatch,
-  recipientConfirmMatch,
+  donorRejectMatch,
+  donorWithdrawConfirmation,
   fetchDonationByIdWithAccess,
   fetchRequestByIdWithAccess,
-  getMatchConfirmationStatus,
+  fetchUserById,
   getDonorSnapshotByDonation,
+  getMatchConfirmationStatus,
   getRecipientSnapshotByRequest,
+  recipientConfirmCompletion,
+  recipientConfirmMatch,
+  recipientRejectMatch,
+  recipientWithdrawConfirmation,
+  canConfirmCompletion,
+  CompletionConfirmationDTO,
 } from "../api/matchingApi";
-import { ProfileCard } from "../../components/match/ProfileCard";
-import { MatchInfoCard } from "../../components/match/MatchInfoCard";
-import { YourDetailsCard } from "../../components/match/YourDetailsCard";
-import { MapSection } from "../../components/match/MapSection";
-import { StatusHeader } from "@/components/common/StatusHeader";
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
 
 const HEADER_HEIGHT = 120;
 
@@ -50,9 +62,13 @@ interface MatchDetails {
   recipientConfirmed: boolean;
   donorConfirmedAt?: string;
   recipientConfirmedAt?: string;
-  confirmedAt?: string;
   matchedAt: string;
   distance?: number;
+  status?: string;
+  expiredAt?: string;
+  expiryReason?: string;
+  completedAt?: string;
+  canConfirmCompletion?: boolean;
 }
 
 interface UserProfile {
@@ -88,6 +104,7 @@ const MatchDetailsScreen = () => {
   const [match, setMatch] = useState<MatchDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [confirmingMatch, setConfirmingMatch] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
   const [navigatingToProfile, setNavigatingToProfile] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
@@ -112,6 +129,20 @@ const MatchDetailsScreen = () => {
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
   const [alertType, setAlertType] = useState<"success" | "error" | "warning" | "info">("info");
+
+  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
+
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [withdrawReason, setWithdrawReason] = useState("");
+
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [completionData, setCompletionData] = useState<CompletionConfirmationDTO>({
+    receivedDate: new Date().toISOString().split('T')[0],
+    completionNotes: "",
+    recipientRating: 5,
+    hospitalName: "",
+  });
 
   const showAlert = (
     title: string,
@@ -170,10 +201,6 @@ const MatchDetailsScreen = () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
         setLocationPermission(false);
-        Alert.alert(
-          "Permission Denied",
-          "Location permission is required to show distance and directions."
-        );
         return;
       }
 
@@ -193,7 +220,6 @@ const MatchDetailsScreen = () => {
       setCurrentGpsLocation(gpsLocation);
     } catch (error) {
       console.error("Error getting location:", error);
-      Alert.alert("Location Error", "Could not get your current location.");
     } finally {
       setLoadingLocation(false);
     }
@@ -252,18 +278,15 @@ const MatchDetailsScreen = () => {
 
     const registered = extractRegisteredLocation(currentUserData);
     setRegisteredLocation(registered);
-    console.log("Registered location:", registered);
 
     const otherLocation = getOtherPartyLocation(otherPartyData, otherPartyRole);
     setOtherPartyLocation(otherLocation);
-    console.log("Other party location:", otherLocation);
 
     const locations: LocationCoordinates[] = [];
     if (registered) locations.push(registered);
     if (currentGpsLocation) locations.push(currentGpsLocation);
     if (otherLocation) locations.push(otherLocation);
 
-    console.log("All locations to display:", locations);
     setAllLocations(locations);
 
     if (registered && otherLocation) {
@@ -274,7 +297,6 @@ const MatchDetailsScreen = () => {
         otherLocation.longitude
       );
       setCalculatedDistance(distance);
-      console.log("Distance calculated:", distance);
     }
   };
 
@@ -286,18 +308,10 @@ const MatchDetailsScreen = () => {
   };
 
   const loadYourDetails = async (matchData: MatchDetails, userId: string | null) => {
-    if (!userId) {
-      console.log("No userId provided");
-      return;
-    }
+    if (!userId) return;
     setLoadingYourDetails(true);
     try {
-      let userRole: "donor" | "recipient" | "unknown" = "unknown";
-      if (userId === matchData.donorUserId) {
-        userRole = "donor";
-      } else if (userId === matchData.recipientUserId) {
-        userRole = "recipient";
-      }
+      const userRole = getUserRoleInMatch();
 
       if (userRole === "donor") {
         const donationDetails = await fetchDonationByIdWithAccess(matchData.donationId);
@@ -318,7 +332,7 @@ const MatchDetailsScreen = () => {
     if (!match || !currentUserId) return;
     setConfirmingMatch(true);
     try {
-      let result;
+      let result: string;
       const userRole = getUserRoleInMatch();
 
       if (userRole === "donor") {
@@ -335,20 +349,162 @@ const MatchDetailsScreen = () => {
       if (userRole === "donor") {
         updatedMatch.donorConfirmed = true;
         updatedMatch.donorConfirmedAt = new Date().toISOString();
+        updatedMatch.status = updatedMatch.recipientConfirmed ? "CONFIRMED" : "DONOR_CONFIRMED";
       } else {
         updatedMatch.recipientConfirmed = true;
         updatedMatch.recipientConfirmedAt = new Date().toISOString();
+        updatedMatch.status = updatedMatch.donorConfirmed ? "CONFIRMED" : "RECIPIENT_CONFIRMED";
       }
 
       if (updatedMatch.donorConfirmed && updatedMatch.recipientConfirmed) {
         updatedMatch.isConfirmed = true;
+        updatedMatch.status = "CONFIRMED";
       }
 
       setMatch(updatedMatch);
     } catch (error: any) {
-      showAlert("Confirmation Failed", error.message, "error");
+      showAlert("Confirmation Failed", error.message || "Failed to confirm match", "error");
     } finally {
       setConfirmingMatch(false);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!match || !currentUserId || rejectReason.trim().length < 10) {
+      showAlert("Invalid Reason", "Please provide a reason with at least 10 characters", "warning");
+      return;
+    }
+    setActionLoading(true);
+    try {
+      const userRole = getUserRoleInMatch();
+      let result: string;
+
+      if (userRole === "donor") {
+        result = await donorRejectMatch(match.matchResultId, rejectReason.trim());
+      } else if (userRole === "recipient") {
+        result = await recipientRejectMatch(match.matchResultId, rejectReason.trim());
+      } else {
+        throw new Error("You are not authorized to reject this match");
+      }
+
+      showAlert("Match Rejected", result, "success");
+
+      setMatch((prev) => prev ? { ...prev, status: "REJECTED" } : prev);
+      setShowRejectModal(false);
+      setRejectReason("");
+
+      setTimeout(() => router.back(), 2000);
+    } catch (error: any) {
+      showAlert("Rejection Failed", error.message || "Failed to reject match", "error");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleWithdraw = async () => {
+    if (!match || !currentUserId || withdrawReason.trim().length < 10) {
+      showAlert("Invalid Reason", "Please provide a reason with at least 10 characters", "warning");
+      return;
+    }
+    setActionLoading(true);
+    try {
+      const userRole = getUserRoleInMatch();
+      let result: string;
+
+      if (userRole === "donor") {
+        result = await donorWithdrawConfirmation(match.matchResultId, withdrawReason.trim());
+      } else if (userRole === "recipient") {
+        result = await recipientWithdrawConfirmation(match.matchResultId, withdrawReason.trim());
+      } else {
+        throw new Error("You are not authorized to withdraw from this match");
+      }
+
+      showAlert("Withdrawn Successfully", result, "success");
+
+      setMatch((prev) => {
+        if (!prev) return prev;
+
+        if (userRole === "donor") {
+          if (prev.recipientConfirmed) {
+            return {
+              ...prev,
+              donorConfirmed: false,
+              donorConfirmedAt: undefined,
+              status: "RECIPIENT_CONFIRMED",
+              isConfirmed: false
+            };
+          } else {
+            return {
+              ...prev,
+              donorConfirmed: false,
+              donorConfirmedAt: undefined,
+              status: "PENDING",
+              isConfirmed: false
+            };
+          }
+        } else {
+          if (prev.donorConfirmed) {
+            return {
+              ...prev,
+              recipientConfirmed: false,
+              recipientConfirmedAt: undefined,
+              status: "DONOR_CONFIRMED",
+              isConfirmed: false
+            };
+          } else {
+            return {
+              ...prev,
+              recipientConfirmed: false,
+              recipientConfirmedAt: undefined,
+              status: "PENDING",
+              isConfirmed: false
+            };
+          }
+        }
+      });
+
+      setShowWithdrawModal(false);
+      setWithdrawReason("");
+    } catch (error: any) {
+      showAlert("Withdrawal Failed", error.message || "Failed to withdraw confirmation", "error");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleConfirmCompletion = async () => {
+    if (!match || !currentUserId) return;
+    if (!completionData.receivedDate || (completionData.completionNotes?.trim().length || 0) < 10) {
+      showAlert("Invalid Data", "Please provide received date and notes (min 10 characters)", "warning");
+      return;
+    }
+    setActionLoading(true);
+    try {
+      const result = await recipientConfirmCompletion(match.matchResultId, completionData);
+      showAlert("Completion Confirmed", result, "success");
+
+      setMatch((prev) => prev ? { ...prev, completedAt: new Date().toISOString() } : prev);
+      setShowCompletionModal(false);
+      setCompletionData({
+        receivedDate: new Date().toISOString().split('T')[0],
+        completionNotes: "",
+        recipientRating: 5,
+        hospitalName: "",
+      });
+    } catch (error: any) {
+      showAlert("Completion Failed", error.message || "Failed to confirm completion", "error");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const checkCanConfirmCompletion = async () => {
+    if (!match || !currentUserId || getUserRoleInMatch() !== "recipient") return;
+    try {
+      const result = await canConfirmCompletion(match.matchResultId);
+      setMatch((prev) => prev ? { ...prev, canConfirmCompletion: result.canConfirm } : prev);
+    } catch (error) {
+      console.error("Error checking completion eligibility:", error);
     }
   };
 
@@ -397,6 +553,7 @@ const MatchDetailsScreen = () => {
         setRecipientSnapshot(recipientSnapshotData);
 
         await loadYourDetails(parsedMatch, userId);
+        await checkCanConfirmCompletion();
       } catch (error: any) {
         showAlert("Error", error.message || "Failed to load match details", "error");
       } finally {
@@ -437,8 +594,29 @@ const MatchDetailsScreen = () => {
   const canConfirmMatch = (): boolean => {
     if (!match || !currentUserId) return false;
     const userConfirmed = getCurrentUserStatus();
-    const matchFullyConfirmed = match.isConfirmed;
-    return !userConfirmed && !matchFullyConfirmed;
+    const isTerminalStatus = ["REJECTED", "EXPIRED", "CANCELLED_BY_DONOR", "CANCELLED_BY_RECIPIENT", "CONFIRMED"].includes(match.status || "");
+    return !userConfirmed && !isTerminalStatus;
+  };
+
+  const canRejectMatch = (): boolean => {
+    if (!match || !currentUserId) return false;
+    const isTerminalStatus = ["REJECTED", "EXPIRED", "CANCELLED_BY_DONOR", "CANCELLED_BY_RECIPIENT", "CONFIRMED"].includes(match.status || "");
+    return !isTerminalStatus;
+  };
+
+  const canWithdrawMatch = (): boolean => {
+    if (!match || !currentUserId) return false;
+    const userConfirmed = getCurrentUserStatus();
+    const isTerminalStatus = ["REJECTED", "EXPIRED", "CANCELLED_BY_DONOR", "CANCELLED_BY_RECIPIENT"].includes(match.status || "");
+    return userConfirmed && !isTerminalStatus;
+  };
+
+  const canShowCompletionButton = (): boolean => {
+    if (!match || !currentUserId) return false;
+    return getUserRoleInMatch() === "recipient" &&
+      match.status === "CONFIRMED" &&
+      !match.completedAt &&
+      match.canConfirmCompletion === true;
   };
 
   const getConfirmationButtonText = (): string => {
@@ -561,8 +739,8 @@ const MatchDetailsScreen = () => {
             title="Match Details"
             subtitle={match.matchResultId.slice(0, 8)}
             iconName="link"
-            statusText={match.isConfirmed ? "Confirmed" : "Pending"}
-            statusColor={match.isConfirmed ? theme.success : theme.error}
+            statusText={formatStatusDisplay(match.status || "PENDING").text}
+            statusColor={getStatusColor(match.status || "PENDING", theme)}
             showBackButton
             onBackPress={handleBackPress}
             theme={theme}
@@ -572,8 +750,8 @@ const MatchDetailsScreen = () => {
         <ScrollView
           contentContainerStyle={{
             paddingTop: HEADER_HEIGHT + 10,
-            paddingHorizontal: 20,
-            paddingBottom: canConfirmMatch() ? 140 : 40,
+            paddingHorizontal: wp("5%"),
+            paddingBottom: hp("20%"),
           }}
           onScroll={handleScroll}
           scrollEventThrottle={16}
@@ -621,23 +799,66 @@ const MatchDetailsScreen = () => {
             matchType={match?.matchType}
           />
 
-          {canConfirmMatch() && (
-            <View style={{ marginTop: 20 }}>
-              <TouchableOpacity
-                style={[styles.submitButton, confirmingMatch ? styles.submitButtonDisabled : null]}
-                onPress={handleConfirmMatch}
-                disabled={confirmingMatch}
-                activeOpacity={0.8}
-              >
-                {confirmingMatch ? (
-                  <ActivityIndicator color="#fff" size="small" />
-                ) : (
-                  <Text style={styles.submitButtonText}>{getConfirmationButtonText()}</Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          )}
+          <ActionButtons
+            canConfirmMatch={canConfirmMatch()}
+            canRejectMatch={canRejectMatch()}
+            canWithdrawMatch={canWithdrawMatch()}
+            canShowCompletion={canShowCompletionButton()}
+            confirmingMatch={confirmingMatch}
+            actionLoading={actionLoading}
+            confirmButtonText={getConfirmationButtonText()}
+            theme={theme}
+            styles={styles}
+            onConfirm={handleConfirmMatch}
+            onReject={() => setShowRejectModal(true)}
+            onWithdraw={() => setShowWithdrawModal(true)}
+            onComplete={() => setShowCompletionModal(true)}
+          />
         </ScrollView>
+
+        <RejectModal
+          visible={showRejectModal}
+          reason={rejectReason}
+          actionLoading={actionLoading}
+          theme={theme}
+          onClose={() => {
+            setShowRejectModal(false);
+            setRejectReason("");
+          }}
+          onReasonChange={setRejectReason}
+          onConfirm={handleReject}
+        />
+
+        <WithdrawModal
+          visible={showWithdrawModal}
+          reason={withdrawReason}
+          actionLoading={actionLoading}
+          theme={theme}
+          onClose={() => {
+            setShowWithdrawModal(false);
+            setWithdrawReason("");
+          }}
+          onReasonChange={setWithdrawReason}
+          onConfirm={handleWithdraw}
+        />
+
+        <CompletionModal
+          visible={showCompletionModal}
+          data={completionData}
+          actionLoading={actionLoading}
+          theme={theme}
+          onClose={() => {
+            setShowCompletionModal(false);
+            setCompletionData({
+              receivedDate: new Date().toISOString().split('T')[0],
+              completionNotes: "",
+              recipientRating: 5,
+              hospitalName: "",
+            });
+          }}
+          onDataChange={setCompletionData}
+          onConfirm={handleConfirmCompletion}
+        />
       </View>
 
       {navigatingToProfile && (

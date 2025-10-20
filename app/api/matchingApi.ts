@@ -1,5 +1,5 @@
-import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
+import * as SecureStore from 'expo-secure-store';
 
 const BASE_URL = Constants.expoConfig?.extra?.API_URL;
 
@@ -42,6 +42,8 @@ export interface MatchResponse {
   donorConfirmedAt?: string;
   recipientConfirmedAt?: string;
   matchedAt: string;
+  expiredAt?: string;
+  expiryReason?: string;
   distance?: number;
   compatibilityScore?: number;
   bloodCompatibilityScore?: number;
@@ -50,6 +52,19 @@ export interface MatchResponse {
   urgencyPriorityScore?: number;
   matchReason?: string;
   priorityRank?: number;
+  completedAt?: string;
+  receivedDate?: string;
+  canConfirmCompletion?: boolean;
+  completionNotes?: string;
+  recipientRating?: number;
+  hospitalName?: string;
+}
+
+export interface CompletionConfirmationDTO {
+  receivedDate?: string;
+  completionNotes?: string;
+  recipientRating?: number;
+  hospitalName?: string;
 }
 
 export interface UserProfile {
@@ -377,6 +392,104 @@ export const recipientConfirmMatch = async (matchId: string): Promise<string> =>
   });
   await handleResponse(response, 'Failed to confirm match as recipient');
   return await response.text();
+};
+
+export const getAllMatches = async (): Promise<MatchResponse[]> => {
+  const headers = await getAuthHeaders();
+  const response = await fetch(`${BASE_URL}/matching/admin/all-matches`, {
+    method: 'GET',
+    headers,
+  });
+  await handleResponse(response, 'Failed to fetch all matches');
+  return await response.json();
+};
+
+export const getMatchesByDonation = async (donationId: string): Promise<MatchResponse[]> => {
+  const headers = await getAuthHeaders();
+  const response = await fetch(`${BASE_URL}/matching/donation/${donationId}/matches`, {
+    method: 'GET',
+    headers,
+  });
+  await handleResponse(response, 'Failed to fetch matches for donation');
+  return await response.json();
+};
+
+export const getMatchesByRequest = async (requestId: string): Promise<MatchResponse[]> => {
+  const headers = await getAuthHeaders();
+  const response = await fetch(`${BASE_URL}/matching/request/${requestId}/matches`, {
+    method: 'GET',
+    headers,
+  });
+  await handleResponse(response, 'Failed to fetch matches for request');
+  return await response.json();
+};
+
+export const donorRejectMatch = async (matchId: string, reason: string = 'Not specified'): Promise<string> => {
+  const headers = await getAuthHeaders();
+  const response = await fetch(`${BASE_URL}/matching/donor/reject/${matchId}`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ reason }),
+  });
+  await handleResponse(response, 'Failed to reject match as donor');
+  return await response.text();
+};
+
+export const recipientRejectMatch = async (matchId: string, reason: string = 'Not specified'): Promise<string> => {
+  const headers = await getAuthHeaders();
+  const response = await fetch(`${BASE_URL}/matching/recipient/reject/${matchId}`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ reason }),
+  });
+  await handleResponse(response, 'Failed to reject match as recipient');
+  return await response.text();
+};
+
+export const donorWithdrawConfirmation = async (matchId: string, reason: string = 'Not specified'): Promise<string> => {
+  const headers = await getAuthHeaders();
+  const response = await fetch(`${BASE_URL}/matching/donor/withdraw/${matchId}`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ reason }),
+  });
+  await handleResponse(response, 'Failed to withdraw confirmation as donor');
+  return await response.text();
+};
+
+export const recipientWithdrawConfirmation = async (matchId: string, reason: string = 'Not specified'): Promise<string> => {
+  const headers = await getAuthHeaders();
+  const response = await fetch(`${BASE_URL}/matching/recipient/withdraw/${matchId}`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ reason }),
+  });
+  await handleResponse(response, 'Failed to withdraw confirmation as recipient');
+  return await response.text();
+};
+
+export const recipientConfirmCompletion = async (matchId: string, details: CompletionConfirmationDTO): Promise<string> => {
+  const headers = await getAuthHeaders();
+  const response = await fetch(`${BASE_URL}/matching/recipient/confirm-completion/${matchId}`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(details),
+  });
+  await handleResponse(response, 'Failed to confirm completion as recipient');
+  return await response.text();
+};
+
+export const canConfirmCompletion = async (matchId: string): Promise<Record<string, any>> => {
+  const headers = await getAuthHeaders();
+  const response = await fetch(`${BASE_URL}/matching/recipient/can-confirm-completion/${matchId}`, {
+    method: 'GET',
+    headers,
+  });
+  if (response.status === 404) {
+    throw new Error('MATCH_NOT_FOUND');
+  }
+  await handleResponse(response, 'Failed to check completion eligibility');
+  return await response.json();
 };
 
 export const getDonorDetailsByUserId = async (userId: string): Promise<DonorDTO | null> => {
