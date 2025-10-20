@@ -32,6 +32,7 @@ import { StemCellDetailsForm } from "../../components/donation/StemCellDetailsFo
 import AppLayout from "@/components/AppLayout";
 import { LocationSelector } from "@/components/donation/LocationSelector";
 import { StatusHeader } from "@/components/common/StatusHeader";
+import { fetchDonorByUserId } from "../api/donorApi";
 
 const HEADER_HEIGHT = 180;
 
@@ -148,15 +149,16 @@ const DonationScreen = () => {
     const fetchData = async () => {
       setCheckingHLA(true);
       try {
-        const id = await SecureStore.getItemAsync("donorId");
-        if (id) {
-          setDonorId(id);
+        const donorData = await fetchDonorByUserId();
 
-          const donorData = await SecureStore.getItemAsync("donorData");
-          if (donorData) {
-            const donor = JSON.parse(donorData);
-            setHlaProfile(donor.hlaProfile || null);
-          }
+        if (donorData && donorData.id) {
+          setDonorId(donorData.id);
+          setHlaProfile(donorData.hlaProfile || null);
+
+          await SecureStore.setItemAsync("donorId", donorData.id);
+          await SecureStore.setItemAsync("donorData", JSON.stringify(donorData));
+        } else {
+          console.log("No donor data found for current user");
         }
       } catch (error) {
         console.error("Error fetching donor data:", error);
@@ -164,8 +166,10 @@ const DonationScreen = () => {
         setCheckingHLA(false);
       }
     };
+
     fetchData();
   }, []);
+
 
   const isFormValid = () => {
     if (
@@ -274,7 +278,7 @@ const DonationScreen = () => {
       showAlert(
         "Donation Failed",
         error.message ||
-          "Unable to process your donation at this time. Please check your connection and try again.",
+        "Unable to process your donation at this time. Please check your connection and try again.",
         "error"
       );
     } finally {

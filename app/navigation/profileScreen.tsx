@@ -39,7 +39,7 @@ import {
   getMyRequests,
   fetchRequestsByUserId,
   ReceiveRequestDTO,
-} from "../api/recipientApi";
+} from "../api/requestApi";
 import ScrollableHeaderLayout from "../../components/common/ScrollableHeaderLayout";
 
 const mockReviews = [
@@ -458,6 +458,10 @@ const ProfileScreen: React.FC = () => {
       "donorId",
       "donorData",
       "recipientData",
+      'locationId',
+      'addresses',
+      'selectedAddress',
+      'userLocation'
     ];
     await Promise.all(
       keysToDelete.map((key) => SecureStore.deleteItemAsync(key))

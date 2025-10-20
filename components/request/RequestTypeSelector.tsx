@@ -4,7 +4,7 @@ import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../utils/theme-context';
 import { lightTheme, darkTheme } from '../../constants/styles/authStyles';
 import { createUnifiedStyles } from '../../constants/styles/unifiedStyles';
-import { RequestType } from '../../app/api/recipientApi';
+import { RequestType } from '../../app/api/requestApi';
 
 interface RequestTypeSelectorProps {
   requestType: RequestType;

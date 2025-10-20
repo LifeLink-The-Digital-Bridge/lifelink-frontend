@@ -34,6 +34,21 @@ export interface DonationRequest {
   stemCellType?: StemCellType;
 }
 
+export interface CancellationRequestDTO {
+  reason: string;
+  additionalNotes?: string;
+}
+
+export interface CancellationResponseDTO {
+  success: boolean;
+  message: string;
+  donationId: string;
+  cancelledAt: string;
+  cancellationReason: string;
+  expiredMatchesCount: number;
+  profileUnlocked: boolean;
+}
+
 export async function registerDonation(payload: DonationRequest) {
   const token = await SecureStore.getItemAsync('jwt');
   const userId = await SecureStore.getItemAsync('userId');
@@ -186,3 +201,79 @@ export async function addDonorAddress(donorId: string, locationData: any): Promi
   
   return await response.json();
 }
+export const cancelDonation = async (
+  donationId: string,
+  cancellationData: CancellationRequestDTO
+): Promise<CancellationResponseDTO> => {
+  const token = await SecureStore.getItemAsync("jwt");
+  const userId = await SecureStore.getItemAsync("userId");
+  if (!token || !userId) throw new Error("Not authenticated");
+
+  console.log("Cancelling donation:", donationId, cancellationData);
+
+  const response = await fetch(
+    `${BASE_URL}/donors/donations/${donationId}/cancel`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        id: userId,
+      },
+      body: JSON.stringify(cancellationData),
+    }
+  );
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("Cancel donation error:", response.status, errorText);
+    throw new Error(errorText || "Failed to cancel donation");
+  }
+
+  return await response.json();
+};
+
+export const canCancelDonation = async (donationId: string): Promise<boolean> => {
+  const token = await SecureStore.getItemAsync("jwt");
+  const userId = await SecureStore.getItemAsync("userId");
+  if (!token || !userId) throw new Error("Not authenticated");
+
+  const response = await fetch(
+    `${BASE_URL}/donors/donations/${donationId}/can-cancel`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        id: userId,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to check cancellation status");
+  }
+
+  const data = await response.json();
+  return data.canCancel;
+};
+
+export const getDonationStatus = async (donationId: string): Promise<string> => {
+  const token = await SecureStore.getItemAsync("jwt");
+  const userId = await SecureStore.getItemAsync("userId");
+  if (!token || !userId) throw new Error("Not authenticated");
+
+  const response = await fetch(
+    `${BASE_URL}/donors/donations/${donationId}/status`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        id: userId,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to get donation status");
+  }
+
+  return await response.text();
+};

@@ -4,7 +4,7 @@ import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../utils/theme-context';
 import { lightTheme, darkTheme } from '../../constants/styles/authStyles';
 import { createUnifiedStyles } from '../../constants/styles/unifiedStyles';
-import { fetchRecipientAddresses, addRecipientAddress } from '../../app/api/recipientApi';
+import { fetchRecipientAddresses, addRecipientAddress } from '../../app/api/requestApi';
 
 interface Location {
   id: string;
@@ -51,6 +51,12 @@ export function LocationSelector({ selectedLocationId, onLocationSelect, recipie
     latitude: null as number | null,
     longitude: null as number | null
   });
+  useEffect(() => {
+    setLocations([]);
+    setSelectedLocation(null);
+    setModalVisible(false);
+    setShowAddForm(false);
+  }, [recipientId]);
 
   useEffect(() => {
     if (modalVisible && recipientId) {
@@ -67,7 +73,7 @@ export function LocationSelector({ selectedLocationId, onLocationSelect, recipie
 
   const fetchLocations = async () => {
     if (!recipientId) return;
-    
+
     setLoading(true);
     try {
       console.log('🔄 Fetching locations for recipient:', recipientId);
@@ -152,7 +158,7 @@ export function LocationSelector({ selectedLocationId, onLocationSelect, recipie
       >
         <View style={styles.locationSelectorContent}>
           <Text style={[styles.inputText, selectedLocation ? {} : { color: theme.textSecondary }]}>
-            {selectedLocation 
+            {selectedLocation
               ? `${selectedLocation.addressLine}, ${selectedLocation.city}`
               : 'Select request location'
             }
@@ -237,45 +243,45 @@ export function LocationSelector({ selectedLocationId, onLocationSelect, recipie
             ) : (
               <View style={styles.addForm}>
                 <Text style={styles.addFormTitle}>Add New Address</Text>
-                
+
                 <TextInput
                   style={styles.input}
                   placeholder="Address Line *"
                   placeholderTextColor={theme.textSecondary}
                   value={newLocation.addressLine}
-                  onChangeText={(text) => setNewLocation({...newLocation, addressLine: text})}
+                  onChangeText={(text) => setNewLocation({ ...newLocation, addressLine: text })}
                 />
-                
+
                 <TextInput
                   style={styles.input}
                   placeholder="Landmark"
                   placeholderTextColor={theme.textSecondary}
                   value={newLocation.landmark}
-                  onChangeText={(text) => setNewLocation({...newLocation, landmark: text})}
+                  onChangeText={(text) => setNewLocation({ ...newLocation, landmark: text })}
                 />
-                
+
                 <TextInput
                   style={styles.input}
                   placeholder="Area"
                   placeholderTextColor={theme.textSecondary}
                   value={newLocation.area}
-                  onChangeText={(text) => setNewLocation({...newLocation, area: text})}
+                  onChangeText={(text) => setNewLocation({ ...newLocation, area: text })}
                 />
-                
+
                 <View style={styles.row}>
                   <TextInput
                     style={[styles.input, { flex: 1, marginRight: 8 }]}
                     placeholder="City *"
                     placeholderTextColor={theme.textSecondary}
                     value={newLocation.city}
-                    onChangeText={(text) => setNewLocation({...newLocation, city: text})}
+                    onChangeText={(text) => setNewLocation({ ...newLocation, city: text })}
                   />
                   <TextInput
                     style={[styles.input, { flex: 1, marginLeft: 8 }]}
                     placeholder="State *"
                     placeholderTextColor={theme.textSecondary}
                     value={newLocation.state}
-                    onChangeText={(text) => setNewLocation({...newLocation, state: text})}
+                    onChangeText={(text) => setNewLocation({ ...newLocation, state: text })}
                   />
                 </View>
 
@@ -285,18 +291,18 @@ export function LocationSelector({ selectedLocationId, onLocationSelect, recipie
                     placeholder="Country"
                     placeholderTextColor={theme.textSecondary}
                     value={newLocation.country}
-                    onChangeText={(text) => setNewLocation({...newLocation, country: text})}
+                    onChangeText={(text) => setNewLocation({ ...newLocation, country: text })}
                   />
                   <TextInput
                     style={[styles.input, { flex: 1, marginLeft: 8 }]}
                     placeholder="Pincode"
                     placeholderTextColor={theme.textSecondary}
                     value={newLocation.pincode}
-                    onChangeText={(text) => setNewLocation({...newLocation, pincode: text})}
+                    onChangeText={(text) => setNewLocation({ ...newLocation, pincode: text })}
                     keyboardType="numeric"
                   />
                 </View>
-                
+
                 <View style={styles.buttonRow}>
                   <TouchableOpacity
                     style={[styles.button, styles.cancelButton]}
@@ -304,7 +310,7 @@ export function LocationSelector({ selectedLocationId, onLocationSelect, recipie
                   >
                     <Text style={styles.cancelButtonText}>Cancel</Text>
                   </TouchableOpacity>
-                  
+
                   <TouchableOpacity
                     style={[styles.button, styles.saveButton]}
                     onPress={handleAddNewLocation}

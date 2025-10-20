@@ -5,7 +5,7 @@ import { useTheme } from '../../utils/theme-context';
 import { lightTheme, darkTheme } from '../../constants/styles/authStyles';
 import { createUnifiedStyles } from '../../constants/styles/unifiedStyles';
 import { CustomPicker } from '../common/CustomPicker';
-import { RequestType, BloodType, OrganType, TissueType, StemCellType, UrgencyLevel } from '../../app/api/recipientApi';
+import { RequestType, BloodType, OrganType, TissueType, StemCellType, UrgencyLevel } from '../../app/api/requestApi';
 
 interface RequestDetailsFormProps {
   requestType: RequestType;

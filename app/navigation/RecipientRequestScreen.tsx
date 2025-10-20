@@ -22,13 +22,14 @@ import {
   TissueType,
   StemCellType,
   UrgencyLevel,
-} from "../api/recipientApi";
+} from "../api/requestApi";
 import AppLayout from "../../components/AppLayout";
 import { ValidationAlert } from "../../components/common/ValidationAlert";
 import { RequestTypeSelector } from "../../components/request/RequestTypeSelector";
 import { RequestDetailsForm } from "../../components/request/RequestDetailsForm";
 import { LocationSelector } from "@/components/request/LocationSelector";
 import { StatusHeader } from "@/components/common/StatusHeader";
+import { getRecipientByUserId } from "../api/recipientApi";
 
 const HEADER_HEIGHT = 120;
 
@@ -147,25 +148,20 @@ const RecipientRequestScreen = () => {
           return;
         }
 
-        const id = await SecureStore.getItemAsync("recipientId");
-        if (id) {
-          setRecipientId(id);
+        const recipientData = await getRecipientByUserId();
 
-          const recipientDataStr = await SecureStore.getItemAsync("recipientData");
-          if (recipientDataStr) {
-            try {
-              const recipientData = JSON.parse(recipientDataStr);
-              setHlaProfile(recipientData.hlaProfile || null);
-              
-              if (recipientData?.addresses?.[0]?.id) {
-                setLocationId(recipientData.addresses[0].id);
-              }
-            } catch (e) {
-              console.error("Error parsing recipient data:", e);
-            }
-          }
+        if (recipientData && recipientData.id) {
+          setRecipientId(recipientData.id);
+          setHlaProfile(recipientData.hlaProfile || null);
+
+          await SecureStore.setItemAsync("recipientId", recipientData.id);
+          await SecureStore.setItemAsync("recipientData", JSON.stringify(recipientData));
+
+        } else {
+          throw new Error("No recipient data found");
         }
       } catch (error: any) {
+        console.error("Error checking recipient role:", error);
         showAlert(
           "Role Error",
           error.message || "Failed to check recipient role",
@@ -180,6 +176,7 @@ const RecipientRequestScreen = () => {
     };
     checkRecipientRole();
   }, []);
+
 
   useEffect(() => {
     const today = new Date();
@@ -325,7 +322,7 @@ const RecipientRequestScreen = () => {
             onTypeChange={handleTypeChange}
             hlaProfile={hlaProfile}
           />
-          
+
           <LocationSelector
             selectedLocationId={locationId}
             onLocationSelect={setLocationId}

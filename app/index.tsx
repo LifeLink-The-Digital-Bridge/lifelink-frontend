@@ -256,167 +256,165 @@ export default function HomeScreenContent() {
 
   return (
     <AppLayout>
-
-    <View style={homeStyles.container}>
-      <ScrollView
-        ref={scrollViewRef}
-        style={homeStyles.container}
-        contentContainerStyle={homeStyles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        scrollEventThrottle={16}
-        onScroll={handleScroll}
-      >
-        <Animated.View
-          style={[
-            homeStyles.heroSection,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }, { scale: scaleAnim }],
-            },
-          ]}
+      <View style={homeStyles.container}>
+        <ScrollView
+          ref={scrollViewRef}
+          style={homeStyles.container}
+          contentContainerStyle={homeStyles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          scrollEventThrottle={16}
+          onScroll={handleScroll}
         >
-          <Animatable.View
-            animation="fadeIn"
-            delay={200}
-            style={homeStyles.logoContainer}
+          <Animated.View
+            style={[
+              homeStyles.heroSection,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }, { scale: scaleAnim }],
+              },
+            ]}
           >
-            <VideoLogo
-              style={{ width: 150, height: 150 }}
-              autoPlay={true}
-              loop={true}
-            />
-          </Animatable.View>
-
-          <Animatable.Text
-            style={homeStyles.title}
-            animation="fadeInUp"
-            delay={400}
-          >
-            Welcome to LifeLink
-          </Animatable.Text>
-
-          <Animatable.Text
-            style={homeStyles.subtitle}
-            animation="fadeInUp"
-            delay={600}
-          >
-            Connecting hearts, saving lives through the power of donation
-          </Animatable.Text>
-
-          <Animatable.View
-            style={homeStyles.buttonContainer}
-            animation="fadeInUp"
-            delay={800}
-          >
-            <TouchableOpacity
-              style={homeStyles.primaryButton}
-              onPress={() => router.push("/(auth)/loginScreen")}
-              activeOpacity={0.8}
+            <Animatable.View
+              animation="fadeIn"
+              delay={200}
+              style={homeStyles.logoContainer}
             >
-              <Animatable.Text
-                style={homeStyles.buttonText}
-                animation="pulse"
-                iterationCount="infinite"
-                duration={3000}
-              >
-                Sign In
-              </Animatable.Text>
-            </TouchableOpacity>
+              <VideoLogo
+                style={{ width: 150, height: 150 }}
+                autoPlay={true}
+                loop={true}
+              />
+            </Animatable.View>
 
-            <TouchableOpacity
-              style={homeStyles.secondaryButton}
-              onPress={() => router.push("/(auth)/registerScreen")}
-              activeOpacity={0.8}
+            <Animatable.Text
+              style={homeStyles.title}
+              animation="fadeInUp"
+              delay={400}
             >
-              <Text style={homeStyles.secondaryButtonText}>Create Account</Text>
-            </TouchableOpacity>
-          </Animatable.View>
-        </Animated.View>
+              Welcome to LifeLink
+            </Animatable.Text>
 
-        <View style={homeStyles.featuresContainer}>
-          {showFeatures && (
-            <>
-              <Animatable.Text
-                style={homeStyles.sectionTitle}
-                animation="fadeInDown"
-                duration={600}
+            <Animatable.Text
+              style={homeStyles.subtitle}
+              animation="fadeInUp"
+              delay={600}
+            >
+              Connecting hearts, saving lives through the power of donation
+            </Animatable.Text>
+
+            <Animatable.View
+              style={homeStyles.buttonContainer}
+              animation="fadeInUp"
+              delay={800}
+            >
+              <TouchableOpacity
+                style={homeStyles.primaryButton}
+                onPress={() => router.push("/(auth)/loginScreen")}
+                activeOpacity={0.8}
               >
-                How LifeLink Helps
-              </Animatable.Text>
+                <Animatable.Text
+                  style={homeStyles.buttonText}
+                  animation="pulse"
+                  iterationCount="infinite"
+                  duration={3000}
+                >
+                  Sign In
+                </Animatable.Text>
+              </TouchableOpacity>
 
-              {features.map((feature, index) => (
-                <Animatable.View
-                  key={index}
-                  style={homeStyles.featureItem}
-                  animation="fadeInRight"
-                  delay={feature.delay}
+              <TouchableOpacity
+                style={homeStyles.secondaryButton}
+                onPress={() => router.push("/(auth)/registerScreen")}
+                activeOpacity={0.8}
+              >
+                <Text style={homeStyles.secondaryButtonText}>Create Account</Text>
+              </TouchableOpacity>
+            </Animatable.View>
+          </Animated.View>
+
+          <View style={homeStyles.featuresContainer}>
+            {showFeatures && (
+              <>
+                <Animatable.Text
+                  style={homeStyles.sectionTitle}
+                  animation="fadeInDown"
                   duration={600}
                 >
-                  <View style={homeStyles.featureIcon}>
-                    <Feather
-                      name={feature.icon as any}
-                      size={24}
-                      color={currentTheme.primary}
-                    />
-                  </View>
-                  <Text style={homeStyles.featureText}>{feature.title}</Text>
+                  How LifeLink Helps
+                </Animatable.Text>
+
+                {features.map((feature, index) => (
+                  <Animatable.View
+                    key={index}
+                    style={homeStyles.featureItem}
+                    animation="fadeInRight"
+                    delay={feature.delay}
+                    duration={600}
+                  >
+                    <View style={homeStyles.featureIcon}>
+                      <Feather
+                        name={feature.icon as any}
+                        size={24}
+                        color={currentTheme.primary}
+                      />
+                    </View>
+                    <Text style={homeStyles.featureText}>{feature.title}</Text>
+                  </Animatable.View>
+                ))}
+
+                <Animatable.View
+                  style={{ alignItems: "center", paddingTop: 40, paddingBottom: 60 }}
+                  animation="fadeIn"
+                  delay={800}
+                >
+                  <Text style={[homeStyles.scrollText, { textAlign: "center" }]}>
+                    Join thousands of people making a difference
+                  </Text>
                 </Animatable.View>
-              ))}
+              </>
+            )}
+          </View>
+        </ScrollView>
 
-              <Animatable.View
-                style={{ alignItems: "center", paddingTop: 40, paddingBottom: 60 }}
-                animation="fadeIn"
-                delay={800}
-              >
-                <Text style={[homeStyles.scrollText, { textAlign: "center" }]}>
-                  Join thousands of people making a difference
-                </Text>
-              </Animatable.View>
-            </>
-          )}
-        </View>
-      </ScrollView>
+        {!showFeatures && (
+          <TouchableOpacity
+            style={homeStyles.scrollIndicator}
+            onPress={scrollDownToFeatures}
+            activeOpacity={0.7}
+          >
+            <Animatable.Text
+              style={homeStyles.scrollText}
+              animation="fadeIn"
+              delay={1200}
+            >
+              Learn more about LifeLink
+            </Animatable.Text>
+            <Animatable.View
+              animation="bounceIn"
+              iterationCount="infinite"
+              duration={1000}
+            >
+              <Feather
+                name="chevron-down"
+                size={28}
+                color={currentTheme.primary}
+              />
+            </Animatable.View>
+          </TouchableOpacity>
+        )}
 
-      {!showFeatures && (
         <TouchableOpacity
-          style={homeStyles.scrollIndicator}
-          onPress={scrollDownToFeatures}
-          activeOpacity={0.7}
+          style={homeStyles.themeToggle}
+          onPress={toggleTheme}
+          activeOpacity={0.8}
         >
-          <Animatable.Text
-            style={homeStyles.scrollText}
-            animation="fadeIn"
-            delay={1200}
-          >
-            Learn more about LifeLink
-          </Animatable.Text>
-          <Animatable.View
-            animation="bounceIn"
-            iterationCount="infinite"
-            duration={1000}
-          >
-            <Feather
-              name="chevron-down"
-              size={28}
-              color={currentTheme.primary}
-            />
-          </Animatable.View>
+          <Feather
+            name={colorScheme === "dark" ? "sun" : "moon"}
+            size={24}
+            color={currentTheme.text}
+          />
         </TouchableOpacity>
-      )}
-
-      <TouchableOpacity
-        style={homeStyles.themeToggle}
-        onPress={toggleTheme}
-        activeOpacity={0.8}
-      >
-        <Feather
-          name={colorScheme === "dark" ? "sun" : "moon"}
-          size={24}
-          color={currentTheme.text}
-        />
-      </TouchableOpacity>
-    </View>
-        </AppLayout>
-
+      </View>
+    </AppLayout>
   );
 }
