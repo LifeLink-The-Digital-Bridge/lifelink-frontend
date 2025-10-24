@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Switch } from 'react-native';
 import { useTheme } from '../../utils/theme-context';
 import { lightTheme, darkTheme } from '../../constants/styles/authStyles';
 import { createUnifiedStyles } from '../../constants/styles/unifiedStyles';
+import { createDonorStyles } from '../../constants/styles/donorStyles';
 import { Feather } from '@expo/vector-icons';
+import { CustomDatePicker } from '../common/DatePicker';
+import { getBloodPressureCategory, validateBloodPressure } from '../../utils/bloodPressureValidator';
 
 interface MedicalDetailsProps {
   hemoglobinLevel: string;
@@ -43,229 +46,187 @@ interface MedicalDetailsProps {
   gender: string;
 }
 
-export function MedicalDetails({
-  hemoglobinLevel,
-  setHemoglobinLevel,
-  bloodPressure,
-  setBloodPressure,
-  bloodGlucoseLevel,
-  setBloodGlucoseLevel,
-  hasDiabetes,
-  setHasDiabetes,
-  hasDiseases,
-  setHasDiseases,
-  diseaseDescription,
-  setDiseaseDescription,
-  takingMedication,
-  setTakingMedication,
-  currentMedications,
-  setCurrentMedications,
-  lastMedicalCheckup,
-  setLastMedicalCheckup,
-  medicalHistory,
-  setMedicalHistory,
-  hasInfectiousDiseases,
-  setHasInfectiousDiseases,
-  infectiousDiseaseDetails,
-  setInfectiousDiseaseDetails,
-  creatinineLevel,
-  setCreatinineLevel,
-  liverFunctionTests,
-  setLiverFunctionTests,
-  cardiacStatus,
-  setCardiacStatus,
-  pulmonaryFunction,
-  setPulmonaryFunction,
-  overallHealthStatus,
-  setOverallHealthStatus,
-  gender,
-}: MedicalDetailsProps) {
+export function MedicalDetails(props: MedicalDetailsProps) {
   const { colorScheme } = useTheme();
   const isDark = colorScheme === 'dark';
   const theme = isDark ? darkTheme : lightTheme;
   const styles = createUnifiedStyles(theme);
+  const donorStyles = createDonorStyles(theme);
+
+  const [touched, setTouched] = useState({
+    bloodPressure: false,
+    hemoglobinLevel: false,
+    creatinineLevel: false,
+    lastMedicalCheckup: false,
+    medicalHistory: false,
+    liverFunctionTests: false,
+    cardiacStatus: false,
+    pulmonaryFunction: false,
+    overallHealthStatus: false,
+  });
+
+  const [bpValidation, setBpValidation] = useState(validateBloodPressure(props.bloodPressure));
+
+  useEffect(() => {
+    const validation = validateBloodPressure(props.bloodPressure);
+    setBpValidation(validation);
+  }, [props.bloodPressure]);
+
+  const requiredFieldsCount = 9;
+  const filledFieldsCount = [
+    props.bloodPressure,
+    props.hemoglobinLevel,
+    props.creatinineLevel,
+    props.lastMedicalCheckup,
+    props.medicalHistory,
+    props.liverFunctionTests,
+    props.cardiacStatus,
+    props.pulmonaryFunction,
+    props.overallHealthStatus
+  ].filter(field => field && field.trim() !== '').length;
+  
+  const isSectionComplete = filledFieldsCount === requiredFieldsCount && bpValidation.isValid;
+  const missingCount = requiredFieldsCount - filledFieldsCount;
 
   return (
-
     <View style={styles.sectionContainer}>
       <View style={styles.sectionHeader}>
         <View style={styles.sectionIconContainer}>
-          <Feather name="heart" size={18} color={theme.primary} />
+          <Feather
+            name="check-circle"
+            size={18}
+            color={isSectionComplete ? theme.success : theme.primary}
+          />
         </View>
         <Text style={styles.sectionTitle}>Medical Details</Text>
+        {!isSectionComplete && (
+          <View style={{
+            backgroundColor: theme.error + '20',
+            paddingHorizontal: 8,
+            paddingVertical: 4,
+            borderRadius: 12,
+            marginLeft: 'auto',
+          }}>
+            <Text style={{
+              color: theme.error,
+              fontSize: 11,
+              fontWeight: '600',
+            }}>
+              {missingCount} required
+            </Text>
+          </View>
+        )}
       </View>
 
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>Hemoglobin Level (g/dL)</Text>
+        <Text style={styles.label}>
+          Blood Pressure (mmHg) <Text style={{ color: theme.error }}>*</Text>
+        </Text>
         <TextInput
-          style={styles.input}
-          placeholder="Enter hemoglobin level"
+          style={[
+            styles.input,
+            touched.bloodPressure && !bpValidation.isValid && { 
+              borderColor: theme.error, 
+              borderWidth: 2 
+            }
+          ]}
+          placeholder="120/80"
           placeholderTextColor={theme.textSecondary}
-          keyboardType="numeric"
-          value={hemoglobinLevel}
-          onChangeText={setHemoglobinLevel}
+          value={props.bloodPressure}
+          onChangeText={props.setBloodPressure}
+          onBlur={() => setTouched({ ...touched, bloodPressure: true })}
+          keyboardType="numbers-and-punctuation"
         />
+        {touched.bloodPressure && !bpValidation.isValid && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+            <Feather name="alert-circle" size={12} color={theme.error} />
+            <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
+              {bpValidation.message}
+            </Text>
+          </View>
+        )}
+        {bpValidation.isValid && bpValidation.systolic && bpValidation.diastolic && (
+          <Text style={[
+            donorStyles.eligibilityText,
+            getBloodPressureCategory(bpValidation.systolic, bpValidation.diastolic) === 'Normal' 
+              ? donorStyles.eligibleText 
+              : donorStyles.ineligibleText
+          ]}>
+            ✓ {getBloodPressureCategory(bpValidation.systolic, bpValidation.diastolic)} Blood Pressure
+          </Text>
+        )}
       </View>
 
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>Blood Pressure</Text>
+        <Text style={styles.label}>
+          Hemoglobin Level (g/dL) <Text style={{ color: theme.error }}>*</Text>
+        </Text>
         <TextInput
-          style={styles.input}
-          placeholder="e.g., 120/80"
+          style={[
+            styles.input,
+            !props.hemoglobinLevel && touched.hemoglobinLevel && { 
+              borderColor: theme.error, 
+              borderWidth: 2 
+            }
+          ]}
+          placeholder="13.5"
           placeholderTextColor={theme.textSecondary}
-          value={bloodPressure}
-          onChangeText={setBloodPressure}
+          value={props.hemoglobinLevel}
+          onChangeText={props.setHemoglobinLevel}
+          onBlur={() => setTouched({ ...touched, hemoglobinLevel: true })}
+          keyboardType="decimal-pad"
         />
+        {!props.hemoglobinLevel && touched.hemoglobinLevel && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+            <Feather name="alert-circle" size={12} color={theme.error} />
+            <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
+              Hemoglobin level is required
+            </Text>
+          </View>
+        )}
       </View>
 
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Blood Glucose Level (mg/dL)</Text>
         <TextInput
           style={styles.input}
-          placeholder="Enter blood glucose level"
+          placeholder="100"
           placeholderTextColor={theme.textSecondary}
-          keyboardType="numeric"
-          value={bloodGlucoseLevel}
-          onChangeText={setBloodGlucoseLevel}
+          value={props.bloodGlucoseLevel}
+          onChangeText={props.setBloodGlucoseLevel}
+          keyboardType="decimal-pad"
         />
       </View>
 
       <View style={styles.switchRow}>
         <Text style={styles.switchLabel}>Has Diabetes?</Text>
         <Switch
-          value={hasDiabetes}
-          onValueChange={setHasDiabetes}
+          value={props.hasDiabetes}
+          onValueChange={props.setHasDiabetes}
           thumbColor={theme.primary}
           trackColor={{ false: theme.border, true: theme.primary + '50' }}
-        />
-      </View>
-
-
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Creatinine Level (mg/dL)</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter creatinine level"
-          placeholderTextColor={theme.textSecondary}
-          keyboardType="numeric"
-          value={creatinineLevel}
-          onChangeText={setCreatinineLevel}
-        />
-      </View>
-
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Liver Function Tests</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter test results"
-          placeholderTextColor={theme.textSecondary}
-          value={liverFunctionTests}
-          onChangeText={setLiverFunctionTests}
-        />
-      </View>
-
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Cardiac Status</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter cardiac status"
-          placeholderTextColor={theme.textSecondary}
-          value={cardiacStatus}
-          onChangeText={setCardiacStatus}
-        />
-      </View>
-
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Pulmonary Function (%)</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter percentage"
-          placeholderTextColor={theme.textSecondary}
-          keyboardType="numeric"
-          value={pulmonaryFunction}
-          onChangeText={setPulmonaryFunction}
-        />
-      </View>
-
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Overall Health Status</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Describe overall health"
-          placeholderTextColor={theme.textSecondary}
-          value={overallHealthStatus}
-          onChangeText={setOverallHealthStatus}
-        />
-      </View>
-
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Last Medical Checkup</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="YYYY-MM-DD"
-          placeholderTextColor={theme.textSecondary}
-          value={lastMedicalCheckup}
-          onChangeText={setLastMedicalCheckup}
-        />
-      </View>
-
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Medical History</Text>
-        <TextInput
-          style={styles.textArea}
-          placeholder="Describe your medical history"
-          placeholderTextColor={theme.textSecondary}
-          value={medicalHistory}
-          onChangeText={setMedicalHistory}
-          multiline
-          numberOfLines={3}
         />
       </View>
 
       <View style={styles.switchRow}>
-        <Text style={styles.switchLabel}>Any diseases?</Text>
+        <Text style={styles.switchLabel}>Has Diseases?</Text>
         <Switch
-          value={hasDiseases}
-          onValueChange={setHasDiseases}
+          value={props.hasDiseases}
+          onValueChange={props.setHasDiseases}
           thumbColor={theme.primary}
           trackColor={{ false: theme.border, true: theme.primary + '50' }}
         />
       </View>
 
-      {hasDiseases && (
+      {props.hasDiseases && (
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Disease Description</Text>
           <TextInput
             style={styles.textArea}
-            placeholder="Describe your diseases"
+            placeholder="Describe any diseases..."
             placeholderTextColor={theme.textSecondary}
-            value={diseaseDescription}
-            onChangeText={setDiseaseDescription}
-            multiline
-            numberOfLines={3}
-          />
-        </View>
-      )}
-
-      <View style={styles.switchRow}>
-        <Text style={styles.switchLabel}>Has Infectious Diseases?</Text>
-        <Switch
-          value={hasInfectiousDiseases}
-          onValueChange={setHasInfectiousDiseases}
-          thumbColor={theme.primary}
-          trackColor={{ false: theme.border, true: theme.primary + '50' }}
-        />
-      </View>
-
-      {hasInfectiousDiseases && (
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Infectious Disease Details</Text>
-          <TextInput
-            style={styles.textArea}
-            placeholder="Describe infectious diseases"
-            placeholderTextColor={theme.textSecondary}
-            value={infectiousDiseaseDetails}
-            onChangeText={setInfectiousDiseaseDetails}
+            value={props.diseaseDescription}
+            onChangeText={props.setDiseaseDescription}
             multiline
             numberOfLines={3}
           />
@@ -275,27 +236,246 @@ export function MedicalDetails({
       <View style={styles.switchRow}>
         <Text style={styles.switchLabel}>Taking Medication?</Text>
         <Switch
-          value={takingMedication}
-          onValueChange={setTakingMedication}
+          value={props.takingMedication}
+          onValueChange={props.setTakingMedication}
           thumbColor={theme.primary}
           trackColor={{ false: theme.border, true: theme.primary + '50' }}
         />
       </View>
 
-      {takingMedication && (
+      {props.takingMedication && (
         <View style={styles.inputContainer}>
           <Text style={styles.label}>Current Medications</Text>
           <TextInput
             style={styles.textArea}
-            placeholder="List your current medications"
+            placeholder="List current medications..."
             placeholderTextColor={theme.textSecondary}
-            value={currentMedications}
-            onChangeText={setCurrentMedications}
+            value={props.currentMedications}
+            onChangeText={props.setCurrentMedications}
             multiline
             numberOfLines={3}
           />
         </View>
       )}
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>
+          Last Medical Checkup <Text style={{ color: theme.error }}>*</Text>
+        </Text>
+        <CustomDatePicker
+          selectedDate={props.lastMedicalCheckup}
+          onDateChange={props.setLastMedicalCheckup}
+          hasError={!props.lastMedicalCheckup && touched.lastMedicalCheckup}
+          placeholder="Select last checkup date"
+        />
+        {!props.lastMedicalCheckup && touched.lastMedicalCheckup && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+            <Feather name="alert-circle" size={12} color={theme.error} />
+            <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
+              Last medical checkup date is required
+            </Text>
+          </View>
+        )}
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>
+          Medical History <Text style={{ color: theme.error }}>*</Text>
+        </Text>
+        <TextInput
+          style={[
+            styles.textArea,
+            !props.medicalHistory && touched.medicalHistory && { 
+              borderColor: theme.error, 
+              borderWidth: 2 
+            }
+          ]}
+          placeholder="Detailed medical history..."
+          placeholderTextColor={theme.textSecondary}
+          value={props.medicalHistory}
+          onChangeText={props.setMedicalHistory}
+          onBlur={() => setTouched({ ...touched, medicalHistory: true })}
+          multiline
+          numberOfLines={4}
+        />
+        {!props.medicalHistory && touched.medicalHistory && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+            <Feather name="alert-circle" size={12} color={theme.error} />
+            <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
+              Medical history is required
+            </Text>
+          </View>
+        )}
+      </View>
+
+      <View style={styles.switchRow}>
+        <Text style={styles.switchLabel}>Has Infectious Diseases?</Text>
+        <Switch
+          value={props.hasInfectiousDiseases}
+          onValueChange={props.setHasInfectiousDiseases}
+          thumbColor={theme.primary}
+          trackColor={{ false: theme.border, true: theme.primary + '50' }}
+        />
+      </View>
+
+      {props.hasInfectiousDiseases && (
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Infectious Disease Details</Text>
+          <TextInput
+            style={styles.textArea}
+            placeholder="Describe infectious diseases..."
+            placeholderTextColor={theme.textSecondary}
+            value={props.infectiousDiseaseDetails}
+            onChangeText={props.setInfectiousDiseaseDetails}
+            multiline
+            numberOfLines={3}
+          />
+        </View>
+      )}
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>
+          Creatinine Level (mg/dL) <Text style={{ color: theme.error }}>*</Text>
+        </Text>
+        <TextInput
+          style={[
+            styles.input,
+            !props.creatinineLevel && touched.creatinineLevel && { 
+              borderColor: theme.error, 
+              borderWidth: 2 
+            }
+          ]}
+          placeholder="1.0"
+          placeholderTextColor={theme.textSecondary}
+          value={props.creatinineLevel}
+          onChangeText={props.setCreatinineLevel}
+          onBlur={() => setTouched({ ...touched, creatinineLevel: true })}
+          keyboardType="decimal-pad"
+        />
+        {!props.creatinineLevel && touched.creatinineLevel && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+            <Feather name="alert-circle" size={12} color={theme.error} />
+            <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
+              Creatinine level is required
+            </Text>
+          </View>
+        )}
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>
+          Liver Function Tests <Text style={{ color: theme.error }}>*</Text>
+        </Text>
+        <TextInput
+          style={[
+            styles.textArea,
+            !props.liverFunctionTests && touched.liverFunctionTests && { 
+              borderColor: theme.error, 
+              borderWidth: 2 
+            }
+          ]}
+          placeholder="ALT: 30 U/L, AST: 28 U/L..."
+          placeholderTextColor={theme.textSecondary}
+          value={props.liverFunctionTests}
+          onChangeText={props.setLiverFunctionTests}
+          onBlur={() => setTouched({ ...touched, liverFunctionTests: true })}
+          multiline
+          numberOfLines={3}
+        />
+        {!props.liverFunctionTests && touched.liverFunctionTests && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+            <Feather name="alert-circle" size={12} color={theme.error} />
+            <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
+              Liver function tests results are required
+            </Text>
+          </View>
+        )}
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>
+          Cardiac Status <Text style={{ color: theme.error }}>*</Text>
+        </Text>
+        <TextInput
+          style={[
+            styles.input,
+            !props.cardiacStatus && touched.cardiacStatus && { 
+              borderColor: theme.error, 
+              borderWidth: 2 
+            }
+          ]}
+          placeholder="Normal/Abnormal - details"
+          placeholderTextColor={theme.textSecondary}
+          value={props.cardiacStatus}
+          onChangeText={props.setCardiacStatus}
+          onBlur={() => setTouched({ ...touched, cardiacStatus: true })}
+        />
+        {!props.cardiacStatus && touched.cardiacStatus && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+            <Feather name="alert-circle" size={12} color={theme.error} />
+            <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
+              Cardiac status is required
+            </Text>
+          </View>
+        )}
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>
+          Pulmonary Function <Text style={{ color: theme.error }}>*</Text>
+        </Text>
+        <TextInput
+          style={[
+            styles.input,
+            !props.pulmonaryFunction && touched.pulmonaryFunction && { 
+              borderColor: theme.error, 
+              borderWidth: 2 
+            }
+          ]}
+          placeholder="85.5"
+          placeholderTextColor={theme.textSecondary}
+          value={props.pulmonaryFunction}
+          onChangeText={props.setPulmonaryFunction}
+          onBlur={() => setTouched({ ...touched, pulmonaryFunction: true })}
+          keyboardType="decimal-pad"
+        />
+        {!props.pulmonaryFunction && touched.pulmonaryFunction && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+            <Feather name="alert-circle" size={12} color={theme.error} />
+            <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
+              Pulmonary function is required
+            </Text>
+          </View>
+        )}
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>
+          Overall Health Status <Text style={{ color: theme.error }}>*</Text>
+        </Text>
+        <TextInput
+          style={[
+            styles.input,
+            !props.overallHealthStatus && touched.overallHealthStatus && { 
+              borderColor: theme.error, 
+              borderWidth: 2 
+            }
+          ]}
+          placeholder="Excellent/Good/Fair/Poor"
+          placeholderTextColor={theme.textSecondary}
+          value={props.overallHealthStatus}
+          onChangeText={props.setOverallHealthStatus}
+          onBlur={() => setTouched({ ...touched, overallHealthStatus: true })}
+        />
+        {!props.overallHealthStatus && touched.overallHealthStatus && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+            <Feather name="alert-circle" size={12} color={theme.error} />
+            <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
+              Overall health status is required
+            </Text>
+          </View>
+        )}
+      </View>
     </View>
   );
 }

@@ -543,12 +543,22 @@ const RecipientScreen: React.FC = () => {
               {loading ? (
                 <ActivityIndicator color="#fff" size="small" />
               ) : (
-                <Text style={styles.submitButtonText}>
-                  Complete Registration
-                </Text>
+                <View style={{ alignItems: 'center' }}>
+                  <Text style={styles.submitButtonText}>
+                    {formState.isFormValid()
+                      ? 'Complete Registration'
+                      : 'Complete Required Fields'}
+                  </Text>
+                  {!formState.isFormValid() && (
+                    <Text style={[styles.submitButtonText, { fontSize: 12, opacity: 0.8, marginTop: 4 }]}>
+                      Please fill all mandatory fields marked with *
+                    </Text>
+                  )}
+                </View>
               )}
             </TouchableOpacity>
           </View>
+
         </ScrollView>
       </View>
 

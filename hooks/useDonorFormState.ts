@@ -101,7 +101,7 @@ export function useDonorFormState() {
   const [hlaDP1, setHlaDP1] = useState<string>("");
   const [hlaDP2, setHlaDP2] = useState<string>("");
   const [testingDate, setTestingDate] = useState<string>("");
-  const [testingMethod, setTestingMethod] = useState<string>("NGS_SEQUENCING");
+  const [testingMethod, setTestingMethod] = useState<string>("");
   const [laboratoryName, setLaboratoryName] = useState<string>("");
   const [certificationNumber, setCertificationNumber] = useState<string>("");
   const [addressId, setAddressId] = useState<string | null>(null);
@@ -235,9 +235,7 @@ export function useDonorFormState() {
             setHlaDP1(donor.hlaProfile.hlaDP1 || "");
             setHlaDP2(donor.hlaProfile.hlaDP2 || "");
             setTestingDate(donor.hlaProfile.testingDate || "");
-            setTestingMethod(
-              donor.hlaProfile.testingMethod || "NGS_SEQUENCING"
-            );
+            setTestingMethod(donor.hlaProfile.testingMethod || "");
             setLaboratoryName(donor.hlaProfile.laboratoryName || "");
             setCertificationNumber(donor.hlaProfile.certificationNumber || "");
           }

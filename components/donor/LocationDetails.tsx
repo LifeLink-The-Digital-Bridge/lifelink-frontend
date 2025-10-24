@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../utils/theme-context';
@@ -59,20 +59,60 @@ export function LocationDetails({
   const theme = isDark ? darkTheme : lightTheme;
   const styles = createUnifiedStyles(theme);
 
-  console.log('🗺️ DonorForm LocationDetails render:', {
-    hasLocation: !!location,
-    coordinates: location,
-    manualLocationSet,
-    locationLoading
+  const [touched, setTouched] = useState({
+    addressLine: false,
+    landmark: false,
+    area: false,
+    district: false,
+    city: false,
+    stateVal: false,
+    country: false,
+    pincode: false,
   });
+
+  const requiredFieldsCount = 8;
+  const filledFieldsCount = [
+    addressLine,
+    landmark,
+    area,
+    district,
+    city,
+    stateVal,
+    country,
+    pincode,
+  ].filter(field => field && field.trim() !== '').length + (location ? 1 : 0);
+
+  const isSectionComplete = filledFieldsCount === requiredFieldsCount + 1;
+  const missingCount = (requiredFieldsCount + 1) - filledFieldsCount;
 
   return (
     <View style={styles.sectionContainer}>
       <View style={styles.sectionHeader}>
         <View style={styles.sectionIconContainer}>
-          <Feather name="map-pin" size={18} color={theme.primary} />
+          <Feather
+            name={isSectionComplete ? "check-circle" : "map-pin"}
+            size={18}
+            color={isSectionComplete ? theme.success : theme.primary}
+          />
         </View>
         <Text style={styles.sectionTitle}>Location Details</Text>
+        {!isSectionComplete && (
+          <View style={{
+            backgroundColor: theme.error + '20',
+            paddingHorizontal: 8,
+            paddingVertical: 4,
+            borderRadius: 12,
+            marginLeft: 'auto',
+          }}>
+            <Text style={{
+              color: theme.error,
+              fontSize: 11,
+              fontWeight: '600',
+            }}>
+              {missingCount} required
+            </Text>
+          </View>
+        )}
       </View>
 
       {locationLoading && (
@@ -88,92 +128,208 @@ export function LocationDetails({
           <Text style={styles.locationErrorText}>{locationError}</Text>
         </View>
       )}
-      
+
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>Address Line</Text>
+        <Text style={styles.label}>
+          Address Line <Text style={{ color: theme.error }}>*</Text>
+        </Text>
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            !addressLine && touched.addressLine && { borderColor: theme.error, borderWidth: 2 }
+          ]}
           placeholder="Enter your address"
           placeholderTextColor={theme.textSecondary}
           value={addressLine}
           onChangeText={setAddressLine}
+          onBlur={() => setTouched({ ...touched, addressLine: true })}
         />
+        {!addressLine && touched.addressLine && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+            <Feather name="alert-circle" size={12} color={theme.error} />
+            <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
+              Address line is required
+            </Text>
+          </View>
+        )}
       </View>
-      
+
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>Landmark (Optional)</Text>
+        <Text style={styles.label}>
+          Landmark <Text style={{ color: theme.error }}>*</Text>
+        </Text>
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            !landmark && touched.landmark && { borderColor: theme.error, borderWidth: 2 }
+          ]}
           placeholder="Nearby landmark"
           placeholderTextColor={theme.textSecondary}
           value={landmark}
           onChangeText={setLandmark}
+          onBlur={() => setTouched({ ...touched, landmark: true })}
         />
+        {!landmark && touched.landmark && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+            <Feather name="alert-circle" size={12} color={theme.error} />
+            <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
+              Landmark is required
+            </Text>
+          </View>
+        )}
       </View>
-      
+
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>Area</Text>
+        <Text style={styles.label}>
+          Area <Text style={{ color: theme.error }}>*</Text>
+        </Text>
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            !area && touched.area && { borderColor: theme.error, borderWidth: 2 }
+          ]}
           placeholder="Enter area"
           placeholderTextColor={theme.textSecondary}
           value={area}
           onChangeText={setArea}
+          onBlur={() => setTouched({ ...touched, area: true })}
         />
+        {!area && touched.area && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+            <Feather name="alert-circle" size={12} color={theme.error} />
+            <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
+              Area is required
+            </Text>
+          </View>
+        )}
       </View>
-      
+
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>District (Optional)</Text>
+        <Text style={styles.label}>
+          District <Text style={{ color: theme.error }}>*</Text>
+        </Text>
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            !district && touched.district && { borderColor: theme.error, borderWidth: 2 }
+          ]}
           placeholder="Enter district"
           placeholderTextColor={theme.textSecondary}
           value={district}
           onChangeText={setDistrict}
+          onBlur={() => setTouched({ ...touched, district: true })}
         />
+        {!district && touched.district && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+            <Feather name="alert-circle" size={12} color={theme.error} />
+            <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
+              District is required
+            </Text>
+          </View>
+        )}
       </View>
-      
+
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>City & State</Text>
+        <Text style={styles.label}>
+          City & State <Text style={{ color: theme.error }}>*</Text>
+        </Text>
         <View style={styles.row}>
-          <TextInput
-            style={[styles.input, { flex: 1, marginRight: 12 }]}
-            placeholder="City"
-            placeholderTextColor={theme.textSecondary}
-            value={city}
-            onChangeText={setCity}
-          />
-          <TextInput
-            style={[styles.input, { flex: 1 }]}
-            placeholder="State"
-            placeholderTextColor={theme.textSecondary}
-            value={stateVal}
-            onChangeText={setStateVal}
-          />
+          <View style={{ flex: 1, marginRight: 12 }}>
+            <TextInput
+              style={[
+                styles.input,
+                !city && touched.city && { borderColor: theme.error, borderWidth: 2 }
+              ]}
+              placeholder="City *"
+              placeholderTextColor={theme.textSecondary}
+              value={city}
+              onChangeText={setCity}
+              onBlur={() => setTouched({ ...touched, city: true })}
+            />
+            {!city && touched.city && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                <Feather name="alert-circle" size={12} color={theme.error} />
+                <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
+                  City is required
+                </Text>
+              </View>
+            )}
+          </View>
+          <View style={{ flex: 1 }}>
+            <TextInput
+              style={[
+                styles.input,
+                !stateVal && touched.stateVal && { borderColor: theme.error, borderWidth: 2 }
+              ]}
+              placeholder="State *"
+              placeholderTextColor={theme.textSecondary}
+              value={stateVal}
+              onChangeText={setStateVal}
+              onBlur={() => setTouched({ ...touched, stateVal: true })}
+            />
+            {!stateVal && touched.stateVal && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                <Feather name="alert-circle" size={12} color={theme.error} />
+                <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
+                  State is required
+                </Text>
+              </View>
+            )}
+          </View>
         </View>
       </View>
-      
+
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>Country & Pincode</Text>
+        <Text style={styles.label}>
+          Country & Pincode <Text style={{ color: theme.error }}>*</Text>
+        </Text>        
         <View style={styles.row}>
-          <TextInput
-            style={[styles.input, { flex: 1, marginRight: 12 }]}
-            placeholder="Country"
-            placeholderTextColor={theme.textSecondary}
-            value={country}
-            onChangeText={setCountry}
-          />
-          <TextInput
-            style={[styles.input, { flex: 1 }]}
-            placeholder="Pincode"
-            placeholderTextColor={theme.textSecondary}
-            value={pincode}
-            onChangeText={setPincode}
-            keyboardType="numeric"
-          />
+          <View style={{ flex: 1, marginRight: 12 }}>
+            <TextInput
+              style={[
+                styles.input,
+                !country && touched.country && { borderColor: theme.error, borderWidth: 2 }
+              ]}
+              placeholder="Country *"
+              placeholderTextColor={theme.textSecondary}
+              value={country}
+              onChangeText={setCountry}
+              onBlur={() => setTouched({ ...touched, country: true })}
+            />
+            {!country && touched.country && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                <Feather name="alert-circle" size={12} color={theme.error} />
+                <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
+                  Country is required
+                </Text>
+              </View>
+            )}
+          </View>
+          <View style={{ flex: 1 }}>
+            <TextInput
+              style={[
+                styles.input,
+                !pincode && touched.pincode && { borderColor: theme.error, borderWidth: 2 }
+              ]}
+              placeholder="Pincode *"
+              placeholderTextColor={theme.textSecondary}
+              value={pincode}
+              onChangeText={setPincode}
+              onBlur={() => setTouched({ ...touched, pincode: true })}
+              keyboardType="numeric"
+            />
+            {!pincode && touched.pincode && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                <Feather name="alert-circle" size={12} color={theme.error} />
+                <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
+                  Pincode is required
+                </Text>
+              </View>
+            )}
+          </View>
         </View>
       </View>
-      
+
       <View style={styles.locationButtonContainer}>
         <TouchableOpacity
           style={styles.locationButton}
@@ -185,10 +341,10 @@ export function LocationDetails({
             {location ? "Update Location" : "Pick Location on Map"}
           </Text>
         </TouchableOpacity>
-        
+
         {location && manualLocationSet && onResetLocation && (
           <TouchableOpacity
-            style={[styles.locationButton, { 
+            style={[styles.locationButton, {
               backgroundColor: theme.textSecondary + '40',
               marginLeft: 8,
               flex: 0.4
@@ -203,7 +359,16 @@ export function LocationDetails({
           </TouchableOpacity>
         )}
       </View>
-      
+
+      {!location && (
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
+          <Feather name="alert-circle" size={12} color={theme.error} />
+          <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
+            Location coordinates are required
+          </Text>
+        </View>
+      )}
+
       {location && (
         <View style={styles.coordinatesContainer}>
           <Feather name="check-circle" size={16} color={theme.success} />

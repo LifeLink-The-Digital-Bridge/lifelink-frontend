@@ -19,6 +19,8 @@ export function ConsentForm({ isConsented, setIsConsented }: ConsentFormProps) {
 
   const [termsModalVisible, setTermsModalVisible] = useState(false);
 
+  const isSectionComplete = isConsented;
+
   const handleTermsPress = () => {
     setTermsModalVisible(true);
   };
@@ -37,9 +39,30 @@ export function ConsentForm({ isConsented, setIsConsented }: ConsentFormProps) {
     <View style={styles.sectionContainer}>
       <View style={styles.sectionHeader}>
         <View style={styles.sectionIconContainer}>
-          <Feather name="file-text" size={18} color={theme.primary} />
+          <Feather 
+            name={isSectionComplete ? "check-circle" : "file-text"} 
+            size={18} 
+            color={isSectionComplete ? theme.success : theme.primary} 
+          />
         </View>
         <Text style={styles.sectionTitle}>Final Agreement</Text>
+        {!isSectionComplete && (
+          <View style={{
+            backgroundColor: theme.error + '20',
+            paddingHorizontal: 8,
+            paddingVertical: 4,
+            borderRadius: 12,
+            marginLeft: 'auto',
+          }}>
+            <Text style={{
+              color: theme.error,
+              fontSize: 11,
+              fontWeight: '600',
+            }}>
+              Required
+            </Text>
+          </View>
+        )}
       </View>
 
       <View style={styles.agreementCard}>
@@ -92,6 +115,15 @@ export function ConsentForm({ isConsented, setIsConsented }: ConsentFormProps) {
             trackColor={{ false: theme.border, true: theme.primary + "50" }}
           />
         </View>
+
+        {!isConsented && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
+            <Feather name="alert-circle" size={12} color={theme.error} />
+            <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
+              You must consent to proceed with registration
+            </Text>
+          </View>
+        )}
       </View>
 
       {isConsented && (
@@ -100,8 +132,7 @@ export function ConsentForm({ isConsented, setIsConsented }: ConsentFormProps) {
           <View style={{ marginLeft: 12, flex: 1 }}>
             <Text style={styles.successTitle}>Thank you for your consent!</Text>
             <Text style={styles.successSubtitle}>
-              You're now ready to complete your donor registration. HLA testing
-              will be scheduled during medical screening.
+              You're now ready to complete your donor registration. HLA testing will be scheduled during medical screening.
             </Text>
           </View>
         </View>

@@ -312,96 +312,96 @@ const DonorScreen: React.FC = () => {
     router.replace("/(tabs)/donate");
   };
 
-const handleSubmit = async (): Promise<void> => {
-  if (!formState.isFormValid()) {
-    showAlert(
-      "Incomplete Form",
-      "Please fill all required fields.",
-      "warning"
-    );
-    return;
-  }
-
-  setLoading(true);
-  try {
-    const addressData: any = {
-      addressLine: formState.addressLine,
-      landmark: formState.landmark,
-      area: formState.area,
-      city: formState.city,
-      district: formState.district,
-      state: formState.stateVal,
-      country: formState.country,
-      pincode: formState.pincode,
-      latitude: formState.location?.latitude || 0,
-      longitude: formState.location?.longitude || 0,
-    };
-
-    if (formState.addressId) {
-      addressData.id = formState.addressId;
+  const handleSubmit = async (): Promise<void> => {
+    if (!formState.isFormValid()) {
+      showAlert(
+        "Incomplete Form",
+        "Please fill all required fields.",
+        "warning"
+      );
+      return;
     }
 
-    const payload = {
-      registrationDate: new Date().toISOString().slice(0, 10),
-      status: "ACTIVE",
-      medicalDetails: {
-        hemoglobinLevel: Number(formState.hemoglobinLevel),
-        bloodPressure: formState.bloodPressure,
-        bloodGlucoseLevel: formState.bloodGlucoseLevel ? Number(formState.bloodGlucoseLevel) : null,
-        hasDiabetes: formState.hasDiabetes,
-        hasDiseases: formState.hasDiseases,
-        takingMedication: formState.takingMedication,
-        diseaseDescription: formState.hasDiseases
-          ? formState.diseaseDescription
-          : null,
-        currentMedications: formState.takingMedication
-          ? formState.currentMedications
-          : null,
-        lastMedicalCheckup: formState.lastMedicalCheckup,
-        medicalHistory: formState.medicalHistory,
-        hasInfectiousDiseases: formState.hasInfectiousDiseases,
-        infectiousDiseaseDetails: formState.hasInfectiousDiseases
-          ? formState.infectiousDiseaseDetails
-          : null,
-        creatinineLevel: Number(formState.creatinineLevel),
-        liverFunctionTests: formState.liverFunctionTests,
-        cardiacStatus: formState.cardiacStatus,
-        pulmonaryFunction: Number(formState.pulmonaryFunction),
-        overallHealthStatus: formState.overallHealthStatus,
-      },
-      eligibilityCriteria: {
-        ageEligible: formState.age !== null ? formState.age >= 18 : false,
-        age: formState.age !== null ? formState.age : 0,
-        dob: formState.dob,
-        weightEligible: formState.weightEligible,
-        weight: Number(formState.weight),
-        medicalClearance: formState.medicalClearance,
-        recentTattooOrPiercing: formState.recentTattooOrPiercing,
-        recentTravelDetails: formState.recentTravelDetails,
-        recentVaccination: formState.recentVaccination,
-        recentSurgery: formState.recentSurgery,
-        chronicDiseases: formState.chronicDiseases,
-        allergies: formState.allergies,
-        lastDonationDate: formState.lastDonationDate || null,
-        height: Number(formState.height),
-        bodyMassIndex: Number(formState.bodyMassIndex),
-        bodySize: formState.bodySize,
-        isLivingDonor: formState.isLivingDonor,
-      },
-      consentForm: {
-        userId: formState.userId,
-        isConsented: formState.isConsented,
-        consentedAt: new Date().toISOString(),
-      },
-      addresses: [addressData],
-      hlaProfile:
-        formState.hlaA1 &&
-        formState.hlaA2 &&
-        formState.hlaB1 &&
-        formState.hlaB2 &&
-        formState.testingDate &&
-        formState.laboratoryName
-          ? {
+    setLoading(true);
+    try {
+      const addressData: any = {
+        addressLine: formState.addressLine,
+        landmark: formState.landmark,
+        area: formState.area,
+        city: formState.city,
+        district: formState.district,
+        state: formState.stateVal,
+        country: formState.country,
+        pincode: formState.pincode,
+        latitude: formState.location?.latitude || 0,
+        longitude: formState.location?.longitude || 0,
+      };
+
+      if (formState.addressId) {
+        addressData.id = formState.addressId;
+      }
+
+      const payload = {
+        registrationDate: new Date().toISOString().slice(0, 10),
+        status: "ACTIVE",
+        medicalDetails: {
+          hemoglobinLevel: Number(formState.hemoglobinLevel),
+          bloodPressure: formState.bloodPressure,
+          bloodGlucoseLevel: formState.bloodGlucoseLevel ? Number(formState.bloodGlucoseLevel) : null,
+          hasDiabetes: formState.hasDiabetes,
+          hasDiseases: formState.hasDiseases,
+          takingMedication: formState.takingMedication,
+          diseaseDescription: formState.hasDiseases
+            ? formState.diseaseDescription
+            : null,
+          currentMedications: formState.takingMedication
+            ? formState.currentMedications
+            : null,
+          lastMedicalCheckup: formState.lastMedicalCheckup,
+          medicalHistory: formState.medicalHistory,
+          hasInfectiousDiseases: formState.hasInfectiousDiseases,
+          infectiousDiseaseDetails: formState.hasInfectiousDiseases
+            ? formState.infectiousDiseaseDetails
+            : null,
+          creatinineLevel: Number(formState.creatinineLevel),
+          liverFunctionTests: formState.liverFunctionTests,
+          cardiacStatus: formState.cardiacStatus,
+          pulmonaryFunction: Number(formState.pulmonaryFunction),
+          overallHealthStatus: formState.overallHealthStatus,
+        },
+        eligibilityCriteria: {
+          ageEligible: formState.age !== null ? formState.age >= 18 : false,
+          age: formState.age !== null ? formState.age : 0,
+          dob: formState.dob,
+          weightEligible: formState.weightEligible,
+          weight: Number(formState.weight),
+          medicalClearance: formState.medicalClearance,
+          recentTattooOrPiercing: formState.recentTattooOrPiercing,
+          recentTravelDetails: formState.recentTravelDetails,
+          recentVaccination: formState.recentVaccination,
+          recentSurgery: formState.recentSurgery,
+          chronicDiseases: formState.chronicDiseases,
+          allergies: formState.allergies,
+          lastDonationDate: formState.lastDonationDate || null,
+          height: Number(formState.height),
+          bodyMassIndex: Number(formState.bodyMassIndex),
+          bodySize: formState.bodySize,
+          isLivingDonor: formState.isLivingDonor,
+        },
+        consentForm: {
+          userId: formState.userId,
+          isConsented: formState.isConsented,
+          consentedAt: new Date().toISOString(),
+        },
+        addresses: [addressData],
+        hlaProfile:
+          formState.hlaA1 &&
+            formState.hlaA2 &&
+            formState.hlaB1 &&
+            formState.hlaB2 &&
+            formState.testingDate &&
+            formState.laboratoryName
+            ? {
               hlaA1: formState.hlaA1,
               hlaA2: formState.hlaA2,
               hlaB1: formState.hlaB1,
@@ -415,52 +415,52 @@ const handleSubmit = async (): Promise<void> => {
               hlaDP1: formState.hlaDP1 || undefined,
               hlaDP2: formState.hlaDP2 || undefined,
               testingDate: formState.testingDate,
-              testingMethod: formState.testingMethod || "NGS_SEQUENCING",
+              testingMethod: formState.testingMethod,
               laboratoryName: formState.laboratoryName,
               certificationNumber: formState.certificationNumber || undefined,
               hlaString: `${formState.hlaA1},${formState.hlaA2},${formState.hlaB1},${formState.hlaB2},${formState.hlaC1 || ""},${formState.hlaC2 || ""},${formState.hlaDR1 || ""},${formState.hlaDR2 || ""},${formState.hlaDQ1 || ""},${formState.hlaDQ2 || ""},${formState.hlaDP1 || ""},${formState.hlaDP2 || ""}`,
               isHighResolution: true,
             }
-          : undefined,
-    };
+            : undefined,
+      };
 
-    const response = await registerDonor(payload);
-    if (response?.id) {
-      await SecureStore.setItemAsync("donorId", response.id);
-      await SecureStore.setItemAsync("donorData", JSON.stringify(response));
+      const response = await registerDonor(payload);
+      if (response?.id) {
+        await SecureStore.setItemAsync("donorId", response.id);
+        await SecureStore.setItemAsync("donorData", JSON.stringify(response));
 
-      if (
-        response.addresses &&
-        response.addresses.length > 0 &&
-        !formState.addressId
-      ) {
-        formState.setAddressId(response.addresses[0].id);
+        if (
+          response.addresses &&
+          response.addresses.length > 0 &&
+          !formState.addressId
+        ) {
+          formState.setAddressId(response.addresses[0].id);
+        }
+
+        showAlert(
+          "Registration Successful!",
+          "Your donor registration has been completed successfully.",
+          "success"
+        );
+
+        setTimeout(() => {
+          router.replace("/(tabs)/donate");
+        }, 2000);
+      } else {
+        throw new Error(
+          "Registration succeeded but donorId missing in response."
+        );
       }
-
+    } catch (error: any) {
       showAlert(
-        "Registration Successful!",
-        "Your donor registration has been completed successfully.",
-        "success"
+        "Registration Failed",
+        error.message || "Something went wrong during registration.",
+        "error"
       );
-
-      setTimeout(() => {
-        router.replace("/(tabs)/donate");
-      }, 2000);
-    } else {
-      throw new Error(
-        "Registration succeeded but donorId missing in response."
-      );
+    } finally {
+      setLoading(false);
     }
-  } catch (error: any) {
-    showAlert(
-      "Registration Failed",
-      error.message || "Something went wrong during registration.",
-      "error"
-    );
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
 
   if (roleLoading || locationLoading) {
@@ -520,8 +520,8 @@ const handleSubmit = async (): Promise<void> => {
               router.push({
                 pathname: "/navigation/mapScreen",
                 params: {
-                  latitude: formState.location?.latitude?.toString() || "",
-                  longitude: formState.location?.longitude?.toString() || "",
+                  latitude: formState.location?.latitude?.toString(),
+                  longitude: formState.location?.longitude?.toString(),
                   returnScreen: "donor",
                 },
               })
@@ -547,9 +547,18 @@ const handleSubmit = async (): Promise<void> => {
               {loading ? (
                 <ActivityIndicator color="#fff" size="small" />
               ) : (
-                <Text style={styles.submitButtonText}>
-                  Complete Registration
-                </Text>
+                <View style={{ alignItems: 'center' }}>
+                  <Text style={styles.submitButtonText}>
+                    {formState.isFormValid()
+                      ? 'Complete Registration'
+                      : 'Complete Required Fields'}
+                  </Text>
+                  {!formState.isFormValid() && (
+                    <Text style={[styles.submitButtonText, { fontSize: 12, opacity: 0.8, marginTop: 4 }]}>
+                      Please fill all mandatory fields marked with *
+                    </Text>
+                  )}
+                </View>
               )}
             </TouchableOpacity>
           </View>

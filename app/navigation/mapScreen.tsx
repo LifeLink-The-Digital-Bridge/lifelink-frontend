@@ -228,7 +228,7 @@ const MapScreen = () => {
   const handleConfirmLocation = () => {
     if (selectedLocation) {
       if (params.returnScreen === "donor") {
-        router.replace({
+        router.push({
           pathname: "/navigation/donorScreen",
           params: {
             selectedLatitude: selectedLocation.latitude.toString(),
@@ -237,7 +237,7 @@ const MapScreen = () => {
           },
         });
       } else if (params.returnScreen === "recipient") {
-        router.replace({
+        router.push({
           pathname: "/navigation/RecipientScreen",
           params: {
             selectedLatitude: selectedLocation.latitude.toString(),
@@ -253,6 +253,7 @@ const MapScreen = () => {
     }
   };
 
+
   const handleCurrentLocation = async () => {
     try {
       setGettingCurrentLocation(true);
@@ -264,7 +265,7 @@ const MapScreen = () => {
         longitude: location.coords.longitude,
       };
       setSelectedLocation(newLocation);
-      
+
       if (mapRef.current) {
         mapRef.current.animateToRegion({
           ...newLocation,
@@ -480,8 +481,8 @@ const MapScreen = () => {
                 backgroundColor: selectedLocation
                   ? theme.primary
                   : isDark
-                  ? "rgba(79, 141, 245, 0.3)"
-                  : "rgba(79, 141, 245, 0.5)",
+                    ? "rgba(79, 141, 245, 0.3)"
+                    : "rgba(79, 141, 245, 0.5)",
                 borderRadius: 30,
                 paddingVertical: 14,
                 paddingHorizontal: 24,

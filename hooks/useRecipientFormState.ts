@@ -200,7 +200,7 @@ export function useRecipientFormState(): RecipientFormState {
   const [hlaDP1, setHlaDP1] = useState<string>("");
   const [hlaDP2, setHlaDP2] = useState<string>("");
   const [testingDate, setTestingDate] = useState<string>("");
-  const [testingMethod, setTestingMethod] = useState<string>("NGS_SEQUENCING");
+  const [testingMethod, setTestingMethod] = useState<string>("");
   const [laboratoryName, setLaboratoryName] = useState<string>("");
   const [certificationNumber, setCertificationNumber] = useState<string>("");
 
@@ -308,7 +308,7 @@ export function useRecipientFormState(): RecipientFormState {
             setHlaDP2(recipient.hlaProfile.hlaDP2 || "");
             setTestingDate(recipient.hlaProfile.testingDate || "");
             setTestingMethod(
-              recipient.hlaProfile.testingMethod || "NGS_SEQUENCING"
+              recipient.hlaProfile.testingMethod || ""
             );
             setLaboratoryName(recipient.hlaProfile.laboratoryName || "");
             setCertificationNumber(

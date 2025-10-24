@@ -6,8 +6,6 @@ const BASE_URL = Constants.expoConfig?.extra?.API_URL;
 export interface ManualMatchRequest {
   donationId: string;
   receiveRequestId: string;
-  donorLocationId: string;
-  recipientLocationId: string;
 }
 
 export interface ManualMatchResponse {
@@ -23,8 +21,17 @@ export interface ManualMatchResponse {
     requestType: string;
     bloodType: string;
     matchType: string;
+    matchedAt: string;
+    status: string;
+    distance?: number;
+  };
+  error?: {
+    errorType: string;
+    errorMessage: string;
+    timestamp: string;
   };
 }
+
 
 export interface MatchResponse {
   matchResultId: string;
