@@ -43,14 +43,34 @@ export interface MatchResponse {
   requestType?: string;
   bloodType?: string;
   matchType: string;
+
+  status: string;
   isConfirmed: boolean;
   donorConfirmed: boolean;
   recipientConfirmed: boolean;
   donorConfirmedAt?: string;
   recipientConfirmedAt?: string;
+
+  firstConfirmer?: 'DONOR' | 'RECIPIENT';
+  firstConfirmedAt?: string;
+  confirmationExpiresAt?: string;
+
+  withdrawnBy?: 'DONOR' | 'RECIPIENT';
+  withdrawnAt?: string;
+  withdrawalReason?: string;
+
   matchedAt: string;
   expiredAt?: string;
   expiryReason?: string;
+
+  completedAt?: string;
+  completionConfirmedBy?: string;
+  receivedDate?: string;
+  canConfirmCompletion?: boolean;
+  completionNotes?: string;
+  recipientRating?: number;
+  hospitalName?: string;
+
   distance?: number;
   compatibilityScore?: number;
   bloodCompatibilityScore?: number;
@@ -59,20 +79,49 @@ export interface MatchResponse {
   urgencyPriorityScore?: number;
   matchReason?: string;
   priorityRank?: number;
-  completedAt?: string;
-  receivedDate?: string;
-  canConfirmCompletion?: boolean;
-  completionNotes?: string;
-  recipientRating?: number;
-  hospitalName?: string;
+
+  withdrawalGracePeriodExpiresAt?: string;
+  reconfirmationWindowExpiresAt?: string;
+}
+
+export enum MatchStatus {
+  PENDING = 'PENDING',
+  DONOR_CONFIRMED = 'DONOR_CONFIRMED',
+  RECIPIENT_CONFIRMED = 'RECIPIENT_CONFIRMED',
+  CONFIRMED = 'CONFIRMED',
+  WITHDRAWN = 'WITHDRAWN',
+  REJECTED = 'REJECTED',
+  EXPIRED = 'EXPIRED',
+  COMPLETED = 'COMPLETED',
+  CANCELLED_BY_DONOR = 'CANCELLED_BY_DONOR',
+  CANCELLED_BY_RECIPIENT = 'CANCELLED_BY_RECIPIENT'
+}
+
+export enum DonationStatus {
+  PENDING = 'PENDING',
+  MATCHED = 'MATCHED',
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
+  EXPIRED = 'EXPIRED'
+}
+
+export enum RequestStatus {
+  PENDING = 'PENDING',
+  MATCHED = 'MATCHED',
+  IN_PROGRESS = 'IN_PROGRESS',
+  FULFILLED = 'FULFILLED',
+  CANCELLED = 'CANCELLED',
+  EXPIRED = 'EXPIRED'
 }
 
 export interface CompletionConfirmationDTO {
   receivedDate?: string;
-  completionNotes?: string;
-  recipientRating?: number;
+  notes?: string;
+  rating?: number;
   hospitalName?: string;
 }
+
 
 export interface UserProfile {
   id: string;
@@ -291,28 +340,56 @@ const getAuthHeaders = async (includeUserId: boolean = true) => {
 
 const handleResponse = async (response: Response, errorMessage: string) => {
   if (!response.ok) {
-    let errorText: string;
+    let errorDetails: string;
     try {
-      errorText = await response.text();
+      const contentType = response.headers.get('content-type');
+      if (contentType?.includes('application/json')) {
+        const errorJson = await response.json();
+        errorDetails = errorJson.message || errorJson.error || errorMessage;
+      } else {
+        errorDetails = await response.text();
+      }
     } catch {
-      errorText = errorMessage;
+      errorDetails = errorMessage;
     }
 
     switch (response.status) {
+      case 400:
+        if (errorDetails.includes('grace period')) {
+          throw new Error(`GRACE_PERIOD_EXPIRED: ${errorDetails}`);
+        }
+        if (errorDetails.includes('already confirmed')) {
+          throw new Error(`ALREADY_CONFIRMED: ${errorDetails}`);
+        }
+        if (errorDetails.includes('Re-confirmation window')) {
+          throw new Error(`RECONFIRMATION_EXPIRED: ${errorDetails}`);
+        }
+        throw new Error(errorDetails);
       case 401:
         throw new Error('Authentication required. Please login again.');
       case 403:
-        throw new Error(errorText || 'Access denied');
+        throw new Error(errorDetails || 'Access denied');
       case 404:
-        throw new Error(errorText || 'Resource not found');
+        throw new Error(errorDetails || 'Resource not found');
       case 500:
         throw new Error('Server error. Please try again later.');
       default:
-        throw new Error(errorText || `${errorMessage} (Status: ${response.status})`);
+        throw new Error(errorDetails || `${errorMessage} (Status: ${response.status})`);
     }
   }
   return response;
 };
+
+export const getMatchById = async (matchId: string): Promise<MatchResponse> => {
+  const headers = await getAuthHeaders();
+  const response = await fetch(`${BASE_URL}/matching/matches/${matchId}`, {
+    method: 'GET',
+    headers,
+  });
+  await handleResponse(response, 'Failed to fetch match details');
+  return await response.json();
+};
+
 
 export const manualMatch = async (payload: ManualMatchRequest): Promise<ManualMatchResponse> => {
   const headers = await getAuthHeaders();
@@ -460,9 +537,11 @@ export const donorWithdrawConfirmation = async (matchId: string, reason: string 
     headers,
     body: JSON.stringify({ reason }),
   });
+  
   await handleResponse(response, 'Failed to withdraw confirmation as donor');
   return await response.text();
 };
+
 
 export const recipientWithdrawConfirmation = async (matchId: string, reason: string = 'Not specified'): Promise<string> => {
   const headers = await getAuthHeaders();

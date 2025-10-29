@@ -42,6 +42,7 @@ import {
   recipientWithdrawConfirmation,
   canConfirmCompletion,
   CompletionConfirmationDTO,
+  getMatchById,
 } from "../api/matchingApi";
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
 
@@ -69,6 +70,12 @@ interface MatchDetails {
   expiryReason?: string;
   completedAt?: string;
   canConfirmCompletion?: boolean;
+  withdrawnBy?: string;
+  withdrawnAt?: string;
+  withdrawalReason?: string;
+  confirmationExpiresAt?: string;
+  withdrawalGracePeriodExpiresAt?: string;
+  reconfirmationWindowExpiresAt?: string;
 }
 
 interface UserProfile {
@@ -139,10 +146,14 @@ const MatchDetailsScreen = () => {
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [completionData, setCompletionData] = useState<CompletionConfirmationDTO>({
     receivedDate: new Date().toISOString().split('T')[0],
-    completionNotes: "",
-    recipientRating: 5,
+    notes: "",
+    rating: 5,
     hospitalName: "",
   });
+
+  const [gracePeriodTimer, setGracePeriodTimer] = useState<string>('');
+  const [reconfirmTimer, setReconfirmTimer] = useState<string>('');
+  const [confirmationTimer, setConfirmationTimer] = useState<string>('');
 
   const showAlert = (
     title: string,
@@ -328,7 +339,17 @@ const MatchDetailsScreen = () => {
     }
   };
 
-  const handleConfirmMatch = async () => {
+  const refreshMatchDetails = async () => {
+    if (!match) return;
+    try {
+      const updatedMatch = await getMatchById(match.matchResultId);
+      setMatch(updatedMatch as MatchDetails);
+    } catch (error) {
+      console.error("Error refreshing match:", error);
+    }
+  };
+
+  const handleConfirm = async () => {
     if (!match || !currentUserId) return;
     setConfirmingMatch(true);
     try {
@@ -344,26 +365,27 @@ const MatchDetailsScreen = () => {
       }
 
       showAlert("Match Confirmed", result, "success");
-
-      const updatedMatch = { ...match };
-      if (userRole === "donor") {
-        updatedMatch.donorConfirmed = true;
-        updatedMatch.donorConfirmedAt = new Date().toISOString();
-        updatedMatch.status = updatedMatch.recipientConfirmed ? "CONFIRMED" : "DONOR_CONFIRMED";
-      } else {
-        updatedMatch.recipientConfirmed = true;
-        updatedMatch.recipientConfirmedAt = new Date().toISOString();
-        updatedMatch.status = updatedMatch.donorConfirmed ? "CONFIRMED" : "RECIPIENT_CONFIRMED";
-      }
-
-      if (updatedMatch.donorConfirmed && updatedMatch.recipientConfirmed) {
-        updatedMatch.isConfirmed = true;
-        updatedMatch.status = "CONFIRMED";
-      }
-
-      setMatch(updatedMatch);
+      await refreshMatchDetails();
     } catch (error: any) {
-      showAlert("Confirmation Failed", error.message || "Failed to confirm match", "error");
+      const errorMessage = error.message;
+      
+      if (errorMessage.includes('GRACE_PERIOD_EXPIRED')) {
+        showAlert(
+          'Action Not Allowed',
+          'The grace period has expired. Please contact support.',
+          'warning'
+        );
+      } else if (errorMessage.includes('RECONFIRMATION_EXPIRED')) {
+        showAlert(
+          'Re-confirmation Expired',
+          'The 2-hour re-confirmation window has expired.',
+          'warning'
+        );
+      } else if (errorMessage.includes('ALREADY_CONFIRMED')) {
+        showAlert('Already Confirmed', errorMessage, 'info');
+      } else {
+        showAlert("Confirmation Failed", errorMessage || "Failed to confirm match", "error");
+      }
     } finally {
       setConfirmingMatch(false);
     }
@@ -388,14 +410,23 @@ const MatchDetailsScreen = () => {
       }
 
       showAlert("Match Rejected", result, "success");
-
-      setMatch((prev) => prev ? { ...prev, status: "REJECTED" } : prev);
+      await refreshMatchDetails();
       setShowRejectModal(false);
       setRejectReason("");
 
       setTimeout(() => router.back(), 2000);
     } catch (error: any) {
-      showAlert("Rejection Failed", error.message || "Failed to reject match", "error");
+      const errorMessage = error.message;
+      
+      if (errorMessage.includes('GRACE_PERIOD_EXPIRED')) {
+        showAlert(
+          'Action Not Allowed',
+          'The grace period has expired. Please contact support.',
+          'warning'
+        );
+      } else {
+        showAlert("Rejection Failed", errorMessage || "Failed to reject match", "error");
+      }
     } finally {
       setActionLoading(false);
     }
@@ -420,53 +451,21 @@ const MatchDetailsScreen = () => {
       }
 
       showAlert("Withdrawn Successfully", result, "success");
-
-      setMatch((prev) => {
-        if (!prev) return prev;
-
-        if (userRole === "donor") {
-          if (prev.recipientConfirmed) {
-            return {
-              ...prev,
-              donorConfirmed: false,
-              donorConfirmedAt: undefined,
-              status: "RECIPIENT_CONFIRMED",
-              isConfirmed: false
-            };
-          } else {
-            return {
-              ...prev,
-              donorConfirmed: false,
-              donorConfirmedAt: undefined,
-              status: "PENDING",
-              isConfirmed: false
-            };
-          }
-        } else {
-          if (prev.donorConfirmed) {
-            return {
-              ...prev,
-              recipientConfirmed: false,
-              recipientConfirmedAt: undefined,
-              status: "DONOR_CONFIRMED",
-              isConfirmed: false
-            };
-          } else {
-            return {
-              ...prev,
-              recipientConfirmed: false,
-              recipientConfirmedAt: undefined,
-              status: "PENDING",
-              isConfirmed: false
-            };
-          }
-        }
-      });
-
+      await refreshMatchDetails();
       setShowWithdrawModal(false);
       setWithdrawReason("");
     } catch (error: any) {
-      showAlert("Withdrawal Failed", error.message || "Failed to withdraw confirmation", "error");
+      const errorMessage = error.message;
+      
+      if (errorMessage.includes('GRACE_PERIOD_EXPIRED')) {
+        showAlert(
+          'Action Not Allowed',
+          'The grace period has expired. Please contact support.',
+          'warning'
+        );
+      } else {
+        showAlert("Withdrawal Failed", errorMessage || "Failed to withdraw confirmation", "error");
+      }
     } finally {
       setActionLoading(false);
     }
@@ -474,7 +473,7 @@ const MatchDetailsScreen = () => {
 
   const handleConfirmCompletion = async () => {
     if (!match || !currentUserId) return;
-    if (!completionData.receivedDate || (completionData.completionNotes?.trim().length || 0) < 10) {
+    if (!completionData.receivedDate || (completionData.notes?.trim().length || 0) < 10) {
       showAlert("Invalid Data", "Please provide received date and notes (min 10 characters)", "warning");
       return;
     }
@@ -483,12 +482,12 @@ const MatchDetailsScreen = () => {
       const result = await recipientConfirmCompletion(match.matchResultId, completionData);
       showAlert("Completion Confirmed", result, "success");
 
-      setMatch((prev) => prev ? { ...prev, completedAt: new Date().toISOString() } : prev);
+      await refreshMatchDetails();
       setShowCompletionModal(false);
       setCompletionData({
         receivedDate: new Date().toISOString().split('T')[0],
-        completionNotes: "",
-        recipientRating: 5,
+        notes: "",
+        rating: 5,
         hospitalName: "",
       });
     } catch (error: any) {
@@ -574,6 +573,78 @@ const MatchDetailsScreen = () => {
     getCurrentUserLocation();
   }, []);
 
+  useEffect(() => {
+    if (!match) return;
+    
+    const interval = setInterval(() => {
+      const now = Date.now();
+      
+      if (match.status === 'CONFIRMED' && match.withdrawalGracePeriodExpiresAt) {
+        const expiryTime = new Date(match.withdrawalGracePeriodExpiresAt).getTime();
+        const diff = expiryTime - now;
+        
+        if (diff > 0) {
+          const hours = Math.floor(diff / (60 * 60 * 1000));
+          const minutes = Math.floor((diff % (60 * 60 * 1000)) / (60 * 1000));
+          const seconds = Math.floor((diff % (60 * 1000)) / 1000);
+          setGracePeriodTimer(`${hours}h ${minutes}m ${seconds}s to withdraw`);
+        } else {
+          setGracePeriodTimer('Grace period expired');
+        }
+      } else {
+        setGracePeriodTimer('');
+      }
+      
+      if (match.status === 'WITHDRAWN' && match.reconfirmationWindowExpiresAt) {
+        const expiryTime = new Date(match.reconfirmationWindowExpiresAt).getTime();
+        const diff = expiryTime - now;
+        
+        if (diff > 0) {
+          const hours = Math.floor(diff / (60 * 60 * 1000));
+          const minutes = Math.floor((diff % (60 * 60 * 1000)) / (60 * 1000));
+          const seconds = Math.floor((diff % (60 * 1000)) / 1000);
+          setReconfirmTimer(`${hours}h ${minutes}m ${seconds}s to re-confirm`);
+        } else {
+          setReconfirmTimer('Re-confirmation window expired');
+        }
+      } else {
+        setReconfirmTimer('');
+      }
+      
+      if ((match.status === 'DONOR_CONFIRMED' || match.status === 'RECIPIENT_CONFIRMED') 
+          && match.confirmationExpiresAt) {
+        const expiryTime = new Date(match.confirmationExpiresAt).getTime();
+        const diff = expiryTime - now;
+        
+        if (diff > 0) {
+          const hours = Math.floor(diff / (60 * 60 * 1000));
+          setConfirmationTimer(`${hours} hours for other party to confirm`);
+        } else {
+          setConfirmationTimer('');
+        }
+      } else {
+        setConfirmationTimer('');
+      }
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [match]);
+
+  useEffect(() => {
+    if (!match) return;
+    
+    const pollInterval = setInterval(async () => {
+      try {
+        const updatedMatch = await getMatchById(match.matchResultId);
+        setMatch(updatedMatch as MatchDetails);
+      } catch (error) {
+        console.error('Polling error:', error);
+      }
+    }, 30000);
+    
+    return () => clearInterval(pollInterval);
+  }, [match?.matchResultId]);
+
   const getCurrentUserRole = (): string => {
     const role = getUserRoleInMatch();
     return role === "donor" ? "Donor" : role === "recipient" ? "Recipient" : "Unknown";
@@ -594,21 +665,53 @@ const MatchDetailsScreen = () => {
   const canConfirmMatch = (): boolean => {
     if (!match || !currentUserId) return false;
     const userConfirmed = getCurrentUserStatus();
-    const isTerminalStatus = ["REJECTED", "EXPIRED", "CANCELLED_BY_DONOR", "CANCELLED_BY_RECIPIENT", "CONFIRMED"].includes(match.status || "");
+    const isTerminalStatus = [
+      "REJECTED",
+      "EXPIRED",
+      "WITHDRAWN",
+      "CANCELLED_BY_DONOR",
+      "CANCELLED_BY_RECIPIENT",
+      "CONFIRMED"
+    ].includes(match.status || "");
     return !userConfirmed && !isTerminalStatus;
   };
 
   const canRejectMatch = (): boolean => {
     if (!match || !currentUserId) return false;
-    const isTerminalStatus = ["REJECTED", "EXPIRED", "CANCELLED_BY_DONOR", "CANCELLED_BY_RECIPIENT", "CONFIRMED"].includes(match.status || "");
-    return !isTerminalStatus;
+    
+    const isTerminalStatus = [
+      "REJECTED", 
+      "EXPIRED", 
+      "WITHDRAWN",
+      "CANCELLED_BY_DONOR", 
+      "CANCELLED_BY_RECIPIENT"
+    ].includes(match.status || "");
+    
+    return !isTerminalStatus || match.status === "CONFIRMED";
   };
 
   const canWithdrawMatch = (): boolean => {
     if (!match || !currentUserId) return false;
     const userConfirmed = getCurrentUserStatus();
-    const isTerminalStatus = ["REJECTED", "EXPIRED", "CANCELLED_BY_DONOR", "CANCELLED_BY_RECIPIENT"].includes(match.status || "");
-    return userConfirmed && !isTerminalStatus;
+    const validStatuses = ["DONOR_CONFIRMED", "RECIPIENT_CONFIRMED", "CONFIRMED"];
+    return userConfirmed && validStatuses.includes(match.status || "");
+  };
+
+  const canReconfirmMatch = (): boolean => {
+    if (!match || !currentUserId || match.status !== 'WITHDRAWN') return false;
+    
+    const userRole = getUserRoleInMatch();
+    const withdrawnBy = match.withdrawnBy;
+    
+    if ((userRole === 'donor' && withdrawnBy !== 'DONOR') || 
+        (userRole === 'recipient' && withdrawnBy !== 'RECIPIENT')) {
+      return false;
+    }
+    
+    if (!match.reconfirmationWindowExpiresAt) return false;
+    
+    const expiryTime = new Date(match.reconfirmationWindowExpiresAt).getTime();
+    return Date.now() < expiryTime;
   };
 
   const canShowCompletionButton = (): boolean => {
@@ -616,10 +719,13 @@ const MatchDetailsScreen = () => {
     return getUserRoleInMatch() === "recipient" &&
       match.status === "CONFIRMED" &&
       !match.completedAt &&
-      match.canConfirmCompletion === true;
+      match.canConfirmCompletion !== false;
   };
 
   const getConfirmationButtonText = (): string => {
+    if (match?.status === 'WITHDRAWN') {
+      return `Re-confirm as ${getCurrentUserRole()}`;
+    }
     return `Confirm as ${getCurrentUserRole()}`;
   };
 
@@ -758,6 +864,54 @@ const MatchDetailsScreen = () => {
           showsVerticalScrollIndicator={false}
           style={{ flex: 1 }}
         >
+          {gracePeriodTimer && match.status === 'CONFIRMED' && (
+            <View style={{
+              backgroundColor: (theme as any).warning + '20',
+              padding: wp("3%"),
+              borderRadius: 8,
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginBottom: hp("2%"),
+              borderLeftWidth: 4,
+              borderLeftColor: (theme as any).warning,
+            }}>
+              <Feather name="clock" size={20} color={(theme as any).warning} />
+              <Text style={{ color: (theme as any).warning, marginLeft: 8, flex: 1 }}>{gracePeriodTimer}</Text>
+            </View>
+          )}
+
+          {reconfirmTimer && match.status === 'WITHDRAWN' && (
+            <View style={{
+              backgroundColor: (theme as any).info + '20',
+              padding: wp("3%"),
+              borderRadius: 8,
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginBottom: hp("2%"),
+              borderLeftWidth: 4,
+              borderLeftColor: (theme as any).info,
+            }}>
+              <Feather name="alert-circle" size={20} color={(theme as any).info} />
+              <Text style={{ color: (theme as any).info, marginLeft: 8, flex: 1 }}>{reconfirmTimer}</Text>
+            </View>
+          )}
+
+          {confirmationTimer && (match.status === 'DONOR_CONFIRMED' || match.status === 'RECIPIENT_CONFIRMED') && (
+            <View style={{
+              backgroundColor: theme.primary + '20',
+              padding: wp("3%"),
+              borderRadius: 8,
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginBottom: hp("2%"),
+              borderLeftWidth: 4,
+              borderLeftColor: theme.primary,
+            }}>
+              <Feather name="info" size={20} color={theme.primary} />
+              <Text style={{ color: theme.primary, marginLeft: 8, flex: 1 }}>{confirmationTimer}</Text>
+            </View>
+          )}
+
           <MatchInfoCard
             match={match}
             currentUserRole={getCurrentUserRole()}
@@ -803,13 +957,15 @@ const MatchDetailsScreen = () => {
             canConfirmMatch={canConfirmMatch()}
             canRejectMatch={canRejectMatch()}
             canWithdrawMatch={canWithdrawMatch()}
+            canReconfirmMatch={canReconfirmMatch()}
             canShowCompletion={canShowCompletionButton()}
             confirmingMatch={confirmingMatch}
             actionLoading={actionLoading}
             confirmButtonText={getConfirmationButtonText()}
             theme={theme}
             styles={styles}
-            onConfirm={handleConfirmMatch}
+            onConfirm={handleConfirm}
+            onReconfirm={handleConfirm}
             onReject={() => setShowRejectModal(true)}
             onWithdraw={() => setShowWithdrawModal(true)}
             onComplete={() => setShowCompletionModal(true)}
@@ -851,8 +1007,8 @@ const MatchDetailsScreen = () => {
             setShowCompletionModal(false);
             setCompletionData({
               receivedDate: new Date().toISOString().split('T')[0],
-              completionNotes: "",
-              recipientRating: 5,
+              notes: "",
+              rating: 5,
               hospitalName: "",
             });
           }}

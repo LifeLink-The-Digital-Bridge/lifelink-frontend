@@ -59,34 +59,22 @@ export const formatStatusDisplay = (status: string) => {
   }
 };
 
-export const getStatusColor = (status: string, theme: any) => {
-  switch (status) {
-    case "AVAILABLE":
-    case "PENDING":
-    case "ACTIVE":
-      return "#f59e0b";
-    case "COMPLETED":
-    case "FULFILLED":
-    case "MATCHED":
-    case "CONFIRMED":
-      return theme.success;
-    case "CANCELLED_BY_DONOR":
-    case "CANCELLED_BY_RECIPIENT":
-    case "CANCELLED_DUE_TO_MATCH_FAILURE":
-    case "EXPIRED":
-    case "REJECTED":
-    case "FAILED":
-      return theme.error;
-    case "IN_PROGRESS":
-    case "DONOR_CONFIRMED":
-    case "RECIPIENT_CONFIRMED":
-      return theme.primary;
-    case "WITHDRAWN":
-      return "#6B7280";
-    default:
-      return theme.textSecondary;
-  }
+export const getStatusColor = (status: string, theme: any): string => {
+  const statusColors: Record<string, string> = {
+    PENDING: theme.warning,
+    DONOR_CONFIRMED: theme.info,
+    RECIPIENT_CONFIRMED: theme.info,
+    CONFIRMED: theme.success,
+    WITHDRAWN: theme.warning,
+    REJECTED: theme.error,
+    EXPIRED: theme.error,
+    COMPLETED: theme.success,
+    CANCELLED_BY_DONOR: theme.error,
+    CANCELLED_BY_RECIPIENT: theme.error,
+  };
+  return statusColors[status] || theme.textSecondary;
 };
+
 
 export const getStatusInfo = (status: string) => {
   return STATUS_INFO[status as keyof typeof STATUS_INFO] || { description: status, icon: "info" };

@@ -7,6 +7,7 @@ interface ActionButtonsProps {
   canConfirmMatch: boolean;
   canRejectMatch: boolean;
   canWithdrawMatch: boolean;
+  canReconfirmMatch?: boolean;
   canShowCompletion: boolean;
   confirmingMatch: boolean;
   actionLoading: boolean;
@@ -14,6 +15,7 @@ interface ActionButtonsProps {
   theme: any;
   styles: any;
   onConfirm: () => void;
+  onReconfirm?: () => void;
   onReject: () => void;
   onWithdraw: () => void;
   onComplete: () => void;
@@ -23,6 +25,7 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
   canConfirmMatch,
   canRejectMatch,
   canWithdrawMatch,
+  canReconfirmMatch,
   canShowCompletion,
   confirmingMatch,
   actionLoading,
@@ -30,6 +33,7 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
   theme,
   styles,
   onConfirm,
+  onReconfirm,
   onReject,
   onWithdraw,
   onComplete,
@@ -62,6 +66,48 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
           ) : (
             <>
               <Feather name="check-circle" size={wp("5.5%")} color="#fff" />
+              <Text
+                style={{
+                  color: "#fff",
+                  fontSize: wp("4.2%"),
+                  fontWeight: "700",
+                  marginLeft: wp("2.5%"),
+                  letterSpacing: 0.5,
+                }}
+              >
+                {confirmButtonText}
+              </Text>
+            </>
+          )}
+        </TouchableOpacity>
+      )}
+
+      {canReconfirmMatch && onReconfirm && (
+        <TouchableOpacity
+          style={{
+            backgroundColor: theme.info || theme.primary,
+            paddingVertical: hp("1.8%"),
+            paddingHorizontal: wp("5%"),
+            borderRadius: 12,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            opacity: confirmingMatch ? 0.6 : 1,
+            shadowColor: theme.info || theme.primary,
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.3,
+            shadowRadius: 8,
+            elevation: 5,
+          }}
+          onPress={onReconfirm}
+          disabled={confirmingMatch}
+          activeOpacity={0.8}
+        >
+          {confirmingMatch ? (
+            <ActivityIndicator color="#fff" size="small" />
+          ) : (
+            <>
+              <Feather name="refresh-cw" size={wp("5.5%")} color="#fff" />
               <Text
                 style={{
                   color: "#fff",
