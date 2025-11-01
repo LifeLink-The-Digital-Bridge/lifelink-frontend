@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, useColorScheme } from 'react-native';
 import { Video, ResizeMode } from 'expo-av';
 import * as SplashScreen from 'expo-splash-screen';
 
@@ -12,6 +12,7 @@ interface AnimatedSplashProps {
 export default function AnimatedSplash({ onFinish }: AnimatedSplashProps) {
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [error, setError] = useState(false);
+  const colorScheme = useColorScheme();
 
   useEffect(() => {
     if (videoLoaded) {
@@ -38,31 +39,31 @@ export default function AnimatedSplash({ onFinish }: AnimatedSplashProps) {
   }
 
   return (
-    <View style={styles.container}>
-      <Video
-        source={require('../assets/images/lifelink_loading_video.mp4')}
-        rate={1.0}
-        volume={0.5}
-        isMuted={false}
-        shouldPlay
-        isLooping={false}
-        resizeMode={ResizeMode.CONTAIN}
-        style={styles.video}
-        onLoad={() => {
-          console.log('Video loaded successfully');
-          setVideoLoaded(true);
-        }}
-        onError={(err) => {
-          console.error('Video error:', err);
-          setError(true);
-        }}
-        onPlaybackStatusUpdate={(status) => {
-          if (status.isLoaded && status.didJustFinish) {
-            console.log('Video finished, showing app');
-            onFinish();
-          }
-        }}
-      />
+    <View style={[styles.container, { backgroundColor: colorScheme === 'dark' ? '#1e293b' : '#ffffff' }]}>
+      <View style={styles.videoContainer}>
+        <Video
+          source={require('../assets/images/lifelink_loading_video.mp4')}
+          rate={1.0}
+          volume={0}
+          isMuted={true}
+          shouldPlay
+          isLooping={false}
+          resizeMode={ResizeMode.COVER}
+          style={styles.video}
+          onLoad={() => {
+            setVideoLoaded(true);
+          }}
+          onError={(err) => {
+            console.error('Video error:', err);
+            setError(true);
+          }}
+          onPlaybackStatusUpdate={(status) => {
+            if (status.isLoaded && status.didJustFinish) {
+              onFinish();
+            }
+          }}
+        />
+      </View>
       
       {!videoLoaded && (
         <View style={styles.loadingContainer}>
@@ -76,13 +77,19 @@ export default function AnimatedSplash({ onFinish }: AnimatedSplashProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
     justifyContent: 'center',
     alignItems: 'center',
   },
+  videoContainer: {
+    width: 150,
+    height: 150,
+    borderRadius: 200,
+    overflow: 'hidden',
+  },
   video: {
+    marginTop: -30,
     width: '100%',
-    height: '100%',
+    height: '140%',
   },
   loadingContainer: {
     position: 'absolute',
