@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { useAuth } from "../../utils/auth-context";
+import { useAuth } from "../../../utils/auth-context";
 import {
   View,
   ScrollView,
@@ -9,17 +9,19 @@ import {
   ActivityIndicator,
   Animated,
 } from "react-native";
+import { validateHemoglobin, validateBloodGlucose, validateCreatinine, validatePulmonaryFunction, validateWeight, validateHeight, validateAge, validateHLA } from "../../../utils/medicalValidation";
+import { validateBloodPressure } from "../../../utils/bloodPressureValidator";
 import * as SecureStore from "expo-secure-store";
 import * as Location from "expo-location";
-import { registerRecipient, addRecipientRole } from "../api/recipientApi";
-import { refreshAuthTokens } from "../api/roleApi";
-import { useTheme } from "../../utils/theme-context";
-import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
-import { createUnifiedStyles } from "../../constants/styles/unifiedStyles";
+import { registerRecipient, addRecipientRole } from "../../api/recipientApi";
+import { refreshAuthTokens } from "../../api/roleApi";
+import { useTheme } from "../../../utils/theme-context";
+import { lightTheme, darkTheme } from "../../../constants/styles/authStyles";
+import { createUnifiedStyles } from "../../../constants/styles/unifiedStyles";
 import AppLayout from "@/components/AppLayout";
-import { RecipientForm } from "../../components/recipient/RecipientForm";
-import { ValidationAlert } from "../../components/common/ValidationAlert";
-import { useRecipientFormState } from "../../hooks/useRecipientFormState";
+import { RecipientForm } from "../../../components/recipient/RecipientForm";
+import { ValidationAlert } from "../../../components/common/ValidationAlert";
+import { useRecipientFormState } from "../../../hooks/useRecipientFormState";
 import { StatusHeader } from "@/components/common/StatusHeader";
 
 const HEADER_HEIGHT = 150;
@@ -37,6 +39,8 @@ const RecipientScreen: React.FC = () => {
   const headerTranslateY = useRef(new Animated.Value(0)).current;
 
   const formState = useRecipientFormState();
+  const scrollViewRef = useRef<ScrollView>(null);
+  const fieldRefs = useRef<{ [key: string]: View | null }>({});
 
   const [roleLoading, setRoleLoading] = useState<boolean>(true);
   const [locationLoading, setLocationLoading] = useState<boolean>(false);
@@ -305,6 +309,40 @@ const RecipientScreen: React.FC = () => {
     router.replace("/(tabs)/receive");
   };
 
+  const getFirstErrorField = (): string | null => {
+    const validations = [
+      { field: 'hemoglobinLevel', valid: validateHemoglobin(formState.hemoglobinLevel).isValid, value: formState.hemoglobinLevel },
+      { field: 'bloodPressure', valid: validateBloodPressure(formState.bloodPressure).isValid, value: formState.bloodPressure },
+      { field: 'bloodGlucoseLevel', valid: validateBloodGlucose(formState.bloodGlucoseLevel).isValid, value: formState.bloodGlucoseLevel },
+      { field: 'creatinineLevel', valid: validateCreatinine(formState.creatinineLevel).isValid, value: formState.creatinineLevel },
+      { field: 'pulmonaryFunction', valid: !formState.pulmonaryFunction || validatePulmonaryFunction(formState.pulmonaryFunction).isValid, value: formState.pulmonaryFunction },
+      { field: 'age', valid: validateAge(formState.age).isValid, value: formState.age },
+      { field: 'weight', valid: validateWeight(formState.weight).isValid, value: formState.weight },
+      { field: 'height', valid: validateHeight(formState.height).isValid, value: formState.height },
+      { field: 'hlaA1', valid: validateHLA(formState.hlaA1).isValid, value: formState.hlaA1 },
+      { field: 'hlaA2', valid: validateHLA(formState.hlaA2).isValid, value: formState.hlaA2 },
+      { field: 'hlaB1', valid: validateHLA(formState.hlaB1).isValid, value: formState.hlaB1 },
+      { field: 'hlaB2', valid: validateHLA(formState.hlaB2).isValid, value: formState.hlaB2 },
+      { field: 'hlaC1', valid: validateHLA(formState.hlaC1).isValid, value: formState.hlaC1 },
+      { field: 'hlaC2', valid: validateHLA(formState.hlaC2).isValid, value: formState.hlaC2 },
+      { field: 'hlaDR1', valid: validateHLA(formState.hlaDR1).isValid, value: formState.hlaDR1 },
+      { field: 'hlaDR2', valid: validateHLA(formState.hlaDR2).isValid, value: formState.hlaDR2 },
+      { field: 'hlaDQ1', valid: validateHLA(formState.hlaDQ1).isValid, value: formState.hlaDQ1 },
+      { field: 'hlaDQ2', valid: validateHLA(formState.hlaDQ2).isValid, value: formState.hlaDQ2 },
+      { field: 'hlaDP1', valid: validateHLA(formState.hlaDP1).isValid, value: formState.hlaDP1 },
+      { field: 'hlaDP2', valid: validateHLA(formState.hlaDP2).isValid, value: formState.hlaDP2 },
+    ];
+    
+    for (const v of validations) {
+      if (v.value && !v.valid) return v.field;
+    }
+    return null;
+  };
+
+  const hasValidationErrors = (): boolean => {
+    return getFirstErrorField() !== null;
+  };
+
   const handleSubmit = async (): Promise<void> => {
     if (!formState.isFormValid()) {
       showAlert(
@@ -312,6 +350,27 @@ const RecipientScreen: React.FC = () => {
         "Please fill all required fields to continue.",
         "warning"
       );
+      scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+      return;
+    }
+    
+    const firstErrorField = getFirstErrorField();
+    if (firstErrorField) {
+      showAlert(
+        "Invalid Data",
+        "Please correct the validation errors before submitting.",
+        "error"
+      );
+      const fieldRef = fieldRefs.current[firstErrorField];
+      if (fieldRef) {
+        fieldRef.measureLayout(
+          scrollViewRef.current as any,
+          (x, y) => {
+            scrollViewRef.current?.scrollTo({ y: y - 100, animated: true });
+          },
+          () => {}
+        );
+      }
       return;
     }
 
@@ -502,6 +561,7 @@ const RecipientScreen: React.FC = () => {
         </Animated.View>
 
         <ScrollView
+          ref={scrollViewRef}
           contentContainerStyle={{
             paddingTop: HEADER_HEIGHT + 10,
             paddingHorizontal: 20,
@@ -513,6 +573,7 @@ const RecipientScreen: React.FC = () => {
           style={{ flex: 1 }}
         >
           <RecipientForm
+            fieldRefs={fieldRefs}
             {...formState}
             onLocationPress={() =>
               router.push({
@@ -532,12 +593,12 @@ const RecipientScreen: React.FC = () => {
             <TouchableOpacity
               style={[
                 styles.submitButton,
-                !formState.isFormValid() || loading
+                (!formState.isFormValid() || hasValidationErrors() || loading)
                   ? styles.submitButtonDisabled
                   : null,
               ]}
               onPress={handleSubmit}
-              disabled={!formState.isFormValid() || loading}
+              disabled={loading}
               activeOpacity={0.8}
             >
               {loading ? (
@@ -545,13 +606,15 @@ const RecipientScreen: React.FC = () => {
               ) : (
                 <View style={{ alignItems: 'center' }}>
                   <Text style={styles.submitButtonText}>
-                    {formState.isFormValid()
-                      ? 'Complete Registration'
-                      : 'Complete Required Fields'}
+                    {!formState.isFormValid()
+                      ? 'Complete Required Fields'
+                      : hasValidationErrors()
+                      ? 'Fix Validation Errors'
+                      : 'Complete Registration'}
                   </Text>
-                  {!formState.isFormValid() && (
+                  {(!formState.isFormValid() || hasValidationErrors()) && (
                     <Text style={[styles.submitButtonText, { fontSize: 12, opacity: 0.8, marginTop: 4 }]}>
-                      Please fill all mandatory fields marked with *
+                      {!formState.isFormValid() ? 'Fill all mandatory fields marked with *' : 'Correct invalid values above'}
                     </Text>
                   )}
                 </View>

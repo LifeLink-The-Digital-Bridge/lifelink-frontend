@@ -6,8 +6,10 @@ import { createUnifiedStyles } from '../../constants/styles/unifiedStyles';
 import { createDonorStyles } from '../../constants/styles/donorStyles';
 import { Feather } from '@expo/vector-icons';
 import { CustomDatePicker } from '../common/DatePicker';
+import { validateWeight, validateHeight, validateAge } from '../../utils/medicalValidation';
 
 interface EligibilityCriteriaProps {
+  fieldRefs?: React.MutableRefObject<{ [key: string]: View | null }>;
   age: string;
   setAge: (value: string) => void;
   weight: string;
@@ -29,17 +31,16 @@ interface EligibilityCriteriaProps {
 }
 
 export function EligibilityCriteria(props: EligibilityCriteriaProps) {
+  const { fieldRefs } = props;
   const { colorScheme } = useTheme();
   const isDark = colorScheme === 'dark';
   const theme = isDark ? darkTheme : lightTheme;
   const styles = createUnifiedStyles(theme);
   const donorStyles = createDonorStyles(theme);
 
-  const [touched, setTouched] = useState({
-    age: false,
-    weight: false,
-    height: false,
-  });
+  const ageValidation = validateAge(props.age);
+  const weightValidation = validateWeight(props.weight);
+  const heightValidation = validateHeight(props.height);
 
   const requiredFieldsCount = 3;
   const filledFieldsCount = [props.age, props.weight, props.height].filter(field => field && field.trim() !== '').length;
@@ -53,10 +54,10 @@ export function EligibilityCriteria(props: EligibilityCriteriaProps) {
     <View style={styles.sectionContainer}>
       <View style={styles.sectionHeader}>
         <View style={styles.sectionIconContainer}>
-          <Feather 
-            name="check-circle" 
-            size={18} 
-            color={isSectionComplete ? theme.success : theme.primary} 
+          <Feather
+            name="check-circle"
+            size={18}
+            color={isSectionComplete ? theme.success : theme.primary}
           />
         </View>
         <Text style={styles.sectionTitle}>Eligibility Criteria</Text>
@@ -79,31 +80,30 @@ export function EligibilityCriteria(props: EligibilityCriteriaProps) {
         )}
       </View>
 
-      <View style={styles.inputContainer}>
+      <View style={styles.inputContainer} ref={(ref) => { if (fieldRefs && ref) fieldRefs.current['age'] = ref; }}>
         <Text style={styles.label}>
           Age <Text style={{ color: theme.error }}>*</Text>
         </Text>
         <TextInput
           style={[
             styles.input,
-            !props.age && touched.age && { borderColor: theme.error, borderWidth: 2 }
+            props.age && !ageValidation.isValid && { borderColor: theme.error, borderWidth: 2 }
           ]}
           placeholder="45"
           placeholderTextColor={theme.textSecondary}
           value={props.age}
           onChangeText={props.setAge}
-          onBlur={() => setTouched({ ...touched, age: true })}
           keyboardType="numeric"
         />
-        {!props.age && touched.age && (
+        {props.age && !ageValidation.isValid && (
           <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
             <Feather name="alert-circle" size={12} color={theme.error} />
             <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
-              Age is required
+              {ageValidation.message}
             </Text>
           </View>
         )}
-        {props.age && (
+        {props.age && ageValidation.isValid && (
           <Text style={[
             donorStyles.eligibilityText,
             ageEligible ? donorStyles.eligibleText : donorStyles.ineligibleText
@@ -113,31 +113,30 @@ export function EligibilityCriteria(props: EligibilityCriteriaProps) {
         )}
       </View>
 
-      <View style={styles.inputContainer}>
+      <View style={styles.inputContainer} ref={(ref) => { if (fieldRefs && ref) fieldRefs.current['weight'] = ref; }}>
         <Text style={styles.label}>
           Weight (kg) <Text style={{ color: theme.error }}>*</Text>
         </Text>
         <TextInput
           style={[
             styles.input,
-            !props.weight && touched.weight && { borderColor: theme.error, borderWidth: 2 }
+            props.weight && !weightValidation.isValid && { borderColor: theme.error, borderWidth: 2 }
           ]}
           placeholder="75.5"
           placeholderTextColor={theme.textSecondary}
           value={props.weight}
           onChangeText={props.setWeight}
-          onBlur={() => setTouched({ ...touched, weight: true })}
           keyboardType="numeric"
         />
-        {!props.weight && touched.weight && (
+        {props.weight && !weightValidation.isValid && (
           <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
             <Feather name="alert-circle" size={12} color={theme.error} />
             <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
-              Weight is required
+              {weightValidation.message}
             </Text>
           </View>
         )}
-        {props.weight && (
+        {props.weight && weightValidation.isValid && (
           <Text style={[
             donorStyles.eligibilityText,
             props.weightEligible ? donorStyles.eligibleText : donorStyles.ineligibleText
@@ -147,27 +146,26 @@ export function EligibilityCriteria(props: EligibilityCriteriaProps) {
         )}
       </View>
 
-      <View style={styles.inputContainer}>
+      <View style={styles.inputContainer} ref={(ref) => { if (fieldRefs && ref) fieldRefs.current['height'] = ref; }}>
         <Text style={styles.label}>
           Height (cm) <Text style={{ color: theme.error }}>*</Text>
         </Text>
         <TextInput
           style={[
             styles.input,
-            !props.height && touched.height && { borderColor: theme.error, borderWidth: 2 }
+            props.height && !heightValidation.isValid && { borderColor: theme.error, borderWidth: 2 }
           ]}
           placeholder="175"
           placeholderTextColor={theme.textSecondary}
           value={props.height}
           onChangeText={props.setHeight}
-          onBlur={() => setTouched({ ...touched, height: true })}
           keyboardType="numeric"
         />
-        {!props.height && touched.height && (
+        {props.height && !heightValidation.isValid && (
           <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
             <Feather name="alert-circle" size={12} color={theme.error} />
             <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
-              Height is required
+              {heightValidation.message}
             </Text>
           </View>
         )}

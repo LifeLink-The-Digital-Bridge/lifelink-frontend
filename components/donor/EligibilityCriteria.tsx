@@ -6,8 +6,10 @@ import { createUnifiedStyles } from '../../constants/styles/unifiedStyles';
 import { createDonorStyles } from '../../constants/styles/donorStyles';
 import { Feather } from '@expo/vector-icons';
 import { CustomDatePicker } from '../common/DatePicker';
+import { validateWeight, validateHeight } from '../../utils/medicalValidation';
 
 interface EligibilityCriteriaProps {
+  fieldRefs?: React.MutableRefObject<{ [key: string]: View | null }>;
   dob: string;
   age: number | null;
   weight: string;
@@ -39,6 +41,7 @@ interface EligibilityCriteriaProps {
 }
 
 export function EligibilityCriteria({
+  fieldRefs,
   dob,
   age,
   weight,
@@ -74,10 +77,8 @@ export function EligibilityCriteria({
   const styles = createUnifiedStyles(theme);
   const donorStyles = createDonorStyles(theme);
 
-  const [touched, setTouched] = useState({
-    weight: false,
-    height: false,
-  });
+  const weightValidation = validateWeight(weight);
+  const heightValidation = validateHeight(height);
 
   const requiredFieldsCount = 2;
   const filledFieldsCount = [weight, height].filter(field => field && field.trim() !== '').length;
@@ -136,31 +137,30 @@ export function EligibilityCriteria({
         </Text>
       )}
 
-      <View style={styles.inputContainer}>
+      <View style={styles.inputContainer} ref={(ref) => { if (fieldRefs && ref) fieldRefs.current['weight'] = ref; }}>
         <Text style={styles.label}>
           Weight (kg) <Text style={{ color: theme.error }}>*</Text>
         </Text>
         <TextInput
           style={[
             styles.input,
-            !weight && touched.weight && { borderColor: theme.error, borderWidth: 2 }
+            weight && !weightValidation.isValid && { borderColor: theme.error, borderWidth: 2 }
           ]}
           placeholder="Enter weight in kg"
           placeholderTextColor={theme.textSecondary}
           keyboardType="numeric"
           value={weight}
           onChangeText={setWeight}
-          onBlur={() => setTouched({ ...touched, weight: true })}
         />
-        {!weight && touched.weight && (
+        {weight && !weightValidation.isValid && (
           <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
             <Feather name="alert-circle" size={12} color={theme.error} />
             <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
-              Weight is required
+              {weightValidation.message}
             </Text>
           </View>
         )}
-        {weight && (
+        {weight && weightValidation.isValid && (
           <Text style={[
             donorStyles.eligibilityText,
             weightEligible ? donorStyles.eligibleText : donorStyles.ineligibleText
@@ -170,27 +170,26 @@ export function EligibilityCriteria({
         )}
       </View>
 
-      <View style={styles.inputContainer}>
+      <View style={styles.inputContainer} ref={(ref) => { if (fieldRefs && ref) fieldRefs.current['height'] = ref; }}>
         <Text style={styles.label}>
           Height (cm) <Text style={{ color: theme.error }}>*</Text>
         </Text>
         <TextInput
           style={[
             styles.input,
-            !height && touched.height && { borderColor: theme.error, borderWidth: 2 }
+            height && !heightValidation.isValid && { borderColor: theme.error, borderWidth: 2 }
           ]}
           placeholder="Enter height in cm"
           placeholderTextColor={theme.textSecondary}
           keyboardType="numeric"
           value={height}
           onChangeText={setHeight}
-          onBlur={() => setTouched({ ...touched, height: true })}
         />
-        {!height && touched.height && (
+        {height && !heightValidation.isValid && (
           <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
             <Feather name="alert-circle" size={12} color={theme.error} />
             <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
-              Height is required
+              {heightValidation.message}
             </Text>
           </View>
         )}

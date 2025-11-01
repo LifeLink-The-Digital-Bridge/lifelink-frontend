@@ -7,6 +7,7 @@ import { createUnifiedStyles } from '../../constants/styles/unifiedStyles';
 import { CustomDatePicker } from '../common/DatePicker';
 
 interface HlaProfileProps {
+  fieldRefs?: React.MutableRefObject<{ [key: string]: View | null }>;
   hlaA1: string;
   setHlaA1: (value: string) => void;
   hlaA2: string;
@@ -42,6 +43,7 @@ interface HlaProfileProps {
 }
 
 export function HlaProfile({
+  fieldRefs,
   hlaA1, setHlaA1, hlaA2, setHlaA2,
   hlaB1, setHlaB1, hlaB2, setHlaB2,
   hlaC1, setHlaC1, hlaC2, setHlaC2,
@@ -92,10 +94,10 @@ export function HlaProfile({
     <View style={styles.sectionContainer}>
       <View style={styles.sectionHeader}>
         <View style={styles.sectionIconContainer}>
-          <Feather 
-            name={isSectionComplete ? (hasAnyHlaData ? "check-circle" : "shield") : "shield"} 
-            size={18} 
-            color={isSectionComplete ? (hasAnyHlaData ? theme.success : theme.primary) : theme.primary} 
+          <Feather
+            name={isSectionComplete ? (hasAnyHlaData ? "check-circle" : "shield") : "shield"}
+            size={18}
+            color={isSectionComplete ? (hasAnyHlaData ? theme.success : theme.primary) : theme.primary}
           />
         </View>
         <Text style={styles.sectionTitle}>HLA Profile</Text>
@@ -180,7 +182,7 @@ export function HlaProfile({
           HLA-A Alleles {shouldShowRequired && <Text style={{ color: theme.error }}>*</Text>}
         </Text>
         <View style={styles.row}>
-          <View style={{ flex: 1, marginRight: 12 }}>
+          <View style={{ flex: 1, marginRight: 12 }} ref={(ref) => { if (fieldRefs && ref) fieldRefs.current['hlaA1'] = ref; }}>
             <TextInput
               style={[
                 styles.input,

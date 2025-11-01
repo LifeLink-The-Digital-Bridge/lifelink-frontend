@@ -115,11 +115,11 @@ const RecipientHubScreen = () => {
   }, [loadRecipientData]);
 
   const handleUpdatePress = () => {
-    router.push("/navigation/RecipientScreen");
+    router.push("/navigation/recipientscreens/RecipientScreen");
   };
 
   const handleCreateRequestPress = () => {
-    router.push("/navigation/RecipientRequestScreen");
+    router.push("/navigation/recipientscreens/RecipientRequestScreen");
   };
 
   const handleScroll = (event: any) => {

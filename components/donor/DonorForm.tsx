@@ -8,8 +8,10 @@ import { EligibilityCriteria } from './EligibilityCriteria';
 import { ConsentForm } from './ConsentForm';
 import { LocationDetails } from './LocationDetails';
 import { HlaProfile } from "./HlaProfile";
+import { View } from 'react-native';
 
 export interface DonorFormProps {
+  fieldRefs?: React.MutableRefObject<{ [key: string]: View | null }>;
   hlaA1: string;
   setHlaA1: (value: string) => void;
   hlaA2: string;
@@ -147,6 +149,7 @@ export const DonorForm: React.FC<DonorFormProps> = (props) => {
   return (
     <>
       <MedicalDetails
+        fieldRefs={props.fieldRefs}
         hemoglobinLevel={props.hemoglobinLevel}
         setHemoglobinLevel={props.setHemoglobinLevel}
         bloodPressure={props.bloodPressure}
@@ -185,6 +188,7 @@ export const DonorForm: React.FC<DonorFormProps> = (props) => {
       />
 
       <EligibilityCriteria
+        fieldRefs={props.fieldRefs}
         dob={props.dob}
         age={props.age}
         weight={props.weight}
@@ -241,6 +245,7 @@ export const DonorForm: React.FC<DonorFormProps> = (props) => {
       />
 
       <HlaProfile
+        fieldRefs={props.fieldRefs}
         hlaA1={props.hlaA1}
         setHlaA1={props.setHlaA1}
         hlaA2={props.hlaA2}

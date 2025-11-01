@@ -1,5 +1,5 @@
 import React from "react";
-import { ScrollView } from "react-native";
+import { ScrollView, View } from "react-native";
 import { useTheme } from "../../utils/theme-context";
 import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
 import { createUnifiedStyles } from "../../constants/styles/unifiedStyles";
@@ -11,6 +11,7 @@ import { HlaProfile } from "./HlaProfile";
 import { ConsentForm } from "./ConsentForm";
 
 export interface RecipientFormProps {
+  fieldRefs?: React.MutableRefObject<{ [key: string]: View | null }>;
   hemoglobinLevel: string;
   setHemoglobinLevel: (value: string) => void;
   bloodPressure: string;
@@ -134,6 +135,7 @@ export const RecipientForm: React.FC<RecipientFormProps> = (props) => {
   return (
     <>
       <MedicalDetails
+        fieldRefs={props.fieldRefs}
         hemoglobinLevel={props.hemoglobinLevel}
         setHemoglobinLevel={props.setHemoglobinLevel}
         bloodPressure={props.bloodPressure}
@@ -167,6 +169,7 @@ export const RecipientForm: React.FC<RecipientFormProps> = (props) => {
       />
 
       <EligibilityCriteria
+        fieldRefs={props.fieldRefs}
         age={props.age}
         setAge={props.setAge}
         weight={props.weight}
@@ -212,6 +215,7 @@ export const RecipientForm: React.FC<RecipientFormProps> = (props) => {
       />
 
       <HlaProfile
+        fieldRefs={props.fieldRefs}
         hlaA1={props.hlaA1}
         setHlaA1={props.setHlaA1}
         hlaA2={props.hlaA2}

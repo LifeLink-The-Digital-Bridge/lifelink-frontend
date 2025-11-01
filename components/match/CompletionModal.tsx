@@ -126,8 +126,8 @@ export const CompletionModal: React.FC<CompletionModalProps> = ({
             placeholder="1-5"
             placeholderTextColor={theme.textSecondary}
             keyboardType="number-pad"
-            value={data.recipientRating?.toString() || "5"}
-            onChangeText={(text) => onDataChange({ ...data, recipientRating: parseInt(text) || 5 })}
+            value={data.rating?.toString() || "5"}
+            onChangeText={(text) => onDataChange({ ...data, rating: parseInt(text) || 5 })}
           />
 
           <Text style={{ fontSize: wp("3.5%"), color: theme.text, marginBottom: hp("1%") }}>
@@ -148,8 +148,8 @@ export const CompletionModal: React.FC<CompletionModalProps> = ({
             }}
             placeholder="Completion notes (min 10 characters) *"
             placeholderTextColor={theme.textSecondary}
-            value={data.completionNotes || ""}
-            onChangeText={(text) => onDataChange({ ...data, completionNotes: text })}
+            value={data.notes || ""}
+            onChangeText={(text) => onDataChange({ ...data, notes: text })}
             multiline
             maxLength={500}
           />

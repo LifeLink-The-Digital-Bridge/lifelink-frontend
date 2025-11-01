@@ -1,4 +1,4 @@
-import ProfileScreen from "../navigation/profileScreen";
+import ProfileScreen from "../navigation/profilescreens/profileScreen";
 import React from "react";
 import AppLayout from "../../components/AppLayout";
 

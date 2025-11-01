@@ -14,33 +14,33 @@ import {
 } from "react-native";
 import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { Feather } from "@expo/vector-icons";
-import { TopBar } from "../../components/common/TopBar";
-import { ProfileHeader } from "../../components/profile/ProfileHeader";
-import { ProfileTabs } from "../../components/profile/ProfileTabs";
-import { ProfileContent } from "../../components/profile/ProfileContent";
-import { ProfileActions } from "../../components/profile/ProfileActions";
-import { ThemeModal } from "../../components/profile/ThemeModal";
-import { SidebarMenu } from "../../components/dashboard/SidebarMenu";
-import { useProfile } from "../../hooks/useProfile";
-import { useAuth } from "../../utils/auth-context";
-import { useTheme } from "../../utils/theme-context";
-import { useTabBar } from "../../utils/tabbar-context";
-import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
-import { createProfileStyles } from "../../constants/styles/profileStyles";
+import { TopBar } from "../../../components/common/TopBar";
+import { ProfileHeader } from "../../../components/profile/ProfileHeader";
+import { ProfileTabs } from "../../../components/profile/ProfileTabs";
+import { ProfileContent } from "../../../components/profile/ProfileContent";
+import { ProfileActions } from "../../../components/profile/ProfileActions";
+import { ThemeModal } from "../../../components/profile/ThemeModal";
+import { SidebarMenu } from "../../../components/dashboard/SidebarMenu";
+import { useProfile } from "../../../hooks/useProfile";
+import { useAuth } from "../../../utils/auth-context";
+import { useTheme } from "../../../utils/theme-context";
+import { useTabBar } from "../../../utils/tabbar-context";
+import { lightTheme, darkTheme } from "../../../constants/styles/authStyles";
+import { createProfileStyles } from "../../../constants/styles/profileStyles";
 import * as SecureStore from "expo-secure-store";
-import { getMyDonations, fetchDonationsByUserId } from "../api/donationApi";
+import { getMyDonations, fetchDonationsByUserId } from "../../api/donationApi";
 import {
   getFollowersCount,
   getFollowingCount,
   getUserProfile,
   UserProfile,
-} from "../api/userApi";
+} from "../../api/userApi";
 import {
   getMyRequests,
   fetchRequestsByUserId,
   ReceiveRequestDTO,
-} from "../api/requestApi";
-import ScrollableHeaderLayout from "../../components/common/ScrollableHeaderLayout";
+} from "../../api/requestApi";
+import ScrollableHeaderLayout from "../../../components/common/ScrollableHeaderLayout";
 
 const mockReviews = [
   { id: 1, text: "Great donor, very helpful!", date: "2024-06-02" },

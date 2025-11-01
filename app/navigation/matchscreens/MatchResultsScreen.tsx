@@ -12,16 +12,16 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import AppLayout from "../../components/AppLayout";
-import { ValidationAlert } from "../../components/common/ValidationAlert";
-import { darkTheme, lightTheme } from "../../constants/styles/authStyles";
-import { createUnifiedStyles } from "../../constants/styles/unifiedStyles";
-import { useTheme } from "../../utils/theme-context";
+import AppLayout from "../../../components/AppLayout";
+import { ValidationAlert } from "../../../components/common/ValidationAlert";
+import { darkTheme, lightTheme } from "../../../constants/styles/authStyles";
+import { createUnifiedStyles } from "../../../constants/styles/unifiedStyles";
+import { useTheme } from "../../../utils/theme-context";
 import {
   getMyMatchesAsDonor,
   getMyMatchesAsRecipient,
-} from "../api/matchingApi";
-import { getStatusColor, formatStatusDisplay } from "../../utils/statusHelpers";
+} from "../../api/matchingApi";
+import { getStatusColor, formatStatusDisplay } from "../../../utils/statusHelpers";
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
 
 const HEADER_HEIGHT = 135;
@@ -187,7 +187,7 @@ const MatchResultsScreen = () => {
 
   const handleMatchPress = (match: MatchResult) => {
     router.push({
-      pathname: "/navigation/MatchDetailsScreen",
+      pathname: "/navigation/matchscreens/MatchDetailsScreen",
       params: { matchData: JSON.stringify(match) },
     });
   };

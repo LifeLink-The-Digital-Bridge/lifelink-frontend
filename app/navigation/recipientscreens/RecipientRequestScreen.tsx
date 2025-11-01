@@ -10,10 +10,10 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
-import { useAuth } from "../../utils/auth-context";
-import { useTheme } from "../../utils/theme-context";
-import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
-import { createUnifiedStyles } from "../../constants/styles/unifiedStyles";
+import { useAuth } from "../../../utils/auth-context";
+import { useTheme } from "../../../utils/theme-context";
+import { lightTheme, darkTheme } from "../../../constants/styles/authStyles";
+import { createUnifiedStyles } from "../../../constants/styles/unifiedStyles";
 import {
   createReceiveRequest,
   RequestType,
@@ -22,14 +22,14 @@ import {
   TissueType,
   StemCellType,
   UrgencyLevel,
-} from "../api/requestApi";
-import AppLayout from "../../components/AppLayout";
-import { ValidationAlert } from "../../components/common/ValidationAlert";
-import { RequestTypeSelector } from "../../components/request/RequestTypeSelector";
-import { RequestDetailsForm } from "../../components/request/RequestDetailsForm";
+} from "../../api/requestApi";
+import AppLayout from "../../../components/AppLayout";
+import { ValidationAlert } from "../../../components/common/ValidationAlert";
+import { RequestTypeSelector } from "../../../components/request/RequestTypeSelector";
+import { RequestDetailsForm } from "../../../components/request/RequestDetailsForm";
 import { LocationSelector } from "@/components/request/LocationSelector";
 import { StatusHeader } from "@/components/common/StatusHeader";
-import { getRecipientByUserId } from "../api/recipientApi";
+import { getRecipientByUserId } from "../../api/recipientApi";
 
 const HEADER_HEIGHT = 120;
 
@@ -144,7 +144,7 @@ const RecipientRequestScreen = () => {
             "You must register as a recipient before making a request.",
             "warning"
           );
-          router.replace("/navigation/RecipientScreen");
+          router.replace("/navigation/recipientscreens/RecipientRequestScreen");
           return;
         }
 

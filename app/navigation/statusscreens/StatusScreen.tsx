@@ -9,39 +9,39 @@ import {
   RefreshControl,
 } from "react-native";
 import * as SecureStore from "expo-secure-store";
-import { useAuth } from "../../utils/auth-context";
+import { useAuth } from "../../../utils/auth-context";
 import { router } from "expo-router";
-import { createUnifiedStyles } from "../../constants/styles/unifiedStyles";
-import { createStatusStyles } from "../../constants/styles/statusStyles";
-import { useTheme } from "../../utils/theme-context";
-import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
-import Applayout from "../../components/AppLayout";
-import { ValidationAlert } from "../../components/common/ValidationAlert";
+import { createUnifiedStyles } from "../../../constants/styles/unifiedStyles";
+import { createStatusStyles } from "../../../constants/styles/statusStyles";
+import { useTheme } from "../../../utils/theme-context";
+import { lightTheme, darkTheme } from "../../../constants/styles/authStyles";
+import Applayout from "../../../components/AppLayout";
+import { ValidationAlert } from "../../../components/common/ValidationAlert";
 import { Feather } from "@expo/vector-icons";
 import {
   getMyMatchesAsDonor,
   getMyMatchesAsRecipient,
   MatchResponse,
-} from "../api/matchingApi";
+} from "../../api/matchingApi";
 import {
   getMyDonations,
   canCancelDonation,
   cancelDonation,
   CancellationRequestDTO as DonationCancellationDTO,
-} from "../api/donationApi";
+} from "../../api/donationApi";
 import {
   getMyRequests,
   canCancelRequest,
   cancelRequest,
   CancellationRequestDTO as RequestCancellationDTO,
   ReceiveRequestDTO,
-} from "../api/requestApi";
+} from "../../api/requestApi";
 import { StatusHeader } from "@/components/common/StatusHeader";
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
-import { DonationCard } from "../../components/status/DonationCard";
-import { RequestCard } from "../../components/status/RequestCard";
-import { CancellationModal } from "../../components/status/CancellationModal";
-import { EmptyState } from "../../components/status/EmptyState";
+import { DonationCard } from "../../../components/status/DonationCard";
+import { RequestCard } from "../../../components/status/RequestCard";
+import { CancellationModal } from "../../../components/status/CancellationModal";
+import { EmptyState } from "../../../components/status/EmptyState";
 
 const HEADER_HEIGHT = 135;
 
@@ -269,14 +269,14 @@ const StatusScreen = () => {
   };
 
   const handleViewMatches = () => {
-    router.push("/navigation/MatchResultsScreen");
+    router.push("/navigation/matchscreens/MatchResultsScreen");
   };
 
   const handleDonationPress = (donation: DonationDTO) => {
     const match = getMatchForDonation(donation.id);
     if (match) {
       router.push({
-        pathname: "/navigation/MatchDetailsScreen",
+        pathname: "/navigation/matchscreens/MatchDetailsScreen",
         params: { matchData: JSON.stringify(match) },
       });
     }
@@ -286,7 +286,7 @@ const StatusScreen = () => {
     const match = getMatchForRequest(request.id);
     if (match) {
       router.push({
-        pathname: "/navigation/MatchDetailsScreen",
+        pathname: "/navigation/matchscreens/MatchDetailsScreen",
         params: { matchData: JSON.stringify(match) },
       });
     }

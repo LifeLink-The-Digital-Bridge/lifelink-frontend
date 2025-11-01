@@ -1,38 +1,38 @@
-import React, { useEffect, useState, useRef } from "react";
-import { useRouter } from "expo-router";
-import { useAuth } from "../../utils/auth-context";
-import {
-  Text,
-  View,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-  TextInput,
-  Animated,
-} from "react-native";
-import { Feather } from "@expo/vector-icons";
-import * as SecureStore from "expo-secure-store";
-import { useTheme } from "../../utils/theme-context";
-import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
-import { createUnifiedStyles } from "../../constants/styles/unifiedStyles";
-import {
-  registerDonation,
-  DonationType,
-  BloodType,
-  OrganType,
-  TissueType,
-  StemCellType,
-} from "../api/donationApi";
-import { ValidationAlert } from "../../components/common/ValidationAlert";
-import { DonationTypeSelector } from "../../components/donation/DonationTypeSelector";
-import { BloodTypeSelector } from "../../components/donation/BloodTypeSelector";
-import { OrganDetailsForm } from "../../components/donation/OrganDetailsForm";
-import { TissueDetailsForm } from "../../components/donation/TissueDetailsForm";
-import { StemCellDetailsForm } from "../../components/donation/StemCellDetailsForm";
 import AppLayout from "@/components/AppLayout";
-import { LocationSelector } from "@/components/donation/LocationSelector";
 import { StatusHeader } from "@/components/common/StatusHeader";
-import { fetchDonorByUserId } from "../api/donorApi";
+import { LocationSelector } from "@/components/donation/LocationSelector";
+import { Feather } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import * as SecureStore from "expo-secure-store";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Animated,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { ValidationAlert } from "../../../components/common/ValidationAlert";
+import { BloodTypeSelector } from "../../../components/donation/BloodTypeSelector";
+import { DonationTypeSelector } from "../../../components/donation/DonationTypeSelector";
+import { OrganDetailsForm } from "../../../components/donation/OrganDetailsForm";
+import { StemCellDetailsForm } from "../../../components/donation/StemCellDetailsForm";
+import { TissueDetailsForm } from "../../../components/donation/TissueDetailsForm";
+import { darkTheme, lightTheme } from "../../../constants/styles/authStyles";
+import { createUnifiedStyles } from "../../../constants/styles/unifiedStyles";
+import { useAuth } from "../../../utils/auth-context";
+import { useTheme } from "../../../utils/theme-context";
+import {
+  BloodType,
+  DonationType,
+  OrganType,
+  registerDonation,
+  StemCellType,
+  TissueType,
+} from "../../api/donationApi";
+import { fetchDonorByUserId } from "../../api/donorApi";
 
 const HEADER_HEIGHT = 180;
 

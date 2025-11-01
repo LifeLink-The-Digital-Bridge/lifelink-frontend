@@ -6,6 +6,7 @@ import { lightTheme, darkTheme } from '../../constants/styles/authStyles';
 import { createDonationStyles } from '../../constants/styles/donationStyles';
 import { CustomPicker } from '../common/CustomPicker';
 import { OrganType } from '../../app/api/donationApi';
+import { parseLocalDateTime } from '../../utils/dateTimeUtils';
 
 interface OrganDetailsFormProps {
   organType: OrganType | "";
@@ -59,6 +60,18 @@ export function OrganDetailsForm(props: OrganDetailsFormProps) {
   const theme = isDark ? darkTheme : lightTheme;
   const styles = createDonationStyles(theme);
 
+  const { date: expiryDate, time: expiryTime } = parseLocalDateTime(props.organViabilityExpiry);
+
+  const handleDateChange = (newDate: string) => {
+    const currentTime = expiryTime || '14:30';
+    props.setOrganViabilityExpiry(`${newDate}T${currentTime}:00`);
+  };
+
+  const handleTimeChange = (newTime: string) => {
+    const currentDate = expiryDate || new Date().toISOString().slice(0, 10);
+    props.setOrganViabilityExpiry(`${currentDate}T${newTime}:00`);
+  };
+
   return (
     <View style={styles.formSection}>
       <View style={styles.sectionHeader}>
@@ -109,13 +122,24 @@ export function OrganDetailsForm(props: OrganDetailsFormProps) {
       </View>
 
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>Viability Expiry (YYYY-MM-DD HH:MM)</Text>
+        <Text style={styles.label}>Viability Expiry Date</Text>
         <TextInput
           style={styles.input}
-          placeholder="2025-09-15 14:30"
+          placeholder="2025-10-31"
           placeholderTextColor={theme.textSecondary}
-          value={props.organViabilityExpiry}
-          onChangeText={props.setOrganViabilityExpiry}
+          value={expiryDate}
+          onChangeText={handleDateChange}
+        />
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Viability Expiry Time</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="09:30"
+          placeholderTextColor={theme.textSecondary}
+          value={expiryTime}
+          onChangeText={handleTimeChange}
         />
       </View>
 

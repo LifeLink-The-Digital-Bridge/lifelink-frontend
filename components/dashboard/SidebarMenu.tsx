@@ -11,7 +11,7 @@ interface MenuItem {
   icon: string;
   label: string;
   subtitle: string;
-  route: '/navigation/RaiseFund' | '/navigation/StatusScreen' | '/navigation/ManualMatchScreen' | '/navigation/MatchResultsScreen';
+  route: '/navigation/RaiseFund' | '/navigation/statusscreens/StatusScreen' | '/navigation/matchscreens/ManualMatchScreen' | '/navigation/matchscreens/MatchResultsScreen';
   badge?: string;
 }
 
@@ -171,7 +171,7 @@ export function SidebarMenu({ isVisible, onClose }: SidebarMenuProps) {
           icon: 'activity', 
           label: 'Activity',
           subtitle: 'View match results',
-          route: '/navigation/MatchResultsScreen'
+          route: '/navigation/matchscreens/MatchResultsScreen'
         },
       ]
     },
@@ -182,13 +182,13 @@ export function SidebarMenu({ isVisible, onClose }: SidebarMenuProps) {
           icon: 'clipboard', 
           label: 'My Status',
           subtitle: 'Track donations & requests',
-          route: '/navigation/StatusScreen'
+          route: '/navigation/statusscreens/StatusScreen'
         },
         { 
           icon: 'link', 
           label: 'Manual Match',
           subtitle: 'Connect manually',
-          route: '/navigation/ManualMatchScreen'
+          route: '/navigation/matchscreens/ManualMatchScreen'
         },
       ]
     }

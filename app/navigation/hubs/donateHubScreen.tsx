@@ -127,11 +127,11 @@ export default function DonateHubScreen() {
   }, [loadDonorData]);
 
   const handleUpdatePress = () => {
-    router.push("/navigation/donorScreen");
+    router.push("/navigation/donorscreens/donorScreen");
   };
 
   const handleContinuePress = () => {
-    router.push("/navigation/donateScreen");
+    router.push("/navigation/donorscreens/donateScreen");
   };
 
   const handleScroll = (event: any) => {

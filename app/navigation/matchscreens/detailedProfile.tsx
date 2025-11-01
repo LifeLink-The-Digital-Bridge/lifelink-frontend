@@ -9,11 +9,11 @@ import {
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Feather, FontAwesome } from "@expo/vector-icons";
-import { useTheme } from "../../utils/theme-context";
-import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
-import { createUnifiedStyles } from "../../constants/styles/unifiedStyles";
+import { useTheme } from "../../../utils/theme-context";
+import { lightTheme, darkTheme } from "../../../constants/styles/authStyles";
+import { createUnifiedStyles } from "../../../constants/styles/unifiedStyles";
 import AppLayout from "@/components/AppLayout";
-import { InfoRow } from "../../components/match/InfoRow";
+import { InfoRow } from "../../../components/match/InfoRow";
 import { StatusHeader } from "@/components/common/StatusHeader";
 
 const HEADER_HEIGHT = 120;

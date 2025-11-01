@@ -15,12 +15,12 @@ import {
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import * as SecureStore from "expo-secure-store";
-import { updateUserProfile, fetchUserProfile, UserDTO } from "../api/profile";
+import { updateUserProfile, fetchUserProfile, UserDTO } from "../../api/profile";
 import { Feather } from "@expo/vector-icons";
 import AppLayout from "@/components/AppLayout";
 import { Picker } from "@react-native-picker/picker";
-import { useTheme } from "../../utils/theme-context";
-import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
+import { useTheme } from "../../../utils/theme-context";
+import { lightTheme, darkTheme } from "../../../constants/styles/authStyles";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const BASE_WIDTH = 375;

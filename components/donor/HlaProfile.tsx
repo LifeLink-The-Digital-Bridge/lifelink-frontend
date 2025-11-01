@@ -5,8 +5,10 @@ import { useTheme } from '../../utils/theme-context';
 import { lightTheme, darkTheme } from '../../constants/styles/authStyles';
 import { createUnifiedStyles } from '../../constants/styles/unifiedStyles';
 import { CustomDatePicker } from '../common/DatePicker';
+import { validateHLA } from '../../utils/medicalValidation';
 
 interface HlaProfileProps {
+  fieldRefs?: React.MutableRefObject<{ [key: string]: View | null }>;
   hlaA1: string;
   setHlaA1: (value: string) => void;
   hlaA2: string;
@@ -42,6 +44,7 @@ interface HlaProfileProps {
 }
 
 export function HlaProfile({
+  fieldRefs,
   hlaA1, setHlaA1, hlaA2, setHlaA2,
   hlaB1, setHlaB1, hlaB2, setHlaB2,
   hlaC1, setHlaC1, hlaC2, setHlaC2,
@@ -58,13 +61,33 @@ export function HlaProfile({
   const theme = isDark ? darkTheme : lightTheme;
   const styles = createUnifiedStyles(theme);
 
-  const [touched, setTouched] = useState({
-    hlaA1: false, hlaA2: false,
-    hlaB1: false, hlaB2: false,
-    hlaC1: false, hlaC2: false,
-    hlaDR1: false, hlaDR2: false,
-    hlaDQ1: false, hlaDQ2: false,
-    hlaDP1: false, hlaDP2: false,
+  const hlaValidations = {
+    hlaA1: validateHLA(hlaA1),
+    hlaA2: validateHLA(hlaA2),
+    hlaB1: validateHLA(hlaB1),
+    hlaB2: validateHLA(hlaB2),
+    hlaC1: validateHLA(hlaC1),
+    hlaC2: validateHLA(hlaC2),
+    hlaDR1: validateHLA(hlaDR1),
+    hlaDR2: validateHLA(hlaDR2),
+    hlaDQ1: validateHLA(hlaDQ1),
+    hlaDQ2: validateHLA(hlaDQ2),
+    hlaDP1: validateHLA(hlaDP1),
+    hlaDP2: validateHLA(hlaDP2),
+  };
+
+  const [touched, setTouched] = useState<{ [key: string]: boolean }>({
+    hlaA2: false,
+    hlaB1: false,
+    hlaB2: false,
+    hlaC1: false,
+    hlaC2: false,
+    hlaDR1: false,
+    hlaDR2: false,
+    hlaDQ1: false,
+    hlaDQ2: false,
+    hlaDP1: false,
+    hlaDP2: false,
     testingDate: false,
     testingMethod: false,
     laboratoryName: false,
@@ -180,23 +203,22 @@ export function HlaProfile({
           HLA-A Alleles {shouldShowRequired && <Text style={{ color: theme.error }}>*</Text>}
         </Text>
         <View style={styles.row}>
-          <View style={{ flex: 1, marginRight: 12 }}>
+          <View style={{ flex: 1, marginRight: 12 }} ref={(ref) => { if (fieldRefs && ref) fieldRefs.current['hlaA1'] = ref; }}>
             <TextInput
               style={[
                 styles.input,
-                shouldShowRequired && !hlaA1 && touched.hlaA1 && { borderColor: theme.error, borderWidth: 2 }
+                hlaA1 && !hlaValidations.hlaA1.isValid && { borderColor: theme.error, borderWidth: 2 }
               ]}
               placeholder="A*02:01"
               placeholderTextColor={theme.textSecondary}
               value={hlaA1}
               onChangeText={setHlaA1}
-              onBlur={() => setTouched({ ...touched, hlaA1: true })}
             />
-            {shouldShowRequired && !hlaA1 && touched.hlaA1 && (
+            {hlaA1 && !hlaValidations.hlaA1.isValid && (
               <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
                 <Feather name="alert-circle" size={12} color={theme.error} />
                 <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
-                  HLA-A1 is required
+                  {hlaValidations.hlaA1.message}
                 </Text>
               </View>
             )}

@@ -2,12 +2,12 @@ import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import AppLayout from '../../components/AppLayout';
-import { ValidationAlert } from '../../components/common/ValidationAlert';
-import { darkTheme, lightTheme } from '../../constants/styles/authStyles';
-import { createUnifiedStyles } from '../../constants/styles/unifiedStyles';
-import { useTheme } from '../../utils/theme-context';
-import { manualMatch, ManualMatchRequest } from '../api/matchingApi';
+import AppLayout from '../../../components/AppLayout';
+import { ValidationAlert } from '../../../components/common/ValidationAlert';
+import { darkTheme, lightTheme } from '../../../constants/styles/authStyles';
+import { createUnifiedStyles } from '../../../constants/styles/unifiedStyles';
+import { useTheme } from '../../../utils/theme-context';
+import { manualMatch, ManualMatchRequest } from '../../api/matchingApi';
 
 const ManualMatchScreen = () => {
   const { colorScheme } = useTheme();
@@ -169,7 +169,7 @@ const ManualMatchScreen = () => {
             <View style={{ flexDirection: 'row', gap: 12 }}>
               <TouchableOpacity
                 style={[styles.submitButton, { flex: 1, backgroundColor: theme.success }]}
-                onPress={() => router.push('/navigation/MatchResultsScreen')}
+                onPress={() => router.push('/navigation/matchscreens/MatchResultsScreen')}
                 activeOpacity={0.8}
               >
                 <Text style={styles.submitButtonText}>View Results</Text>

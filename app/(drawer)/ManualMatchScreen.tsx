@@ -1,3 +1,3 @@
-import ManualMatchScreen from '../navigation/ManualMatchScreen';
+import ManualMatchScreen from '../navigation/matchscreens/ManualMatchScreen';
 
 export default ManualMatchScreen;

@@ -10,9 +10,9 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Feather, FontAwesome } from '@expo/vector-icons';
-import { useTheme } from '../../utils/theme-context';
-import { lightTheme, darkTheme } from '../../constants/styles/authStyles';
-import { getFollowers, getFollowing, UserProfile } from '../api/userApi';
+import { useTheme } from '../../../utils/theme-context';
+import { lightTheme, darkTheme } from '../../../constants/styles/authStyles';
+import { getFollowers, getFollowing, UserProfile } from '../../api/userApi';
 import AppLayout from '@/components/AppLayout';
 import {
   widthPercentageToDP as wp,
@@ -53,7 +53,7 @@ const FollowListScreen = () => {
   };
 
   const handleUserPress = (username: string) => {
-    router.push(`/navigation/profileScreen?username=${username}`);
+    router.push(`/navigation/profilescreens/profileScreen?username=${username}`);
   };
 
   const renderUserItem = ({ item }: { item: UserProfile }) => (

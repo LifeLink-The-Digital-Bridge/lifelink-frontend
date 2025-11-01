@@ -229,7 +229,7 @@ const MapScreen = () => {
     if (selectedLocation) {
       if (params.returnScreen === "donor") {
         router.push({
-          pathname: "/navigation/donorScreen",
+          pathname: "/navigation/donorscreens/donorScreen",
           params: {
             selectedLatitude: selectedLocation.latitude.toString(),
             selectedLongitude: selectedLocation.longitude.toString(),
@@ -238,7 +238,7 @@ const MapScreen = () => {
         });
       } else if (params.returnScreen === "recipient") {
         router.push({
-          pathname: "/navigation/RecipientScreen",
+          pathname: "/navigation/recipientscreens/RecipientScreen",
           params: {
             selectedLatitude: selectedLocation.latitude.toString(),
             selectedLongitude: selectedLocation.longitude.toString(),

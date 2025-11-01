@@ -12,12 +12,12 @@ import {
   Alert,
 } from "react-native";
 import * as Clipboard from "expo-clipboard";
-import { darkTheme, lightTheme } from "../../constants/styles/authStyles";
-import { createUnifiedStyles } from "../../constants/styles/unifiedStyles";
-import { useTheme } from "../../utils/theme-context";
-import { getStatusColor, formatStatusDisplay, getUrgencyConfig } from "../../utils/statusHelpers";
+import { darkTheme, lightTheme } from "../../../constants/styles/authStyles";
+import { createUnifiedStyles } from "../../../constants/styles/unifiedStyles";
+import { useTheme } from "../../../utils/theme-context";
+import { getStatusColor, formatStatusDisplay, getUrgencyConfig } from "../../../utils/statusHelpers";
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
-import { InfoRow } from "../../components/match/InfoRow";
+import { InfoRow } from "../../../components/match/InfoRow";
 
 interface ReceiveRequestDTO {
   id: string;
