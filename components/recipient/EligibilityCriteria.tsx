@@ -188,14 +188,17 @@ export function EligibilityCriteria(props: EligibilityCriteriaProps) {
       )}
 
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>Body Size</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="SMALL/MEDIUM/LARGE"
-          placeholderTextColor={theme.textSecondary}
-          value={props.bodySize}
-          onChangeText={props.setBodySize}
-        />
+        <Text style={styles.label}>Body Size (Auto-calculated)</Text>
+        <View style={[styles.input, { backgroundColor: theme.inputBackground, justifyContent: 'center' }]}>
+          <Text style={{ color: props.bodySize ? theme.text : theme.textSecondary }}>
+            {props.bodySize || 'Enter height and weight'}
+          </Text>
+        </View>
+        {props.height && props.weight && props.bodyMassIndex && (
+          <Text style={donorStyles.helperText}>
+            Height: {props.height} cm | Weight: {props.weight} kg | BMI: {props.bodyMassIndex}
+          </Text>
+        )}
       </View>
 
       <View style={styles.switchRow}>
@@ -218,6 +221,15 @@ export function EligibilityCriteria(props: EligibilityCriteriaProps) {
         />
       </View>
 
+      {!props.medicallyEligible && (
+        <View style={donorStyles.warningContainer}>
+          <Text style={donorStyles.warningIcon}>⚠️</Text>
+          <Text style={donorStyles.warningText}>
+            Without medical clearance, your chances of matching are very less
+          </Text>
+        </View>
+      )}
+
       <View style={styles.switchRow}>
         <View style={{ flex: 1 }}>
           <Text style={styles.switchLabel}>Legal Clearance?</Text>
@@ -237,6 +249,15 @@ export function EligibilityCriteria(props: EligibilityCriteriaProps) {
           trackColor={{ false: theme.border, true: theme.primary + '50' }}
         />
       </View>
+
+      {!props.legalClearance && (
+        <View style={donorStyles.warningContainer}>
+          <Text style={donorStyles.warningIcon}>⚠️</Text>
+          <Text style={donorStyles.warningText}>
+            Without legal clearance, your chances of matching are very less
+          </Text>
+        </View>
+      )}
 
       <Text style={[
         donorStyles.eligibilityText,

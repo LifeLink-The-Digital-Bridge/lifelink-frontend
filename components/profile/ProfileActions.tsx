@@ -59,14 +59,14 @@ export const ProfileActions: React.FC<ProfileActionsProps> = ({
     <View style={styles.actionsContainer}>
       <TouchableOpacity
         style={[styles.actionButton, styles.secondaryButton]}
-        onPress={() => router.push("/navigation/editProfile")}
+        onPress={() => router.push("/navigation/profilescreens/editProfile")}
       >
         <Feather name="edit-2" size={16} color={theme.text} />
         <Text style={[styles.buttonText, styles.secondaryButtonText]}>Edit Profile</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.actionButton, styles.primaryButton]}
-        onPress={() => router.push("/navigation/StatusScreen")}
+        onPress={() => router.push("/navigation/statusscreens/StatusScreen")}
       >
         <Feather name="activity" size={16} color="#fff" />
         <Text style={[styles.buttonText, styles.primaryButtonText]}>My Status</Text>

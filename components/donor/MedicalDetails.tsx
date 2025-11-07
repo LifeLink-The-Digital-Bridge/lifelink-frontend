@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, TextInput, Switch } from 'react-native';
 import { useTheme } from '../../utils/theme-context';
 import { lightTheme, darkTheme } from '../../constants/styles/authStyles';
@@ -6,6 +6,7 @@ import { createUnifiedStyles } from '../../constants/styles/unifiedStyles';
 import { createDonorStyles } from '../../constants/styles/donorStyles';
 import { Feather } from '@expo/vector-icons';
 import { CustomDatePicker } from '../common/DatePicker';
+import { CustomPicker } from '../common/CustomPicker';
 import { getBloodPressureCategory, validateBloodPressure } from '../../utils/bloodPressureValidator';
 import { validateHemoglobin, validateBloodGlucose, validateCreatinine, validatePulmonaryFunction } from '../../utils/medicalValidation';
 
@@ -60,6 +61,13 @@ export function MedicalDetails(props: MedicalDetailsProps) {
   const glucoseValidation = validateBloodGlucose(props.bloodGlucoseLevel);
   const creatinineValidation = validateCreatinine(props.creatinineLevel);
   const pulmonaryValidation = validatePulmonaryFunction(props.pulmonaryFunction);
+
+const healthStatusOptions = [
+    { label: 'EXCELLENT', value: 'EXCELLENT' },
+    { label: 'GOOD', value: 'GOOD' },
+    { label: 'FAIR', value: 'FAIR' },
+    { label: 'POOR', value: 'POOR' }
+  ];
 
   const [touched, setTouched] = useState<{ [key: string]: boolean }>({
     lastMedicalCheckup: false,
@@ -455,33 +463,19 @@ export function MedicalDetails(props: MedicalDetailsProps) {
         )}
       </View>
 
-      <View style={styles.inputContainer}>
+
+      <View style={styles.inputContainer} ref={(ref) => { if (props.fieldRefs && ref) props.fieldRefs.current['overallHealthStatus'] = ref; }}>
         <Text style={styles.label}>
           Overall Health Status <Text style={{ color: theme.error }}>*</Text>
         </Text>
-        <TextInput
-          style={[
-            styles.input,
-            !props.overallHealthStatus && touched.overallHealthStatus && {
-              borderColor: theme.error,
-              borderWidth: 2
-            }
-          ]}
-          placeholder="Excellent/Good/Fair/Poor"
-          placeholderTextColor={theme.textSecondary}
-          value={props.overallHealthStatus}
-          onChangeText={props.setOverallHealthStatus}
-          onBlur={() => setTouched({ ...touched, overallHealthStatus: true })}
+        <CustomPicker
+          selectedValue={props.overallHealthStatus}
+          onValueChange={props.setOverallHealthStatus}
+          items={healthStatusOptions}
+          placeholder="Select Health Status"
         />
-        {!props.overallHealthStatus && touched.overallHealthStatus && (
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-            <Feather name="alert-circle" size={12} color={theme.error} />
-            <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
-              Overall health status is required
-            </Text>
-          </View>
-        )}
       </View>
+
     </View>
   );
 }

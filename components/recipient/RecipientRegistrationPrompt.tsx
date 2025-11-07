@@ -15,7 +15,7 @@ export function RecipientRegistrationPrompt() {
       ]}
       buttonText="Register as Recipient"
       buttonIcon="user-plus"
-      navigationRoute="/navigation/RecipientScreen"
+      navigationRoute="/navigation/recipientscreens/RecipientScreen"
     />
   );
 }

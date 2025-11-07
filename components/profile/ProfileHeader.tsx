@@ -37,7 +37,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   const handleFollowersPress = () => {
     if (profile?.id && profile?.username) {
       router.push(
-        `/navigation/FollowListScreen?userId=${profile.id}&type=followers&username=${profile.username}` as any
+        `/navigation/profilescreens/FollowListScreen?userId=${profile.id}&type=followers&username=${profile.username}` as any
       );
     }
   };
@@ -45,7 +45,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   const handleFollowingPress = () => {
     if (profile?.id && profile?.username) {
       router.push(
-        `/navigation/FollowListScreen?userId=${profile.id}&type=following&username=${profile.username}` as any
+        `/navigation/profilescreens/FollowListScreen?userId=${profile.id}&type=following&username=${profile.username}` as any
       );
     }
   };

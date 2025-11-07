@@ -15,7 +15,7 @@ export function DonorRegistrationPrompt() {
       ]}
       buttonText="Register as Donor"
       buttonIcon="heart"
-      navigationRoute="/navigation/donorScreen"
+      navigationRoute="/navigation/donorscreens/donorScreen"
     />
   );
 }

@@ -60,7 +60,7 @@ export function useDonorFormState() {
   const [bodySize, setBodySize] = useState<string>("MEDIUM");
   const [isLivingDonor, setIsLivingDonor] = useState<boolean>(true);
   const [weightEligible, setWeightEligible] = useState<boolean>(false);
-  const [medicalClearance, setMedicalClearance] = useState<boolean>(false);
+  const [medicalClearance, setMedicalClearance] = useState<boolean>(true);
   const [recentTattooOrPiercing, setRecentTattooOrPiercing] =
     useState<boolean>(false);
   const [recentTravelDetails, setRecentTravelDetails] =

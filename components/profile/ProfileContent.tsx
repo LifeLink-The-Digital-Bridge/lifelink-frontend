@@ -135,7 +135,7 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
               <TouchableOpacity
                 key={idx}
                 style={styles.card}
-                onPress={() => router.push("/navigation/StatusScreen")}
+                onPress={() => router.push("/navigation/statusscreens/StatusScreen")}
                 activeOpacity={0.7}
               >
                 <View style={styles.cardHeader}>
@@ -222,7 +222,7 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
             {isOwnProfile && (
               <TouchableOpacity
                 style={[styles.actionButton, styles.viewAllButton]}
-                onPress={() => router.push("/navigation/StatusScreen")}
+                onPress={() => router.push("/navigation/statusscreens/StatusScreen")}
               >
                 <Feather name="list" size={16} color={theme.primary} />
                 <Text style={[styles.buttonText, styles.viewAllButtonText]}>
@@ -315,7 +315,7 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
               <TouchableOpacity
                 key={idx}
                 style={styles.card}
-                onPress={() => router.push("/navigation/StatusScreen")}
+                onPress={() => router.push("/navigation/statusscreens/StatusScreen")}
                 activeOpacity={0.7}
               >
                 <View style={styles.cardHeader}>
@@ -398,7 +398,7 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
             {isOwnProfile && (
               <TouchableOpacity
                 style={[styles.actionButton, styles.viewAllButton]}
-                onPress={() => router.push("/navigation/StatusScreen")}
+                onPress={() => router.push("/navigation/statusscreens/StatusScreen")}
               >
                 <Feather name="list" size={16} color={theme.primary} />
                 <Text style={[styles.buttonText, styles.viewAllButtonText]}>

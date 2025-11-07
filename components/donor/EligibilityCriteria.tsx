@@ -212,14 +212,17 @@ export function EligibilityCriteria({
       )}
 
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>Body Size</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="SMALL/MEDIUM/LARGE"
-          placeholderTextColor={theme.textSecondary}
-          value={bodySize}
-          onChangeText={setBodySize}
-        />
+        <Text style={styles.label}>Body Size (Auto-calculated)</Text>
+        <View style={[styles.input, { backgroundColor: theme.inputBackground, justifyContent: 'center' }]}>
+          <Text style={{ color: bodySize ? theme.text : theme.textSecondary }}>
+            {bodySize || 'Enter height and weight'}
+          </Text>
+        </View>
+        {height && weight && bodyMassIndex && (
+          <Text style={donorStyles.helperText}>
+            Height: {height} cm | Weight: {weight} kg | BMI: {bodyMassIndex}
+          </Text>
+        )}
       </View>
 
       <View style={styles.switchRow}>
@@ -261,6 +264,15 @@ export function EligibilityCriteria({
           trackColor={{ false: theme.border, true: theme.primary + '50' }}
         />
       </View>
+
+      {!medicalClearance && (
+        <View style={donorStyles.warningContainer}>
+          <Text style={donorStyles.warningIcon}>⚠️</Text>
+          <Text style={donorStyles.warningText}>
+            Without medical clearance, your chances of matching are very less
+          </Text>
+        </View>
+      )}
 
       <View style={styles.switchRow}>
         <View style={{ flex: 1 }}>
