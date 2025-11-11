@@ -311,12 +311,13 @@ const MatchDetailsScreen = () => {
     if (!userId) return;
     setLoadingYourDetails(true);
     try {
-      const userRole = getUserRoleInMatch();
+      const isDonor = userId === matchData.donorUserId;
+      const isRecipient = userId === matchData.recipientUserId;
 
-      if (userRole === "donor") {
+      if (isDonor) {
         const donationDetails = await fetchDonationByIdWithAccess(matchData.donationId);
         setYourDetails({ type: "donation", data: donationDetails });
-      } else if (userRole === "recipient") {
+      } else if (isRecipient) {
         const requestDetails = await fetchRequestByIdWithAccess(matchData.receiveRequestId);
         setYourDetails({ type: "request", data: requestDetails });
       }
@@ -649,7 +650,6 @@ const MatchDetailsScreen = () => {
     return Date.now() < gracePeriodExpiry;
   };
 
-
   const canShowCompletionButton = (): boolean => {
     if (!match || !currentUserId) return false;
     return getUserRoleInMatch() === "recipient" &&
@@ -852,6 +852,7 @@ const MatchDetailsScreen = () => {
             loadingYourDetails={loadingYourDetails}
             userRole={userRole}
           />
+
 
           <MapSection
             allLocations={allLocations}

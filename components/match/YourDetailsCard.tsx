@@ -21,11 +21,6 @@ export const YourDetailsCard: React.FC<YourDetailsCardProps> = ({
   const theme = colorScheme === 'dark' ? darkTheme : lightTheme;
   const styles = createUnifiedStyles(theme);
 
-  const title = userRole === 'donor' 
-    ? 'Your Donation Details' 
-    : 'Your Request Details';
-  const icon = userRole === 'donor' ? 'droplet' : 'clipboard';
-
   if (loadingYourDetails) {
     return (
       <View style={styles.sectionContainer}>
@@ -49,11 +44,36 @@ export const YourDetailsCard: React.FC<YourDetailsCardProps> = ({
   }
 
   if (!yourDetails?.data) {
-    return null;
+    return (
+      <View style={styles.sectionContainer}>
+        <View style={styles.sectionHeader}>
+          <View style={styles.sectionIconContainer}>
+            <Feather
+              name={userRole === 'donor' ? 'heart' : 'clipboard'}
+              size={18}
+              color={theme.primary}
+            />
+          </View>
+          <Text style={styles.sectionTitle}>
+            Your {userRole === 'donor' ? 'Donation' : 'Request'} Details
+          </Text>
+        </View>
+        <View style={{ padding: 20, alignItems: 'center' }}>
+          <Text style={[styles.valueText, { marginTop: 8, color: theme.textSecondary }]}>
+            No details available
+          </Text>
+        </View>
+      </View>
+    );
   }
 
   const isDonation = yourDetails.type === 'donation';
   const data = yourDetails.data;
+
+  const formatEnumValue = (value: string | undefined | null): string => {
+    if (!value) return 'N/A';
+    return value.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
+  };
 
   return (
     <View style={styles.sectionContainer}>
@@ -74,23 +94,38 @@ export const YourDetailsCard: React.FC<YourDetailsCardProps> = ({
         <>
           <InfoRow
             label="Donation Type"
-            value={data.donationType || 'N/A'}
+            value={formatEnumValue(data.donationType)}
           />
-          <InfoRow label="Blood Type" value={data.bloodType || 'N/A'} />
+          <InfoRow 
+            label="Blood Type" 
+            value={formatEnumValue(data.bloodType)} 
+          />
           {data.organType && (
-            <InfoRow label="Organ Type" value={data.organType} />
+            <InfoRow 
+              label="Organ Type" 
+              value={formatEnumValue(data.organType)} 
+            />
           )}
           {data.tissueType && (
-            <InfoRow label="Tissue Type" value={data.tissueType} />
+            <InfoRow 
+              label="Tissue Type" 
+              value={formatEnumValue(data.tissueType)} 
+            />
           )}
           {data.stemCellType && (
-            <InfoRow label="Stem Cell Type" value={data.stemCellType} />
+            <InfoRow 
+              label="Stem Cell Type" 
+              value={formatEnumValue(data.stemCellType)} 
+            />
           )}
           <InfoRow
             label="Quantity"
             value={data.quantity ? `${data.quantity} units` : 'N/A'}
           />
-          <InfoRow label="Status" value={data.status || 'N/A'} />
+          <InfoRow 
+            label="Status" 
+            value={formatEnumValue(data.status)} 
+          />
           <InfoRow
             label="Donation Date"
             value={
@@ -118,7 +153,7 @@ export const YourDetailsCard: React.FC<YourDetailsCardProps> = ({
             <>
               <InfoRow
                 label="Location"
-                value={`${data.location.city || ''}, ${data.location.state || ''}`.trim()}
+                value={`${data.location.city || ''}, ${data.location.state || ''}`.trim() || 'N/A'}
               />
               <InfoRow
                 label="Address"
@@ -130,26 +165,35 @@ export const YourDetailsCard: React.FC<YourDetailsCardProps> = ({
         </>
       ) : (
         <>
-          <InfoRow label="Request Type" value={data.requestType || 'N/A'} />
+          <InfoRow 
+            label="Request Type" 
+            value={formatEnumValue(data.requestType)} 
+          />
           <InfoRow
             label="Blood Type Needed"
-            value={data.requestedBloodType || 'N/A'}
+            value={formatEnumValue(data.requestedBloodType)}
           />
           {data.requestedOrgan && (
-            <InfoRow label="Organ Needed" value={data.requestedOrgan} />
+            <InfoRow 
+              label="Organ Needed" 
+              value={formatEnumValue(data.requestedOrgan)} 
+            />
           )}
           {data.requestedTissue && (
-            <InfoRow label="Tissue Needed" value={data.requestedTissue} />
+            <InfoRow 
+              label="Tissue Needed" 
+              value={formatEnumValue(data.requestedTissue)} 
+            />
           )}
           {data.requestedStemCellType && (
             <InfoRow
               label="Stem Cell Type Needed"
-              value={data.requestedStemCellType}
+              value={formatEnumValue(data.requestedStemCellType)}
             />
           )}
           <InfoRow
             label="Urgency Level"
-            value={data.urgencyLevel || 'N/A'}
+            value={formatEnumValue(data.urgencyLevel)}
             valueColor={
               data.urgencyLevel === 'CRITICAL'
                 ? theme.error
@@ -164,7 +208,10 @@ export const YourDetailsCard: React.FC<YourDetailsCardProps> = ({
             label="Quantity Needed"
             value={data.quantity ? `${data.quantity} units` : 'N/A'}
           />
-          <InfoRow label="Status" value={data.status || 'N/A'} />
+          <InfoRow 
+            label="Status" 
+            value={formatEnumValue(data.status)} 
+          />
           <InfoRow
             label="Request Date"
             value={
@@ -178,7 +225,7 @@ export const YourDetailsCard: React.FC<YourDetailsCardProps> = ({
             <>
               <InfoRow
                 label="Location"
-                value={`${data.location.city || ''}, ${data.location.state || ''}`.trim()}
+                value={`${data.location.city || ''}, ${data.location.state || ''}`.trim() || 'N/A'}
               />
               <InfoRow
                 label="Address"

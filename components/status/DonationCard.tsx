@@ -49,7 +49,7 @@ export const DonationCard: React.FC<DonationCardProps> = ({
           onPress();
         } else {
           router.push({
-            pathname: "/navigation/DonationDetailsScreen",
+            pathname: "/navigation/statusscreens/DonationDetailsScreen",
             params: { donationData: JSON.stringify(donation) },
           });
         }

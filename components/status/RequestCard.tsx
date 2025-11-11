@@ -53,7 +53,7 @@ export const RequestCard: React.FC<RequestCardProps> = ({
           onPress();
         } else {
           router.push({
-            pathname: "/navigation/RequestDetailsScreen",
+            pathname: "/navigation/statusscreens/RequestDetailsScreen",
             params: { requestData: JSON.stringify(request) },
           });
         }

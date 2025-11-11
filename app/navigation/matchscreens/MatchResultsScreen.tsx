@@ -66,6 +66,7 @@ const MatchResultsScreen = () => {
   const [recipientMatches, setRecipientMatches] = useState<MatchResult[]>([]);
   const [activeTab, setActiveTab] = useState<"donor" | "recipient">("donor");
   const [filterType, setFilterType] = useState<FilterType>("all");
+  const [donationTypeFilter, setDonationTypeFilter] = useState<string>("all");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -106,6 +107,11 @@ const MatchResultsScreen = () => {
     }
 
     lastScrollY.current = currentScrollY;
+  };
+
+  const formatEnumValue = (value: string | undefined | null): string => {
+    if (!value) return 'N/A';
+    return value.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
   };
 
   const loadMatches = async () => {
@@ -180,6 +186,10 @@ const MatchResultsScreen = () => {
     loadMatches();
   }, []);
 
+  useEffect(() => {
+    setDonationTypeFilter("all");
+  }, [activeTab]);
+
   const onRefresh = () => {
     setRefreshing(true);
     loadMatches();
@@ -217,16 +227,27 @@ const MatchResultsScreen = () => {
   };
 
   const getFilteredMatches = (matches: MatchResult[]) => {
+    let filtered = matches;
+
     switch (filterType) {
       case "active":
-        return matches.filter(isActiveMatch);
+        filtered = filtered.filter(isActiveMatch);
+        break;
       case "completed":
-        return matches.filter(isCompletedMatch);
+        filtered = filtered.filter(isCompletedMatch);
+        break;
       case "cancelled":
-        return matches.filter(isCancelledMatch);
-      default:
-        return matches;
+        filtered = filtered.filter(isCancelledMatch);
+        break;
     }
+
+    if (donationTypeFilter !== "all") {
+      filtered = filtered.filter(m => 
+        (m.donationType || m.requestType) === donationTypeFilter
+      );
+    }
+
+    return filtered;
   };
 
   const getCurrentMatches = () => {
@@ -295,7 +316,7 @@ const MatchResultsScreen = () => {
               style={{
                 flexDirection: "row",
                 marginHorizontal: wp("5%"),
-                marginBottom: hp("2%"),
+                marginBottom: hp("1.5%"),
                 backgroundColor: theme.card,
                 borderRadius: 12,
                 padding: 4,
@@ -371,7 +392,7 @@ const MatchResultsScreen = () => {
                 key={filter.key}
                 style={{
                   paddingVertical: hp("1%"),
-                  paddingHorizontal: wp("4%"),
+                  paddingHorizontal: wp("3.5%"),
                   borderRadius: 20,
                   backgroundColor: filterType === filter.key ? theme.primary + "20" : theme.card,
                   borderWidth: 1,
@@ -384,17 +405,57 @@ const MatchResultsScreen = () => {
               >
                 <Feather
                   name={filter.icon as any}
-                  size={wp("4%")}
+                  size={wp("3.5%")}
                   color={filterType === filter.key ? theme.primary : theme.textSecondary}
                 />
                 <Text
                   style={{
-                    fontSize: wp("3.5%"),
+                    fontSize: wp("3.2%"),
                     fontWeight: filterType === filter.key ? "600" : "400",
                     color: filterType === filter.key ? theme.primary : theme.text,
                   }}
                 >
                   {filter.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+
+            <View style={{ width: 1, height: hp("4%"), backgroundColor: theme.border + "40", marginHorizontal: wp("1%") }} />
+
+            {[
+              { key: "BLOOD", label: "Blood", icon: "droplet" },
+              { key: "ORGAN", label: "Organ", icon: "heart" },
+              { key: "TISSUE", label: "Tissue", icon: "layers" },
+              { key: "STEM_CELL", label: "Stem Cell", icon: "git-branch" },
+            ].map((type) => (
+              <TouchableOpacity
+                key={type.key}
+                style={{
+                  paddingVertical: hp("1%"),
+                  paddingHorizontal: wp("3.5%"),
+                  borderRadius: 20,
+                  backgroundColor: donationTypeFilter === type.key ? theme.primary + "20" : theme.card,
+                  borderWidth: 1,
+                  borderColor: donationTypeFilter === type.key ? theme.primary : theme.border + "40",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: wp("1.5%"),
+                }}
+                onPress={() => setDonationTypeFilter(type.key)}
+              >
+                <Feather
+                  name={type.icon as any}
+                  size={wp("3.5%")}
+                  color={donationTypeFilter === type.key ? theme.primary : theme.textSecondary}
+                />
+                <Text
+                  style={{
+                    fontSize: wp("3.2%"),
+                    fontWeight: donationTypeFilter === type.key ? "600" : "400",
+                    color: donationTypeFilter === type.key ? theme.primary : theme.text,
+                  }}
+                >
+                  {type.label}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -450,8 +511,8 @@ const MatchResultsScreen = () => {
                       Match with {getOtherPartyRole(match)}
                     </Text>
                     <Text style={styles.headerSubtitle}>
-                      {match.donationType || match.requestType || "Unknown"} •{" "}
-                      {match.bloodType || "Unknown Blood Type"}
+                      {formatEnumValue(match.donationType || match.requestType)} •{" "}
+                      {formatEnumValue(match.bloodType)}
                     </Text>
                   </View>
                   <View
