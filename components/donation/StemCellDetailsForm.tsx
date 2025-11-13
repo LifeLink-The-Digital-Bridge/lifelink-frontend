@@ -6,6 +6,7 @@ import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
 import { createDonationStyles } from "../../constants/styles/donationStyles";
 import { CustomPicker } from "../common/CustomPicker";
 import { StemCellType } from '../../app/api/donationApi';
+import { validateStemCellQuantity } from '../../utils/quantityValidation';
 
 interface StemCellDetailsFormProps {
   stemCellType: StemCellType | "";
@@ -31,6 +32,8 @@ export function StemCellDetailsForm({
   const theme = isDark ? darkTheme : lightTheme;
   const styles = createDonationStyles(theme);
 
+  const validation = quantity ? validateStemCellQuantity(quantity) : { isValid: true, message: '' };
+
   return (
     <View style={styles.formSection}>
       <View style={styles.sectionHeader}>
@@ -53,12 +56,15 @@ export function StemCellDetailsForm({
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Quantity (millions of cells)</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, !validation.isValid && quantity ? { borderColor: '#ef4444', borderWidth: 1 } : {}]}
           placeholder="2.0"
           keyboardType="numeric"
           value={quantity}
           onChangeText={setQuantity}
         />
+        {!validation.isValid && quantity && (
+          <Text style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>{validation.message}</Text>
+        )}
       </View>
     </View>
   );

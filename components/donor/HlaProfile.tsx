@@ -77,6 +77,7 @@ export function HlaProfile({
   };
 
   const [touched, setTouched] = useState<{ [key: string]: boolean }>({
+    hlaA1: false,
     hlaA2: false,
     hlaB1: false,
     hlaB2: false,
@@ -207,13 +208,22 @@ export function HlaProfile({
             <TextInput
               style={[
                 styles.input,
-                hlaA1 && !hlaValidations.hlaA1.isValid && { borderColor: theme.error, borderWidth: 2 }
+                (shouldShowRequired && !hlaA1 && touched.hlaA1) || (hlaA1 && !hlaValidations.hlaA1.isValid) ? { borderColor: theme.error, borderWidth: 2 } : {}
               ]}
               placeholder="A*02:01"
               placeholderTextColor={theme.textSecondary}
               value={hlaA1}
               onChangeText={setHlaA1}
+              onBlur={() => setTouched({ ...touched, hlaA1: true })}
             />
+            {shouldShowRequired && !hlaA1 && touched.hlaA1 && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                <Feather name="alert-circle" size={12} color={theme.error} />
+                <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
+                  HLA-A1 is required
+                </Text>
+              </View>
+            )}
             {hlaA1 && !hlaValidations.hlaA1.isValid && (
               <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
                 <Feather name="alert-circle" size={12} color={theme.error} />
@@ -227,7 +237,7 @@ export function HlaProfile({
             <TextInput
               style={[
                 styles.input,
-                shouldShowRequired && !hlaA2 && touched.hlaA2 && { borderColor: theme.error, borderWidth: 2 }
+                (shouldShowRequired && !hlaA2 && touched.hlaA2) || (hlaA2 && !hlaValidations.hlaA2.isValid) ? { borderColor: theme.error, borderWidth: 2 } : {}
               ]}
               placeholder="A*24:02"
               placeholderTextColor={theme.textSecondary}
@@ -240,6 +250,14 @@ export function HlaProfile({
                 <Feather name="alert-circle" size={12} color={theme.error} />
                 <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
                   HLA-A2 is required
+                </Text>
+              </View>
+            )}
+            {hlaA2 && !hlaValidations.hlaA2.isValid && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                <Feather name="alert-circle" size={12} color={theme.error} />
+                <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
+                  {hlaValidations.hlaA2.message}
                 </Text>
               </View>
             )}
@@ -256,7 +274,7 @@ export function HlaProfile({
             <TextInput
               style={[
                 styles.input,
-                shouldShowRequired && !hlaB1 && touched.hlaB1 && { borderColor: theme.error, borderWidth: 2 }
+                (shouldShowRequired && !hlaB1 && touched.hlaB1) || (hlaB1 && !hlaValidations.hlaB1.isValid) ? { borderColor: theme.error, borderWidth: 2 } : {}
               ]}
               placeholder="B*15:01"
               placeholderTextColor={theme.textSecondary}
@@ -272,12 +290,20 @@ export function HlaProfile({
                 </Text>
               </View>
             )}
+            {hlaB1 && !hlaValidations.hlaB1.isValid && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                <Feather name="alert-circle" size={12} color={theme.error} />
+                <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
+                  {hlaValidations.hlaB1.message}
+                </Text>
+              </View>
+            )}
           </View>
           <View style={{ flex: 1 }}>
             <TextInput
               style={[
                 styles.input,
-                shouldShowRequired && !hlaB2 && touched.hlaB2 && { borderColor: theme.error, borderWidth: 2 }
+                (shouldShowRequired && !hlaB2 && touched.hlaB2) || (hlaB2 && !hlaValidations.hlaB2.isValid) ? { borderColor: theme.error, borderWidth: 2 } : {}
               ]}
               placeholder="B*44:03"
               placeholderTextColor={theme.textSecondary}
@@ -290,6 +316,14 @@ export function HlaProfile({
                 <Feather name="alert-circle" size={12} color={theme.error} />
                 <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
                   HLA-B2 is required
+                </Text>
+              </View>
+            )}
+            {hlaB2 && !hlaValidations.hlaB2.isValid && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                <Feather name="alert-circle" size={12} color={theme.error} />
+                <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
+                  {hlaValidations.hlaB2.message}
                 </Text>
               </View>
             )}
@@ -306,7 +340,7 @@ export function HlaProfile({
             <TextInput
               style={[
                 styles.input,
-                shouldShowRequired && !hlaC1 && touched.hlaC1 && { borderColor: theme.error, borderWidth: 2 }
+                (shouldShowRequired && !hlaC1 && touched.hlaC1) || (hlaC1 && !hlaValidations.hlaC1.isValid) ? { borderColor: theme.error, borderWidth: 2 } : {}
               ]}
               placeholder="C*03:04"
               placeholderTextColor={theme.textSecondary}
@@ -322,12 +356,20 @@ export function HlaProfile({
                 </Text>
               </View>
             )}
+            {hlaC1 && !hlaValidations.hlaC1.isValid && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                <Feather name="alert-circle" size={12} color={theme.error} />
+                <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
+                  {hlaValidations.hlaC1.message}
+                </Text>
+              </View>
+            )}
           </View>
           <View style={{ flex: 1 }}>
             <TextInput
               style={[
                 styles.input,
-                shouldShowRequired && !hlaC2 && touched.hlaC2 && { borderColor: theme.error, borderWidth: 2 }
+                (shouldShowRequired && !hlaC2 && touched.hlaC2) || (hlaC2 && !hlaValidations.hlaC2.isValid) ? { borderColor: theme.error, borderWidth: 2 } : {}
               ]}
               placeholder="C*16:01"
               placeholderTextColor={theme.textSecondary}
@@ -340,6 +382,14 @@ export function HlaProfile({
                 <Feather name="alert-circle" size={12} color={theme.error} />
                 <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
                   HLA-C2 is required
+                </Text>
+              </View>
+            )}
+            {hlaC2 && !hlaValidations.hlaC2.isValid && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                <Feather name="alert-circle" size={12} color={theme.error} />
+                <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
+                  {hlaValidations.hlaC2.message}
                 </Text>
               </View>
             )}
@@ -358,7 +408,7 @@ export function HlaProfile({
             <TextInput
               style={[
                 styles.input,
-                shouldShowRequired && !hlaDR1 && touched.hlaDR1 && { borderColor: theme.error, borderWidth: 2 }
+                (shouldShowRequired && !hlaDR1 && touched.hlaDR1) || (hlaDR1 && !hlaValidations.hlaDR1.isValid) ? { borderColor: theme.error, borderWidth: 2 } : {}
               ]}
               placeholder="DRB1*07:01"
               placeholderTextColor={theme.textSecondary}
@@ -374,12 +424,20 @@ export function HlaProfile({
                 </Text>
               </View>
             )}
+            {hlaDR1 && !hlaValidations.hlaDR1.isValid && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                <Feather name="alert-circle" size={12} color={theme.error} />
+                <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
+                  {hlaValidations.hlaDR1.message}
+                </Text>
+              </View>
+            )}
           </View>
           <View style={{ flex: 1 }}>
             <TextInput
               style={[
                 styles.input,
-                shouldShowRequired && !hlaDR2 && touched.hlaDR2 && { borderColor: theme.error, borderWidth: 2 }
+                (shouldShowRequired && !hlaDR2 && touched.hlaDR2) || (hlaDR2 && !hlaValidations.hlaDR2.isValid) ? { borderColor: theme.error, borderWidth: 2 } : {}
               ]}
               placeholder="DRB1*15:01"
               placeholderTextColor={theme.textSecondary}
@@ -392,6 +450,14 @@ export function HlaProfile({
                 <Feather name="alert-circle" size={12} color={theme.error} />
                 <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
                   HLA-DR2 is required
+                </Text>
+              </View>
+            )}
+            {hlaDR2 && !hlaValidations.hlaDR2.isValid && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                <Feather name="alert-circle" size={12} color={theme.error} />
+                <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
+                  {hlaValidations.hlaDR2.message}
                 </Text>
               </View>
             )}
@@ -408,7 +474,7 @@ export function HlaProfile({
             <TextInput
               style={[
                 styles.input,
-                shouldShowRequired && !hlaDQ1 && touched.hlaDQ1 && { borderColor: theme.error, borderWidth: 2 }
+                (shouldShowRequired && !hlaDQ1 && touched.hlaDQ1) || (hlaDQ1 && !hlaValidations.hlaDQ1.isValid) ? { borderColor: theme.error, borderWidth: 2 } : {}
               ]}
               placeholder="DQB1*02:02"
               placeholderTextColor={theme.textSecondary}
@@ -424,12 +490,20 @@ export function HlaProfile({
                 </Text>
               </View>
             )}
+            {hlaDQ1 && !hlaValidations.hlaDQ1.isValid && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                <Feather name="alert-circle" size={12} color={theme.error} />
+                <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
+                  {hlaValidations.hlaDQ1.message}
+                </Text>
+              </View>
+            )}
           </View>
           <View style={{ flex: 1 }}>
             <TextInput
               style={[
                 styles.input,
-                shouldShowRequired && !hlaDQ2 && touched.hlaDQ2 && { borderColor: theme.error, borderWidth: 2 }
+                (shouldShowRequired && !hlaDQ2 && touched.hlaDQ2) || (hlaDQ2 && !hlaValidations.hlaDQ2.isValid) ? { borderColor: theme.error, borderWidth: 2 } : {}
               ]}
               placeholder="DQB1*06:02"
               placeholderTextColor={theme.textSecondary}
@@ -442,6 +516,14 @@ export function HlaProfile({
                 <Feather name="alert-circle" size={12} color={theme.error} />
                 <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
                   HLA-DQ2 is required
+                </Text>
+              </View>
+            )}
+            {hlaDQ2 && !hlaValidations.hlaDQ2.isValid && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                <Feather name="alert-circle" size={12} color={theme.error} />
+                <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
+                  {hlaValidations.hlaDQ2.message}
                 </Text>
               </View>
             )}
@@ -458,7 +540,7 @@ export function HlaProfile({
             <TextInput
               style={[
                 styles.input,
-                shouldShowRequired && !hlaDP1 && touched.hlaDP1 && { borderColor: theme.error, borderWidth: 2 }
+                (shouldShowRequired && !hlaDP1 && touched.hlaDP1) || (hlaDP1 && !hlaValidations.hlaDP1.isValid) ? { borderColor: theme.error, borderWidth: 2 } : {}
               ]}
               placeholder="DPB1*04:01"
               placeholderTextColor={theme.textSecondary}
@@ -474,12 +556,20 @@ export function HlaProfile({
                 </Text>
               </View>
             )}
+            {hlaDP1 && !hlaValidations.hlaDP1.isValid && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                <Feather name="alert-circle" size={12} color={theme.error} />
+                <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
+                  {hlaValidations.hlaDP1.message}
+                </Text>
+              </View>
+            )}
           </View>
           <View style={{ flex: 1 }}>
             <TextInput
               style={[
                 styles.input,
-                shouldShowRequired && !hlaDP2 && touched.hlaDP2 && { borderColor: theme.error, borderWidth: 2 }
+                (shouldShowRequired && !hlaDP2 && touched.hlaDP2) || (hlaDP2 && !hlaValidations.hlaDP2.isValid) ? { borderColor: theme.error, borderWidth: 2 } : {}
               ]}
               placeholder="DPB1*14:01"
               placeholderTextColor={theme.textSecondary}
@@ -492,6 +582,14 @@ export function HlaProfile({
                 <Feather name="alert-circle" size={12} color={theme.error} />
                 <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
                   HLA-DP2 is required
+                </Text>
+              </View>
+            )}
+            {hlaDP2 && !hlaValidations.hlaDP2.isValid && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                <Feather name="alert-circle" size={12} color={theme.error} />
+                <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
+                  {hlaValidations.hlaDP2.message}
                 </Text>
               </View>
             )}

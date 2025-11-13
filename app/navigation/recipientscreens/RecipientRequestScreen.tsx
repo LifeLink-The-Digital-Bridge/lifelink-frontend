@@ -23,6 +23,7 @@ import {
   StemCellType,
   UrgencyLevel,
 } from "../../api/requestApi";
+import { validateBloodQuantity, validateTissueQuantity, validateStemCellQuantity } from "../../../utils/quantityValidation";
 import AppLayout from "../../../components/AppLayout";
 import { ValidationAlert } from "../../../components/common/ValidationAlert";
 import { RequestTypeSelector } from "../../../components/request/RequestTypeSelector";
@@ -183,10 +184,28 @@ const RecipientRequestScreen = () => {
     setRequestDate(today.toISOString().slice(0, 10));
   }, []);
 
+  const hasQuantityValidationErrors = (): boolean => {
+    if (!quantity) return false;
+    switch (requestType) {
+      case "BLOOD":
+        return !validateBloodQuantity(quantity).isValid;
+      case "TISSUE":
+        return requestedTissue ? !validateTissueQuantity(quantity, requestedTissue).isValid : false;
+      case "STEM_CELL":
+        return !validateStemCellQuantity(quantity).isValid;
+      default:
+        return false;
+    }
+  };
+
   const isFormValid = () => {
     if (!recipientId || !locationId || !quantity || !requestDate) return false;
 
     if (requestType !== "BLOOD" && !hlaProfile) {
+      return false;
+    }
+
+    if (hasQuantityValidationErrors()) {
       return false;
     }
 

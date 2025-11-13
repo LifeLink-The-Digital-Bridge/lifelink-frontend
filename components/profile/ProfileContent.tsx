@@ -116,7 +116,7 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
                     { width: "80%" },
                   ]}
                   onPress={() =>
-                    router.push("/navigation/hubs/donateHubScreen")
+                    router.push("/navigation/donorscreens/donorScreen")
                   }
                 >
                   <Feather name="plus-circle" size={16} color="#fff" />
@@ -296,7 +296,7 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
                     },
                   ]}
                   onPress={() =>
-                    router.push("/navigation/hubs/recipientHubScreen")
+                    router.push("/navigation/recipientscreens/RecipientScreen")
                   }
                 >
                   <Feather name="plus-circle" size={16} color="#fff" />

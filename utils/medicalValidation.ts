@@ -50,7 +50,7 @@ export const validateBloodGlucose = (value: string): ValidationResult => {
 export const validateCreatinine = (value: string): ValidationResult => {
   const num = parseFloat(value);
   if (isNaN(num)) return { isValid: false, message: 'Please enter a valid number' };
-  if (num < 0.1 || num > 20) return { isValid: false, message: 'Value seems unusual. Normal range is 0.6-1.3 mg/dL' };
+  if (num < 0.1 || num > 2.0) return { isValid: false, message: 'Value seems unusual. Normal range is 0.6-1.3 mg/dL' };
   return { isValid: true, message: '' };
 };
 

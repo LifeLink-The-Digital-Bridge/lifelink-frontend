@@ -6,6 +6,7 @@ import { lightTheme, darkTheme } from '../../constants/styles/authStyles';
 import { createUnifiedStyles } from '../../constants/styles/unifiedStyles';
 import { CustomPicker } from '../common/CustomPicker';
 import { RequestType, BloodType, OrganType, TissueType, StemCellType, UrgencyLevel } from '../../app/api/requestApi';
+import { validateBloodQuantity, validateTissueQuantity, validateStemCellQuantity } from '../../utils/quantityValidation';
 
 interface RequestDetailsFormProps {
   requestType: RequestType;
@@ -40,6 +41,22 @@ export function RequestDetailsForm(props: RequestDetailsFormProps) {
   const formatLabel = (value: string) => {
     return value.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
+
+  const getQuantityValidation = () => {
+    if (!props.quantity) return { isValid: true, message: '' };
+    switch (props.requestType) {
+      case 'BLOOD':
+        return validateBloodQuantity(props.quantity);
+      case 'TISSUE':
+        return props.requestedTissue ? validateTissueQuantity(props.quantity, props.requestedTissue) : { isValid: true, message: '' };
+      case 'STEM_CELL':
+        return validateStemCellQuantity(props.quantity);
+      default:
+        return { isValid: true, message: '' };
+    }
+  };
+
+  const quantityValidation = getQuantityValidation();
 
   return (
     <View style={styles.sectionContainer}>
@@ -121,13 +138,23 @@ export function RequestDetailsForm(props: RequestDetailsFormProps) {
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Quantity *</Text>
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input,
+            !quantityValidation.isValid && props.quantity
+              ? { borderColor: '#ef4444', borderWidth: 1 }
+              : {},
+          ]}
           placeholder="1.0"
           placeholderTextColor={theme.textSecondary}
           keyboardType="numeric"
           value={props.quantity}
           onChangeText={props.setQuantity}
         />
+        {!quantityValidation.isValid && props.quantity && (
+          <Text style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>
+            {quantityValidation.message}
+          </Text>
+        )}
       </View>
 
       <View style={styles.inputContainer}>

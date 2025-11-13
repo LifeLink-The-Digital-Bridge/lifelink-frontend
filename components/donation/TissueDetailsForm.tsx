@@ -6,6 +6,7 @@ import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
 import { createDonationStyles } from "../../constants/styles/donationStyles";
 import { CustomPicker } from '../common/CustomPicker';
 import { TissueType } from '../../app/api/donationApi';
+import { validateTissueQuantity } from '../../utils/quantityValidation';
 
 interface TissueDetailsFormProps {
   tissueType: TissueType | "";
@@ -34,6 +35,8 @@ export function TissueDetailsForm({
   const theme = isDark ? darkTheme : lightTheme;
   const styles = createDonationStyles(theme);
 
+  const validation = tissueType && quantity ? validateTissueQuantity(quantity, tissueType) : { isValid: true, message: '' };
+
   return (
     <View style={styles.formSection}>
       <View style={styles.sectionHeader}>
@@ -56,12 +59,15 @@ export function TissueDetailsForm({
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Quantity (grams or units)</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, !validation.isValid && quantity ? { borderColor: '#ef4444', borderWidth: 1 } : {}]}
           placeholder="0.8"
           keyboardType="numeric"
           value={quantity}
           onChangeText={setQuantity}
         />
+        {!validation.isValid && quantity && (
+          <Text style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>{validation.message}</Text>
+        )}
       </View>
     </View>
   );

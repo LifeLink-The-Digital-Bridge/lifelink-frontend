@@ -7,6 +7,7 @@ import { createDonationStyles } from '../../constants/styles/donationStyles';
 import { CustomPicker } from '../common/CustomPicker';
 import { OrganType } from '../../app/api/donationApi';
 import { parseLocalDateTime } from '../../utils/dateTimeUtils';
+import { validateOrganWeight } from '../../utils/quantityValidation';
 
 interface OrganDetailsFormProps {
   organType: OrganType | "";
@@ -61,6 +62,7 @@ export function OrganDetailsForm(props: OrganDetailsFormProps) {
   const styles = createDonationStyles(theme);
 
   const { date: expiryDate, time: expiryTime } = parseLocalDateTime(props.organViabilityExpiry);
+  const weightValidation = props.organType && props.organWeight ? validateOrganWeight(props.organWeight, props.organType) : { isValid: true, message: '' };
 
   const handleDateChange = (newDate: string) => {
     const currentTime = expiryTime || '14:30';
@@ -112,13 +114,16 @@ export function OrganDetailsForm(props: OrganDetailsFormProps) {
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Organ Weight (grams)</Text>
         <TextInput
-          style={styles.input}
+          style={[styles.input, !weightValidation.isValid && props.organWeight ? { borderColor: '#ef4444', borderWidth: 1 } : {}]}
           placeholder="e.g., 1500.5"
           placeholderTextColor={theme.textSecondary}
           keyboardType="numeric"
           value={props.organWeight}
           onChangeText={props.setOrganWeight}
         />
+        {!weightValidation.isValid && props.organWeight && (
+          <Text style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>{weightValidation.message}</Text>
+        )}
       </View>
 
       <View style={styles.inputContainer}>

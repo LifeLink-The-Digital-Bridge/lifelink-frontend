@@ -11,7 +11,7 @@
   "include": [
     "**/*.ts",
     "**/*.tsx",
-    "app/navigation/donateScreen.tsx",
+    "app/navigation/donorscreens/donateScreen.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
   ]

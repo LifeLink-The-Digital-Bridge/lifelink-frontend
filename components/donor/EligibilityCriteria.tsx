@@ -77,6 +77,11 @@ export function EligibilityCriteria({
   const styles = createUnifiedStyles(theme);
   const donorStyles = createDonorStyles(theme);
 
+  const [touched, setTouched] = useState<{ [key: string]: boolean }>({
+    weight: false,
+    height: false,
+  });
+
   const weightValidation = validateWeight(weight);
   const heightValidation = validateHeight(height);
 
@@ -144,14 +149,23 @@ export function EligibilityCriteria({
         <TextInput
           style={[
             styles.input,
-            weight && !weightValidation.isValid && { borderColor: theme.error, borderWidth: 2 }
+            (touched.weight && !weight) || (weight && !weightValidation.isValid) ? { borderColor: theme.error, borderWidth: 2 } : {}
           ]}
           placeholder="Enter weight in kg"
           placeholderTextColor={theme.textSecondary}
           keyboardType="numeric"
           value={weight}
           onChangeText={setWeight}
+          onBlur={() => setTouched({ ...touched, weight: true })}
         />
+        {touched.weight && !weight && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+            <Feather name="alert-circle" size={12} color={theme.error} />
+            <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
+              Weight is required
+            </Text>
+          </View>
+        )}
         {weight && !weightValidation.isValid && (
           <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
             <Feather name="alert-circle" size={12} color={theme.error} />
@@ -177,14 +191,23 @@ export function EligibilityCriteria({
         <TextInput
           style={[
             styles.input,
-            height && !heightValidation.isValid && { borderColor: theme.error, borderWidth: 2 }
+            (touched.height && !height) || (height && !heightValidation.isValid) ? { borderColor: theme.error, borderWidth: 2 } : {}
           ]}
           placeholder="Enter height in cm"
           placeholderTextColor={theme.textSecondary}
           keyboardType="numeric"
           value={height}
           onChangeText={setHeight}
+          onBlur={() => setTouched({ ...touched, height: true })}
         />
+        {touched.height && !height && (
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+            <Feather name="alert-circle" size={12} color={theme.error} />
+            <Text style={{ marginLeft: 4, fontSize: 12, color: theme.error }}>
+              Height is required
+            </Text>
+          </View>
+        )}
         {height && !heightValidation.isValid && (
           <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
             <Feather name="alert-circle" size={12} color={theme.error} />

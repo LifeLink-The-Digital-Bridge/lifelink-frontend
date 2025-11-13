@@ -33,6 +33,7 @@ import {
   TissueType,
 } from "../../api/donationApi";
 import { fetchDonorByUserId } from "../../api/donorApi";
+import { validateBloodQuantity, validateOrganWeight, validateTissueQuantity, validateStemCellQuantity } from "../../../utils/quantityValidation";
 
 const HEADER_HEIGHT = 180;
 
@@ -171,6 +172,21 @@ const DonationScreen = () => {
   }, []);
 
 
+  const hasQuantityValidationErrors = (): boolean => {
+    switch (donationType) {
+      case "BLOOD":
+        return quantity ? !validateBloodQuantity(quantity).isValid : false;
+      case "ORGAN":
+        return organType && organWeight ? !validateOrganWeight(organWeight, organType).isValid : false;
+      case "TISSUE":
+        return tissueType && quantity ? !validateTissueQuantity(quantity, tissueType).isValid : false;
+      case "STEM_CELL":
+        return quantity ? !validateStemCellQuantity(quantity).isValid : false;
+      default:
+        return false;
+    }
+  };
+
   const isFormValid = () => {
     if (
       !donorId ||
@@ -183,6 +199,10 @@ const DonationScreen = () => {
     }
 
     if (donationType !== "BLOOD" && !hlaProfile) {
+      return false;
+    }
+
+    if (hasQuantityValidationErrors()) {
       return false;
     }
 
@@ -364,13 +384,23 @@ const DonationScreen = () => {
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>Quantity (liters, e.g., 0.5)</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[
+                    styles.input,
+                    quantity && !validateBloodQuantity(quantity).isValid
+                      ? { borderColor: '#ef4444', borderWidth: 1 }
+                      : {},
+                  ]}
                   placeholder="0.5"
                   placeholderTextColor={theme.textSecondary}
                   keyboardType="numeric"
                   value={quantity}
                   onChangeText={setQuantity}
                 />
+                {quantity && !validateBloodQuantity(quantity).isValid && (
+                  <Text style={{ color: '#ef4444', fontSize: 12, marginTop: 4 }}>
+                    {validateBloodQuantity(quantity).message}
+                  </Text>
+                )}
               </View>
             </View>
           )}
