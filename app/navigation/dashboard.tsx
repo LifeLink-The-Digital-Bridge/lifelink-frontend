@@ -212,6 +212,13 @@ const Dashboard = () => {
     showValidationAlert("Notifications", "No new notifications at the moment");
   };
 
+    const handleRaiseFund = () => {
+    showValidationAlert(
+      "Raise Fund", 
+      "Raise Fund functionality coming soon! We're working hard to bring you this feature."
+    );
+  };
+
   const nearbyStyles = StyleSheet.create({
     sectionContainer: {
       backgroundColor: theme.card,
