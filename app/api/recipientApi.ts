@@ -36,12 +36,12 @@ export interface EligibilityCriteria {
   lastReviewed: string;
   isLivingDonor?: boolean;
   smokingStatus?: string;
-  packYears?: number;
-  quitSmokingDate?: string;
+  packYears?: number | null;
+  quitSmokingDate?: string | null;
   alcoholStatus?: string;
-  drinksPerWeek?: number;
-  quitAlcoholDate?: string;
-  alcoholAbstinenceMonths?: number;
+  drinksPerWeek?: number | null;
+  quitAlcoholDate?: string | null;
+  alcoholAbstinenceMonths?: number | null;
 }
 
 export interface HlaProfile {

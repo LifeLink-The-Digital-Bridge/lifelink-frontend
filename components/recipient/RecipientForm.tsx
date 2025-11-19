@@ -62,6 +62,20 @@ export interface RecipientFormProps {
   setEligibilityNotes: (value: string) => void;
   lastReviewed: string;
   setLastReviewed: (value: string) => void;
+  smokingStatus: string;
+  setSmokingStatus: (value: string) => void;
+  packYears: string;
+  setPackYears: (value: string) => void;
+  quitSmokingDate: string;
+  setQuitSmokingDate: (value: string) => void;
+  alcoholStatus: string;
+  setAlcoholStatus: (value: string) => void;
+  drinksPerWeek: string;
+  setDrinksPerWeek: (value: string) => void;
+  quitAlcoholDate: string;
+  setQuitAlcoholDate: (value: string) => void;
+  alcoholAbstinenceMonths: string;
+  setAlcoholAbstinenceMonths: (value: string) => void;
 
   isConsented: boolean;
   setIsConsented: (value: boolean) => void;
@@ -188,6 +202,20 @@ export const RecipientForm: React.FC<RecipientFormProps> = (props) => {
         setEligibilityNotes={props.setEligibilityNotes}
         lastReviewed={props.lastReviewed}
         setLastReviewed={props.setLastReviewed}
+        smokingStatus={props.smokingStatus}
+        setSmokingStatus={props.setSmokingStatus}
+        packYears={props.packYears}
+        setPackYears={props.setPackYears}
+        quitSmokingDate={props.quitSmokingDate}
+        setQuitSmokingDate={props.setQuitSmokingDate}
+        alcoholStatus={props.alcoholStatus}
+        setAlcoholStatus={props.setAlcoholStatus}
+        drinksPerWeek={props.drinksPerWeek}
+        setDrinksPerWeek={props.setDrinksPerWeek}
+        quitAlcoholDate={props.quitAlcoholDate}
+        setQuitAlcoholDate={props.setQuitAlcoholDate}
+        alcoholAbstinenceMonths={props.alcoholAbstinenceMonths}
+        setAlcoholAbstinenceMonths={props.setAlcoholAbstinenceMonths}
       />
 
       <LocationDetails

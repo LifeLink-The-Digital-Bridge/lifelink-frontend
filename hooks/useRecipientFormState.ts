@@ -59,6 +59,20 @@ export interface RecipientFormState {
   setLastReviewed: (lastReviewed: string) => void;
   dob: string;
   setDob: (dob: string) => void;
+  smokingStatus: string;
+  setSmokingStatus: (smokingStatus: string) => void;
+  packYears: string;
+  setPackYears: (packYears: string) => void;
+  quitSmokingDate: string;
+  setQuitSmokingDate: (quitSmokingDate: string) => void;
+  alcoholStatus: string;
+  setAlcoholStatus: (alcoholStatus: string) => void;
+  drinksPerWeek: string;
+  setDrinksPerWeek: (drinksPerWeek: string) => void;
+  quitAlcoholDate: string;
+  setQuitAlcoholDate: (quitAlcoholDate: string) => void;
+  alcoholAbstinenceMonths: string;
+  setAlcoholAbstinenceMonths: (alcoholAbstinenceMonths: string) => void;
 
   addressId: string | null;
   setAddressId: (addressId: string | null) => void;
@@ -172,6 +186,14 @@ export function useRecipientFormState(): RecipientFormState {
   const [lastReviewed, setLastReviewed] = useState<string>("");
   const [dob, setDob] = useState<string>("");
 
+  const [smokingStatus, setSmokingStatus] = useState<string>('');
+  const [packYears, setPackYears] = useState<string>('');
+  const [quitSmokingDate, setQuitSmokingDate] = useState<string>('');
+  const [alcoholStatus, setAlcoholStatus] = useState<string>('');
+  const [drinksPerWeek, setDrinksPerWeek] = useState<string>('');
+  const [quitAlcoholDate, setQuitAlcoholDate] = useState<string>('');
+  const [alcoholAbstinenceMonths, setAlcoholAbstinenceMonths] = useState<string>('');
+
   const [addressId, setAddressId] = useState<string | null>(null);
   const [addressLine, setAddressLine] = useState<string>("");
   const [landmark, setLandmark] = useState<string>("");
@@ -273,6 +295,14 @@ export function useRecipientFormState(): RecipientFormState {
             );
             setBodySize(recipient.eligibilityCriteria.bodySize || "MEDIUM");
             setDob(recipient.eligibilityCriteria.dob || "");
+            setSmokingStatus(recipient.eligibilityCriteria.smokingStatus || '');
+            setPackYears(recipient.eligibilityCriteria.packYears?.toString() || '');
+            setQuitSmokingDate(recipient.eligibilityCriteria.quitSmokingDate || '');
+            setAlcoholStatus(recipient.eligibilityCriteria.alcoholStatus || '');
+            setDrinksPerWeek(recipient.eligibilityCriteria.drinksPerWeek?.toString() || '');
+            setQuitAlcoholDate(recipient.eligibilityCriteria.quitAlcoholDate || '');
+            setAlcoholAbstinenceMonths(recipient.eligibilityCriteria.alcoholAbstinenceMonths?.toString() || '');
+
           }
 
           const location = recipient.addresses?.[0] || recipient.location;
@@ -425,6 +455,20 @@ export function useRecipientFormState(): RecipientFormState {
     setLastReviewed,
     dob,
     setDob,
+    smokingStatus,
+    setSmokingStatus,
+    packYears,
+    setPackYears,
+    quitSmokingDate,
+    setQuitSmokingDate,
+    alcoholStatus,
+    setAlcoholStatus,
+    drinksPerWeek,
+    setDrinksPerWeek,
+    quitAlcoholDate,
+    setQuitAlcoholDate,
+    alcoholAbstinenceMonths,
+    setAlcoholAbstinenceMonths,
 
     addressId,
     setAddressId,

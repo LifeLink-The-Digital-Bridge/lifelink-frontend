@@ -109,6 +109,20 @@ export interface DonorFormProps {
   setAllergies: (value: string) => void;
   lastDonationDate: string;
   setLastDonationDate: (value: string) => void;
+  smokingStatus: string;
+  setSmokingStatus: (value: string) => void;
+  packYears: string;
+  setPackYears: (value: string) => void;
+  quitSmokingDate: string;
+  setQuitSmokingDate: (value: string) => void;
+  alcoholStatus: string;
+  setAlcoholStatus: (value: string) => void;
+  drinksPerWeek: string;
+  setDrinksPerWeek: (value: string) => void;
+  quitAlcoholDate: string;
+  setQuitAlcoholDate: (value: string) => void;
+  alcoholAbstinenceMonths: string;
+  setAlcoholAbstinenceMonths: (value: string) => void;
 
   isConsented: boolean;
   setIsConsented: (value: boolean) => void;
@@ -217,6 +231,20 @@ export const DonorForm: React.FC<DonorFormProps> = (props) => {
         setAllergies={props.setAllergies}
         lastDonationDate={props.lastDonationDate}
         setLastDonationDate={props.setLastDonationDate}
+        smokingStatus={props.smokingStatus}
+        setSmokingStatus={props.setSmokingStatus}
+        packYears={props.packYears}
+        setPackYears={props.setPackYears}
+        quitSmokingDate={props.quitSmokingDate}
+        setQuitSmokingDate={props.setQuitSmokingDate}
+        alcoholStatus={props.alcoholStatus}
+        setAlcoholStatus={props.setAlcoholStatus}
+        drinksPerWeek={props.drinksPerWeek}
+        setDrinksPerWeek={props.setDrinksPerWeek}
+        quitAlcoholDate={props.quitAlcoholDate}
+        setQuitAlcoholDate={props.setQuitAlcoholDate}
+        alcoholAbstinenceMonths={props.alcoholAbstinenceMonths}
+        setAlcoholAbstinenceMonths={props.setAlcoholAbstinenceMonths}
       />
 
       <LocationDetails

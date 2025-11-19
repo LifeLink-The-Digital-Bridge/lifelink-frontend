@@ -6,6 +6,7 @@ import { createUnifiedStyles } from '../../constants/styles/unifiedStyles';
 import { createDonorStyles } from '../../constants/styles/donorStyles';
 import { Feather } from '@expo/vector-icons';
 import { CustomDatePicker } from '../common/DatePicker';
+import { CustomPicker } from '../common/CustomPicker';
 import { validateWeight, validateHeight, validateAge } from '../../utils/medicalValidation';
 
 interface EligibilityCriteriaProps {
@@ -28,6 +29,20 @@ interface EligibilityCriteriaProps {
   setEligibilityNotes: (value: string) => void;
   lastReviewed: string;
   setLastReviewed: (value: string) => void;
+  smokingStatus: string;
+  setSmokingStatus: (value: string) => void;
+  packYears: string;
+  setPackYears: (value: string) => void;
+  quitSmokingDate: string;
+  setQuitSmokingDate: (value: string) => void;
+  alcoholStatus: string;
+  setAlcoholStatus: (value: string) => void;
+  drinksPerWeek: string;
+  setDrinksPerWeek: (value: string) => void;
+  quitAlcoholDate: string;
+  setQuitAlcoholDate: (value: string) => void;
+  alcoholAbstinenceMonths: string;
+  setAlcoholAbstinenceMonths: (value: string) => void;
 }
 
 export function EligibilityCriteria(props: EligibilityCriteriaProps) {
@@ -290,6 +305,102 @@ export function EligibilityCriteria(props: EligibilityCriteriaProps) {
           placeholder="Select last reviewed date"
         />
       </View>
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Smoking Status</Text>
+        <CustomPicker
+          selectedValue={props.smokingStatus}
+          onValueChange={props.setSmokingStatus}
+          items={[
+            { label: 'Never smoked', value: 'NEVER_SMOKED' },
+            { label: 'Former smoker', value: 'FORMER_SMOKER' },
+            { label: 'Current smoker', value: 'CURRENT_SMOKER' },
+            { label: 'Occasional smoker', value: 'OCCASIONAL_SMOKER' },
+          ]}
+          placeholder="Select smoking status"
+        />
+      </View>
+
+      {(props.smokingStatus === 'CURRENT_SMOKER' || props.smokingStatus === 'FORMER_SMOKER') && (
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Pack Years</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter pack years"
+            placeholderTextColor={theme.textSecondary}
+            value={props.packYears}
+            onChangeText={props.setPackYears}
+            keyboardType="numeric"
+          />
+        </View>
+      )}
+
+      {props.smokingStatus === 'FORMER_SMOKER' && (
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Quit Smoking Date</Text>
+          <CustomDatePicker
+            selectedDate={props.quitSmokingDate}
+            onDateChange={props.setQuitSmokingDate}
+            hasError={false}
+            placeholder="Select quit smoking date"
+          />
+        </View>
+      )}
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Alcohol Status</Text>
+        <CustomPicker
+          selectedValue={props.alcoholStatus}
+          onValueChange={props.setAlcoholStatus}
+          items={[
+            { label: 'No alcohol use', value: 'NO_ALCOHOL_USE' },
+            { label: 'Moderate use', value: 'MODERATE_USE' },
+            { label: 'Heavy use', value: 'HEAVY_USE' },
+            { label: 'Former user', value: 'FORMER_USER' },
+          ]}
+          placeholder="Select alcohol status"
+        />
+      </View>
+
+      {(props.alcoholStatus === 'MODERATE_USE' || props.alcoholStatus === 'HEAVY_USE') && (
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Drinks Per Week</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter drinks per week"
+            placeholderTextColor={theme.textSecondary}
+            value={props.drinksPerWeek}
+            onChangeText={props.setDrinksPerWeek}
+            keyboardType="numeric"
+          />
+        </View>
+      )}
+
+      {props.alcoholStatus === 'FORMER_USER' && (
+        <>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Quit Alcohol Date</Text>
+            <CustomDatePicker
+              selectedDate={props.quitAlcoholDate}
+              onDateChange={props.setQuitAlcoholDate}
+              hasError={false}
+              placeholder="Select quit alcohol date"
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Alcohol Abstinence (Months)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter months of abstinence"
+              placeholderTextColor={theme.textSecondary}
+              value={props.alcoholAbstinenceMonths}
+              onChangeText={props.setAlcoholAbstinenceMonths}
+              keyboardType="numeric"
+            />
+          </View>
+        </>
+      )}
     </View>
   );
 }

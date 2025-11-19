@@ -43,7 +43,7 @@ export const validateAge = (value: string): ValidationResult => {
 export const validateBloodGlucose = (value: string): ValidationResult => {
   const num = parseFloat(value);
   if (isNaN(num)) return { isValid: false, message: 'Please enter a valid number' };
-  if (num < 40 || num > 600) return { isValid: false, message: 'Value seems unusual. Normal range is 70-140 mg/dL' };
+  if (num < 60 || num > 500) return { isValid: false, message: 'Value seems unusual. Normal range is 60-125 mg/dL' };
   return { isValid: true, message: '' };
 };
 

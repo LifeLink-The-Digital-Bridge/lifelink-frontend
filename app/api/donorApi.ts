@@ -41,6 +41,13 @@ export interface EligibilityCriteriaDTO {
   bodyMassIndex: number;
   bodySize: string;
   isLivingDonor: boolean;
+  smokingStatus?: string;
+  packYears?: number | null;
+  quitSmokingDate?: string | null;
+  alcoholStatus?: string;
+  drinksPerWeek?: number | null;
+  quitAlcoholDate?: string | null;
+  alcoholAbstinenceMonths?: number | null;
 }
 
 export interface ConsentFormDTO {

@@ -442,6 +442,13 @@ const RecipientScreen: React.FC = () => {
           lastReviewed:
             formState.lastReviewed || new Date().toISOString().slice(0, 10),
           isLivingDonor: false,
+          smokingStatus: formState.smokingStatus || undefined,
+          packYears: formState.packYears ? Number(formState.packYears) : null,
+          quitSmokingDate: formState.quitSmokingDate || null,
+          alcoholStatus: formState.alcoholStatus || undefined,
+          drinksPerWeek: formState.drinksPerWeek ? Number(formState.drinksPerWeek) : null,
+          quitAlcoholDate: formState.quitAlcoholDate || null,
+          alcoholAbstinenceMonths: formState.alcoholAbstinenceMonths ? Number(formState.alcoholAbstinenceMonths) : null,
         },
         hlaProfile:
           formState.hlaA1 ||

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Switch } from 'react-native';
 import { useTheme } from '../../utils/theme-context';
 import { lightTheme, darkTheme } from '../../constants/styles/authStyles';
@@ -82,11 +82,24 @@ export function MedicalDetails(props: MedicalDetailsProps) {
     overallHealthStatus: false,
   });
 
-  const requiredFieldsCount = 10; // Updated from 9 to 10
+  useEffect(() => {
+    if (props.bloodGlucoseLevel && glucoseValidation.isValid) {
+      const glucose = parseFloat(props.bloodGlucoseLevel);
+      if (!isNaN(glucose)) {
+        if (glucose >= 126) {
+          props.setHasDiabetes(true);
+        } else if (glucose < 100) {
+          props.setHasDiabetes(false);
+        }
+      }
+    }
+  }, [props.bloodGlucoseLevel]);
+
+  const requiredFieldsCount = 10;
   const filledFieldsCount = [
     props.bloodPressure,
     props.hemoglobinLevel,
-    props.bloodGlucoseLevel, // Added to required fields
+    props.bloodGlucoseLevel,
     props.creatinineLevel,
     props.lastMedicalCheckup,
     props.medicalHistory,
@@ -245,10 +258,49 @@ export function MedicalDetails(props: MedicalDetailsProps) {
             </Text>
           </View>
         )}
+        {props.bloodGlucoseLevel && glucoseValidation.isValid && (
+          <View style={{
+            backgroundColor: props.hasDiabetes ? theme.error + '15' : theme.success + '15',
+            padding: 8,
+            borderRadius: 6,
+            marginTop: 8,
+            flexDirection: 'row',
+            alignItems: 'center',
+          }}>
+            <Feather 
+              name={props.hasDiabetes ? "alert-circle" : "check-circle"} 
+              size={14} 
+              color={props.hasDiabetes ? theme.error : theme.success} 
+            />
+            <Text style={{
+              marginLeft: 6,
+              fontSize: 12,
+              color: props.hasDiabetes ? theme.error : theme.success,
+              fontWeight: '600',
+            }}>
+              {props.hasDiabetes 
+                ? `Diabetes detected (≥126 mg/dL)` 
+                : parseFloat(props.bloodGlucoseLevel) >= 100 && parseFloat(props.bloodGlucoseLevel) < 126
+                  ? `Prediabetes range (100-125 mg/dL)`
+                  : `Normal glucose level (<100 mg/dL)`
+              }
+            </Text>
+          </View>
+        )}
       </View>
 
       <View style={styles.switchRow}>
-        <Text style={styles.switchLabel}>Has Diabetes?</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.switchLabel}>Has Diabetes?</Text>
+          <Text style={{
+            fontSize: 11,
+            color: theme.textSecondary,
+            marginTop: 2,
+            lineHeight: 14,
+          }}>
+            Auto-detected based on glucose level (≥126 mg/dL)
+          </Text>
+        </View>
         <Switch
           value={props.hasDiabetes}
           onValueChange={props.setHasDiabetes}

@@ -71,6 +71,15 @@ export function useDonorFormState() {
   const [allergies, setAllergies] = useState<string>("");
   const [lastDonationDate, setLastDonationDate] = useState<string>("");
 
+  const [smokingStatus, setSmokingStatus] = useState<string>('');
+  const [packYears, setPackYears] = useState<string>('');
+  const [quitSmokingDate, setQuitSmokingDate] = useState<string>('');
+  const [alcoholStatus, setAlcoholStatus] = useState<string>('');
+  const [drinksPerWeek, setDrinksPerWeek] = useState<string>('');
+  const [quitAlcoholDate, setQuitAlcoholDate] = useState<string>('');
+  const [alcoholAbstinenceMonths, setAlcoholAbstinenceMonths] = useState<string>('');
+
+
   const [isConsented, setIsConsented] = useState<boolean>(false);
 
   const [addressLine, setAddressLine] = useState<string>("");
@@ -184,6 +193,14 @@ export function useDonorFormState() {
             setLastDonationDate(
               donor.eligibilityCriteria.lastDonationDate || ""
             );
+            setSmokingStatus(donor.eligibilityCriteria.smokingStatus || '');
+            setPackYears(donor.eligibilityCriteria.packYears?.toString() || '');
+            setQuitSmokingDate(donor.eligibilityCriteria.quitSmokingDate || '');
+            setAlcoholStatus(donor.eligibilityCriteria.alcoholStatus || '');
+            setDrinksPerWeek(donor.eligibilityCriteria.drinksPerWeek?.toString() || '');
+            setQuitAlcoholDate(donor.eligibilityCriteria.quitAlcoholDate || '');
+            setAlcoholAbstinenceMonths(donor.eligibilityCriteria.alcoholAbstinenceMonths?.toString() || '');
+
           }
           if (donor.consentForm) {
             setIsConsented(donor.consentForm.isConsented || false);
@@ -392,6 +409,20 @@ export function useDonorFormState() {
     setAllergies,
     lastDonationDate,
     setLastDonationDate,
+    smokingStatus,
+    setSmokingStatus,
+    packYears,
+    setPackYears,
+    quitSmokingDate,
+    setQuitSmokingDate,
+    alcoholStatus,
+    setAlcoholStatus,
+    drinksPerWeek,
+    setDrinksPerWeek,
+    quitAlcoholDate,
+    setQuitAlcoholDate,
+    alcoholAbstinenceMonths,
+    setAlcoholAbstinenceMonths,
 
     isConsented,
     setIsConsented,
