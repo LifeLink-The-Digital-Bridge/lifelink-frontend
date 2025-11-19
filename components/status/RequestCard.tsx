@@ -2,7 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from "react-native-responsive-screen";
-import { canShowCancelButton, getStatusInfo, getUrgencyConfig } from "../../utils/statusHelpers";
+import { getStatusInfo, getUrgencyConfig } from "../../utils/statusHelpers";
 import { StatusBadge } from "./StatusBadge";
 import { router } from "expo-router/build/exports";
 
@@ -41,7 +41,7 @@ export const RequestCard: React.FC<RequestCardProps> = ({
   onPress,
   onCancelPress,
 }) => {
-  const showCancel = canShowCancelButton(request.status);
+  const showCancel = request.status !== "CANCELLED_BY_RECIPIENT" && request.status !== "FULFILLED" && request.status !== "IN_PROGRESS";
   const statusInfo = getStatusInfo(request.status);
   const urgencyConfig = getUrgencyConfig(request.urgencyLevel, theme);
 
@@ -49,18 +49,13 @@ export const RequestCard: React.FC<RequestCardProps> = ({
     <TouchableOpacity
       style={[styles.card, { marginBottom: hp("1.5%") }]}
       onPress={() => {
-        if (hasMatch) {
-          onPress();
-        } else {
-          router.push({
-            pathname: "/navigation/statusscreens/RequestDetailsScreen",
-            params: { requestData: JSON.stringify(request) },
-          });
-        }
+        router.push({
+          pathname: "/navigation/statusscreens/RequestDetailsScreen",
+          params: { requestData: JSON.stringify(request) },
+        });
       }}
       activeOpacity={0.7}
     >
-
       <View style={statusStyles.cardHeader}>
         <View style={{ flex: 1 }}>
           <Text style={statusStyles.cardTitle}>{request.requestType}</Text>

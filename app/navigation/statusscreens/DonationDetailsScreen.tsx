@@ -2,7 +2,7 @@ import AppLayout from "@/components/AppLayout";
 import { StatusHeader } from "@/components/common/StatusHeader";
 import { Feather } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ActivityIndicator,
   ScrollView,
@@ -18,6 +18,7 @@ import { useTheme } from "../../../utils/theme-context";
 import { getStatusColor, formatStatusDisplay } from "../../../utils/statusHelpers";
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
 import { InfoRow } from "../../../components/match/InfoRow";
+import { getMyMatchesAsDonor, MatchResponse } from "../../api/matchingApi";
 
 interface DonationDTO {
   id: string;
@@ -58,13 +59,45 @@ const DonationDetailsScreen = () => {
   const { colorScheme } = useTheme();
   const { donationData } = useLocalSearchParams();
   const router = useRouter();
+
   const isDark = colorScheme === "dark";
   const theme = isDark ? darkTheme : lightTheme;
   const styles = createUnifiedStyles(theme);
 
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [loadingMatches, setLoadingMatches] = useState(true);
+  const [hasMatch, setHasMatch] = useState(false);
+  const [matchData, setMatchData] = useState<MatchResponse | null>(null);
 
   const donation: DonationDTO = donationData ? JSON.parse(donationData as string) : null;
+
+  const isCancelled = donation?.status === "CANCELLED" || donation?.status === "CANCELED";
+
+  useEffect(() => {
+    const fetchMatches = async () => {
+      if (!donation || isCancelled) {
+        setLoadingMatches(false);
+        return;
+      }
+
+      try {
+        setLoadingMatches(true);
+        const matches = await getMyMatchesAsDonor();
+        const match = matches.find((m) => m.donationId === donation.id);
+
+        if (match) {
+          setHasMatch(true);
+          setMatchData(match);
+        }
+      } catch (error) {
+        console.error("Failed to fetch matches:", error);
+      } finally {
+        setLoadingMatches(false);
+      }
+    };
+
+    fetchMatches();
+  }, [donation?.id, isCancelled]);
 
   const copyToClipboard = async (id: string, label: string) => {
     try {
@@ -79,7 +112,6 @@ const DonationDetailsScreen = () => {
 
   const renderCopyableRow = (label: string, id: string, isLast: boolean = false) => {
     const isCopied = copiedId === id;
-    
     return (
       <View
         style={[
@@ -89,7 +121,7 @@ const DonationDetailsScreen = () => {
             borderBottomWidth: isLast ? 0 : 1,
             borderBottomColor: theme.border,
             alignItems: "center",
-          }
+          },
         ]}
       >
         <Text style={[styles.text, { flex: 0.4, color: theme.textSecondary }]}>
@@ -104,7 +136,7 @@ const DonationDetailsScreen = () => {
                 fontWeight: "500",
                 marginRight: 8,
                 flex: 1,
-              }
+              },
             ]}
             numberOfLines={1}
           >
@@ -130,6 +162,34 @@ const DonationDetailsScreen = () => {
     );
   };
 
+  const getMatchButtonConfig = () => {
+    if (!matchData) return null;
+
+    const matchStatus = matchData.status?.toUpperCase();
+
+    if (matchStatus === "REJECTED" || matchStatus === "CANCELLED" || matchStatus === "CANCELED") {
+      return {
+        backgroundColor: theme.error + "15",
+        borderColor: theme.error,
+        iconColor: theme.error,
+        icon: "x-circle",
+        title: "Match " + (matchStatus === "REJECTED" ? "Rejected" : "Cancelled"),
+        subtitle: "This match is no longer active",
+        showChevron: false,
+      };
+    }
+
+    return {
+      backgroundColor: theme.success + "15",
+      borderColor: theme.success,
+      iconColor: theme.success,
+      icon: "check-circle",
+      title: "Match Found!",
+      subtitle: "Tap to view match details",
+      showChevron: true,
+    };
+  };
+
   if (!donation) {
     return (
       <AppLayout>
@@ -143,6 +203,8 @@ const DonationDetailsScreen = () => {
       </AppLayout>
     );
   }
+
+  const matchConfig = getMatchButtonConfig();
 
   return (
     <AppLayout>
@@ -166,6 +228,81 @@ const DonationDetailsScreen = () => {
           }}
           showsVerticalScrollIndicator={false}
         >
+          {!loadingMatches && !isCancelled && hasMatch && matchData && matchConfig && (
+            <TouchableOpacity
+              style={{
+                backgroundColor: matchConfig.backgroundColor,
+                borderWidth: 2,
+                borderColor: matchConfig.borderColor,
+                borderRadius: 12,
+                padding: wp("4%"),
+                marginBottom: hp("2%"),
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+              onPress={() => {
+                if (matchConfig.showChevron) {
+                  router.push({
+                    pathname: "/navigation/matchscreens/MatchResultsScreen",
+                    params: { 
+                      highlightMatchId: matchData.matchResultId 
+                    },
+                  });
+                }
+              }}
+              activeOpacity={matchConfig.showChevron ? 0.7 : 1}
+              disabled={!matchConfig.showChevron}
+            >
+              <View style={{ flex: 1 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
+                  <Feather name={matchConfig.icon as any} size={20} color={matchConfig.iconColor} />
+                  <Text
+                    style={{
+                      fontSize: wp("4.5%"),
+                      fontWeight: "bold",
+                      color: matchConfig.iconColor,
+                      marginLeft: 8,
+                    }}
+                  >
+                    {matchConfig.title}
+                  </Text>
+                </View>
+                <Text
+                  style={{
+                    fontSize: wp("3.5%"),
+                    color: theme.textSecondary,
+                    marginTop: 2,
+                  }}
+                >
+                  {matchConfig.subtitle}
+                </Text>
+              </View>
+              {matchConfig.showChevron && (
+                <Feather name="chevron-right" size={24} color={matchConfig.iconColor} />
+              )}
+            </TouchableOpacity>
+          )}
+
+          {!isCancelled && loadingMatches && (
+            <View
+              style={{
+                backgroundColor: theme.card,
+                borderRadius: 12,
+                padding: wp("4%"),
+                marginBottom: hp("2%"),
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <ActivityIndicator size="small" color={theme.primary} />
+              <Text style={{ marginLeft: 8, color: theme.textSecondary }}>
+                Checking for matches...
+              </Text>
+            </View>
+          )}
+
           <View style={styles.sectionContainer}>
             <View style={styles.sectionHeader}>
               <View style={styles.sectionIconContainer}>

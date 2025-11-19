@@ -2,7 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { heightPercentageToDP as hp, widthPercentageToDP as wp } from "react-native-responsive-screen";
-import { canShowCancelButton, getStatusInfo } from "../../utils/statusHelpers";
+import { getStatusInfo } from "../../utils/statusHelpers";
 import { StatusBadge } from "./StatusBadge";
 import { router } from "expo-router/build/exports";
 
@@ -38,21 +38,17 @@ export const DonationCard: React.FC<DonationCardProps> = ({
   onPress,
   onCancelPress,
 }) => {
-  const showCancel = canShowCancelButton(donation.status);
+  const showCancel = donation.status !== "CANCELLED_BY_DONOR" && donation.status !== "COMPLETED" && donation.status !== "IN_PROGRESS";
   const statusInfo = getStatusInfo(donation.status);
 
   return (
     <TouchableOpacity
       style={[styles.card, { marginBottom: hp("1.5%") }]}
       onPress={() => {
-        if (hasMatch) {
-          onPress();
-        } else {
-          router.push({
-            pathname: "/navigation/statusscreens/DonationDetailsScreen",
-            params: { donationData: JSON.stringify(donation) },
-          });
-        }
+        router.push({
+          pathname: "/navigation/statusscreens/DonationDetailsScreen",
+          params: { donationData: JSON.stringify(donation) },
+        });
       }}
       activeOpacity={0.7}
     >

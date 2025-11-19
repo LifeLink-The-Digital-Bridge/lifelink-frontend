@@ -23,7 +23,7 @@ export function CustomDatePicker({
   selectedDate,
   onDateChange,
   hasError,
-  placeholder = "Select Date of Birth",
+  placeholder = "Select Date",
 }: DatePickerProps) {
   const { isDark } = useTheme();
   const theme = isDark ? darkTheme : lightTheme;
@@ -272,7 +272,7 @@ export function CustomDatePicker({
             onPress={() => {}}
           >
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select Date of Birth</Text>
+              <Text style={styles.modalTitle}>Select Date</Text>
               <TouchableOpacity onPress={() => setShowPicker(false)}>
                 <Feather name="x" size={20} color={theme.textSecondary} />
               </TouchableOpacity>

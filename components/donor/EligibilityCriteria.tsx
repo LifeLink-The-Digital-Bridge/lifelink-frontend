@@ -6,6 +6,7 @@ import { createUnifiedStyles } from '../../constants/styles/unifiedStyles';
 import { createDonorStyles } from '../../constants/styles/donorStyles';
 import { Feather } from '@expo/vector-icons';
 import { CustomDatePicker } from '../common/DatePicker';
+import { CustomPicker } from '../common/CustomPicker';
 import { validateWeight, validateHeight } from '../../utils/medicalValidation';
 
 interface EligibilityCriteriaProps {
@@ -38,6 +39,20 @@ interface EligibilityCriteriaProps {
   setAllergies: (value: string) => void;
   lastDonationDate: string;
   setLastDonationDate: (value: string) => void;
+  smokingStatus: string;
+  setSmokingStatus: (value: string) => void;
+  packYears: string;
+  setPackYears: (value: string) => void;
+  quitSmokingDate: string;
+  setQuitSmokingDate: (value: string) => void;
+  alcoholStatus: string;
+  setAlcoholStatus: (value: string) => void;
+  drinksPerWeek: string;
+  setDrinksPerWeek: (value: string) => void;
+  quitAlcoholDate: string;
+  setQuitAlcoholDate: (value: string) => void;
+  alcoholAbstinenceMonths: string;
+  setAlcoholAbstinenceMonths: (value: string) => void;
 }
 
 export function EligibilityCriteria({
@@ -70,6 +85,20 @@ export function EligibilityCriteria({
   setAllergies,
   lastDonationDate,
   setLastDonationDate,
+  smokingStatus,
+  setSmokingStatus,
+  packYears,
+  setPackYears,
+  quitSmokingDate,
+  setQuitSmokingDate,
+  alcoholStatus,
+  setAlcoholStatus,
+  drinksPerWeek,
+  setDrinksPerWeek,
+  quitAlcoholDate,
+  setQuitAlcoholDate,
+  alcoholAbstinenceMonths,
+  setAlcoholAbstinenceMonths,
 }: EligibilityCriteriaProps) {
   const { colorScheme } = useTheme();
   const isDark = colorScheme === 'dark';
@@ -405,6 +434,102 @@ export function EligibilityCriteria({
           placeholder="Select last donation date (if applicable)"
         />
       </View>
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Smoking Status</Text>
+        <CustomPicker
+          selectedValue={smokingStatus}
+          onValueChange={setSmokingStatus}
+          items={[
+            { label: 'Never smoked', value: 'NEVER_SMOKED' },
+            { label: 'Former smoker', value: 'FORMER_SMOKER' },
+            { label: 'Current smoker', value: 'CURRENT_SMOKER' },
+            { label: 'Occasional smoker', value: 'OCCASIONAL_SMOKER' },
+          ]}
+          placeholder="Select smoking status"
+        />
+      </View>
+
+      {(smokingStatus === 'CURRENT_SMOKER' || smokingStatus === 'FORMER_SMOKER') && (
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Pack Years</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter pack years"
+            placeholderTextColor={theme.textSecondary}
+            value={packYears}
+            onChangeText={setPackYears}
+            keyboardType="numeric"
+          />
+        </View>
+      )}
+
+      {smokingStatus === 'FORMER_SMOKER' && (
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Quit Smoking Date</Text>
+          <CustomDatePicker
+            selectedDate={quitSmokingDate}
+            onDateChange={setQuitSmokingDate}
+            hasError={false}
+            placeholder="Select quit smoking date"
+          />
+        </View>
+      )}
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.label}>Alcohol Status</Text>
+        <CustomPicker
+          selectedValue={alcoholStatus}
+          onValueChange={setAlcoholStatus}
+          items={[
+            { label: 'No alcohol use', value: 'NO_ALCOHOL_USE' },
+            { label: 'Moderate use', value: 'MODERATE_USE' },
+            { label: 'Heavy use', value: 'HEAVY_USE' },
+            { label: 'Former user', value: 'FORMER_USER' },
+          ]}
+          placeholder="Select alcohol status"
+        />
+      </View>
+
+      {(alcoholStatus === 'MODERATE_USE' || alcoholStatus === 'HEAVY_USE') && (
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Drinks Per Week</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter drinks per week"
+            placeholderTextColor={theme.textSecondary}
+            value={drinksPerWeek}
+            onChangeText={setDrinksPerWeek}
+            keyboardType="numeric"
+          />
+        </View>
+      )}
+
+      {alcoholStatus === 'FORMER_USER' && (
+        <>
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Quit Alcohol Date</Text>
+            <CustomDatePicker
+              selectedDate={quitAlcoholDate}
+              onDateChange={setQuitAlcoholDate}
+              hasError={false}
+              placeholder="Select quit alcohol date"
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Alcohol Abstinence (Months)</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter months of abstinence"
+              placeholderTextColor={theme.textSecondary}
+              value={alcoholAbstinenceMonths}
+              onChangeText={setAlcoholAbstinenceMonths}
+              keyboardType="numeric"
+            />
+          </View>
+        </>
+      )}
     </View>
   );
 }
