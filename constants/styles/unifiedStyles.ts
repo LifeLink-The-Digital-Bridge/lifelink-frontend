@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
+import { heightPercentageToDP as hp, widthPercentageToDP as wp } from "react-native-responsive-screen";
 
 export const createUnifiedStyles = (theme: any) =>
   StyleSheet.create({
@@ -272,21 +272,6 @@ export const createUnifiedStyles = (theme: any) =>
       alignItems: "center",
       justifyContent: "center",
       paddingVertical: hp("1.5%"),
-      paddingHorizontal: wp("5%"),
-      borderRadius: wp("3%"),
-      marginBottom: hp("1.5%"),
-    },
-
-    locationButtonText: {
-      color: "#fff",
-      fontWeight: "600",
-      fontSize: wp("4%"),
-      marginLeft: wp("2%"),
-      textAlign: "center",
-    },
-
-    locationText: {
-      fontSize: wp("3.5%"),
       color: theme.textSecondary,
       textAlign: "center",
       marginBottom: hp("1.5%"),
@@ -916,7 +901,7 @@ export const createUnifiedStyles = (theme: any) =>
       paddingHorizontal: wp(1.5),
       marginBottom: hp(3),
     },
-    
+
     infoLabel: {
       fontSize: wp("3.75%"),
       color: theme.textSecondary,

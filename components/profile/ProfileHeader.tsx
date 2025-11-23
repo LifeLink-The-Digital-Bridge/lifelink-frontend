@@ -88,7 +88,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               <View style={styles.infoItem}>
                 <Feather name="calendar" size={13} color={theme.textSecondary} />
                 <Text style={[styles.infoText, { color: theme.textSecondary }]}>
-                  Joined {formatDate(profile.dob)}
+                  Date Of Birth {formatDate(profile.dob)}
                 </Text>
               </View>
             )}

@@ -1,7 +1,9 @@
-import React from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import React from 'react';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useNotification } from '../../utils/notification-context';
+import { NotificationBadge } from '../notifications/NotificationBadge';
 import { SearchBar } from './SearchBar';
 
 interface TopBarProps {
@@ -24,6 +26,11 @@ export const TopBar: React.FC<TopBarProps> = ({
   onBack,
 }) => {
   const router = useRouter();
+  const { unreadCount } = useNotification();
+
+  const handleBellPress = () => {
+    router.push('../navigation/notifications' as any);
+  };
 
   const styles = StyleSheet.create({
     container: {
@@ -41,6 +48,7 @@ export const TopBar: React.FC<TopBarProps> = ({
       backgroundColor: theme.primary + '20',
       borderRadius: 24,
       padding: 8,
+      position: 'relative',
     },
 
     leftButton: {
@@ -74,9 +82,10 @@ export const TopBar: React.FC<TopBarProps> = ({
 
       <TouchableOpacity
         style={[styles.iconButton, styles.rightButton]}
-        onPress={onBellPress}
+        onPress={handleBellPress}
       >
         <Feather name="bell" size={24} color={theme.primary} />
+        <NotificationBadge count={unreadCount} theme={theme} />
       </TouchableOpacity>
 
       {showSettingsButton && onSettingsPress && (

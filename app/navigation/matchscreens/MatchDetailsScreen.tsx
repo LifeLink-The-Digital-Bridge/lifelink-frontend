@@ -13,20 +13,23 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { heightPercentageToDP as hp, widthPercentageToDP as wp } from "react-native-responsive-screen";
 import { ValidationAlert } from "../../../components/common/ValidationAlert";
+import { ActionButtons } from "../../../components/match/ActionButtons";
+import { CompletionModal } from "../../../components/match/CompletionModal";
 import { MapSection } from "../../../components/match/MapSection";
 import { MatchInfoCard } from "../../../components/match/MatchInfoCard";
 import { ProfileCard } from "../../../components/match/ProfileCard";
-import { YourDetailsCard } from "../../../components/match/YourDetailsCard";
-import { ActionButtons } from "../../../components/match/ActionButtons";
 import { RejectModal } from "../../../components/match/RejectModal";
 import { WithdrawModal } from "../../../components/match/WithdrawModal";
-import { CompletionModal } from "../../../components/match/CompletionModal";
+import { YourDetailsCard } from "../../../components/match/YourDetailsCard";
 import { darkTheme, lightTheme } from "../../../constants/styles/authStyles";
 import { createUnifiedStyles } from "../../../constants/styles/unifiedStyles";
+import { formatStatusDisplay, getStatusColor } from "../../../utils/statusHelpers";
 import { useTheme } from "../../../utils/theme-context";
-import { getStatusColor, formatStatusDisplay } from "../../../utils/statusHelpers";
 import {
+  canConfirmCompletion,
+  CompletionConfirmationDTO,
   donorConfirmMatch,
   donorRejectMatch,
   donorWithdrawConfirmation,
@@ -40,10 +43,7 @@ import {
   recipientConfirmMatch,
   recipientRejectMatch,
   recipientWithdrawConfirmation,
-  canConfirmCompletion,
-  CompletionConfirmationDTO,
 } from "../../api/matchingApi";
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
 
 const HEADER_HEIGHT = 120;
 
@@ -69,6 +69,31 @@ interface MatchDetails {
   expiryReason?: string;
   completedAt?: string;
   canConfirmCompletion?: boolean;
+
+  // New fields from MatchResponse
+  compatibilityScore?: number;
+  bloodCompatibilityScore?: number;
+  locationCompatibilityScore?: number;
+  medicalCompatibilityScore?: number;
+  urgencyPriorityScore?: number;
+  matchReason?: string;
+  priorityRank?: number;
+
+  receivedDate?: string;
+  completionNotes?: string;
+  recipientRating?: number;
+  hospitalName?: string;
+
+  confirmationExpiresAt?: string;
+  firstConfirmer?: string;
+  firstConfirmedAt?: string;
+
+  withdrawnBy?: string;
+  withdrawnAt?: string;
+  withdrawalReason?: string;
+
+  withdrawalGracePeriodExpiresAt?: string;
+  reconfirmationWindowExpiresAt?: string;
 }
 
 interface UserProfile {
@@ -798,32 +823,69 @@ const MatchDetailsScreen = () => {
           style={{ flex: 1 }}
         >
           {match.status === "COMPLETED" && (
+            <View style={styles.sectionContainer}>
+              <Text style={styles.sectionTitle}>Completion Details</Text>
+              <View style={styles.card}>
+                <View style={styles.sectionContainer}>
+                  <Text style={styles.sectionContainer}>Hospital</Text>
+                  <Text style={styles.sectionContainer}>{match.hospitalName || "Not specified"}</Text>
+                </View>
+                <View style={styles.sectionContainer}>
+                  <Text style={styles.sectionContainer}>Received Date</Text>
+                  <Text style={styles.sectionContainer}>{match.receivedDate || "Not specified"}</Text>
+                </View>
+                {match.recipientRating && (
+                  <View style={styles.sectionContainer}>
+                    <Text style={styles.sectionContainer}>Rating</Text>
+                    <View style={{ flexDirection: 'row' }}>
+                      {[...Array(5)].map((_, i) => (
+                        <Feather
+                          key={i}
+                          name="star"
+                          size={16}
+                          color={i < (match.recipientRating || 0) ? "#FFD700" : theme.border}
+                          style={{ marginLeft: 2 }}
+                        />
+                      ))}
+                    </View>
+                  </View>
+                )}
+                {match.completionNotes && (
+                  <View style={[styles.sectionContainer, { flexDirection: 'column', alignItems: 'flex-start', gap: 8 }]}>
+                    <Text style={styles.sectionContainer}>Notes</Text>
+                    <Text style={styles.sectionContainer}>{match.completionNotes}</Text>
+                  </View>
+                )}
+              </View>
+            </View>
+          )}
+
+          {match.status === "COMPLETED" && (
             <View
               style={{
                 backgroundColor: (theme as any).success + "15",
-                borderLeftWidth: 4,
-                borderLeftColor: (theme as any).success,
                 padding: wp("4%"),
+                borderRadius: wp("3%"),
+                borderWidth: 1,
+                borderColor: (theme as any).success + "30",
+                flexDirection: "row",
+                alignItems: "center",
+                marginTop: hp("2%"),
                 marginBottom: hp("2%"),
-                marginHorizontal: wp("5%"),
-                borderRadius: 8,
-                marginTop: hp("1%"),
               }}
             >
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <Feather name="info" size={20} color={(theme as any).success} />
-                <Text
-                  style={{
-                    color: (theme as any).success,
-                    fontSize: wp("3.5%"),
-                    fontWeight: "600",
-                    marginLeft: wp("2%"),
-                    flex: 1,
-                  }}
-                >
-                  This is historical data. The match has been completed.
-                </Text>
-              </View>
+              <Feather name="info" size={20} color={(theme as any).success} />
+              <Text
+                style={{
+                  color: (theme as any).success,
+                  fontSize: wp("3.5%"),
+                  fontWeight: "600",
+                  marginLeft: wp("2%"),
+                  flex: 1,
+                }}
+              >
+                This is historical data. The match has been completed.
+              </Text>
             </View>
           )}
 

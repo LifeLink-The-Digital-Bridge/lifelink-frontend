@@ -1,31 +1,31 @@
-import React, { useEffect, useState, useRef } from "react";
-import {
-  View,
-  Text,
-  ActivityIndicator,
-  ScrollView,
-  Animated,
-  Modal,
-  TouchableOpacity,
-  StyleSheet,
-} from "react-native";
-import * as SecureStore from "expo-secure-store";
+import { Feather } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { useRouter } from "expo-router";
-import { Feather } from "@expo/vector-icons";
-import { useAuth } from "../../utils/auth-context";
-import { useTheme } from "../../utils/theme-context";
-import { useTabBar } from "../../utils/tabbar-context";
-import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
+import * as SecureStore from "expo-secure-store";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Animated,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { heightPercentageToDP as hp, widthPercentageToDP as wp } from "react-native-responsive-screen";
+import ScrollableHeaderLayout from "../../components/common/ScrollableHeaderLayout";
+import { darkTheme, lightTheme } from "../../constants/styles/authStyles";
 import { createDashboardStyles } from "../../constants/styles/dashboardStyles";
 import { createUnifiedStyles } from "../../constants/styles/unifiedStyles";
-import ScrollableHeaderLayout from "../../components/common/ScrollableHeaderLayout";
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
+import { useAuth } from "../../utils/auth-context";
+import { useTabBar } from "../../utils/tabbar-context";
+import { useTheme } from "../../utils/theme-context";
 
 import { TopBar } from "../../components/common/TopBar";
+import { ChatBot } from "../../components/dashboard/ChatBot";
 import { SidebarMenu } from "../../components/dashboard/SidebarMenu";
 import { WelcomeSection } from "../../components/dashboard/WelcomeSection";
-import { ChatBot } from "../../components/dashboard/ChatBot";
 
 const TOPBAR_HEIGHT = 90;
 
@@ -104,7 +104,7 @@ const Dashboard = () => {
   const checkExistingLocationPermission = async () => {
     try {
       const { status } = await Location.getForegroundPermissionsAsync();
-      
+
       if (status === "granted") {
         setLocationPermission(true);
         getCurrentLocation();
@@ -120,7 +120,7 @@ const Dashboard = () => {
   const handleEnableLocation = async () => {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
-      
+
       if (status === "granted") {
         setLocationPermission(true);
         await getCurrentLocation();
@@ -144,7 +144,7 @@ const Dashboard = () => {
         accuracy: Location.Accuracy.Balanced,
       });
       setCurrentLocation(location);
-      
+
       await fetchNearbyData(location.coords.latitude, location.coords.longitude);
     } catch (error) {
       console.error("Error getting current location:", error);
@@ -155,11 +155,11 @@ const Dashboard = () => {
   const fetchNearbyData = async (latitude: number, longitude: number) => {
     try {
       setLoadingNearby(true);
-    
-      
+
+
       await new Promise(resolve => setTimeout(resolve, 1000));
       setNearbyData([]);
-      
+
     } catch (error) {
       console.error("Error fetching nearby data:", error);
       setNearbyData([]);
@@ -208,13 +208,9 @@ const Dashboard = () => {
     showValidationAlert("Chat Bot", "Chat functionality coming soon!");
   };
 
-  const handleBellPress = () => {
-    showValidationAlert("Notifications", "No new notifications at the moment");
-  };
-
-    const handleRaiseFund = () => {
+  const handleRaiseFund = () => {
     showValidationAlert(
-      "Raise Fund", 
+      "Raise Fund",
       "Raise Fund functionality coming soon! We're working hard to bring you this feature."
     );
   };
@@ -381,7 +377,7 @@ const Dashboard = () => {
           <TopBar
             theme={theme}
             onMenuPress={() => setMenuVisible(true)}
-            onBellPress={handleBellPress}
+            onBellPress={() => { }}
           />
         </Animated.View>
 

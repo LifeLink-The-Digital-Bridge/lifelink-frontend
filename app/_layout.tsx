@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
 import { Slot } from 'expo-router';
-import { AuthProvider } from '../utils/auth-context';
-import { ThemeProvider } from '../utils/theme-context';
 import { StatusBar } from 'expo-status-bar';
+import React, { useState } from 'react';
 import AnimatedSplash from '../components/AnimatedSplash';
+import { AuthProvider } from '../utils/auth-context';
+import { NotificationProvider } from '../utils/notification-context';
+import '../utils/polyfills';
+import { ThemeProvider } from '../utils/theme-context';
 
 export default function RootLayout() {
   const [showSplash, setShowSplash] = useState(true);
@@ -15,8 +17,10 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <StatusBar style="auto" />
-        <Slot />
+        <NotificationProvider>
+          <StatusBar style="auto" />
+          <Slot />
+        </NotificationProvider>
       </AuthProvider>
     </ThemeProvider>
   );

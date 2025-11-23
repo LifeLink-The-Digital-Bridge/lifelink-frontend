@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
+import React, { useState } from 'react';
+import { Alert, Text, TouchableOpacity, View } from 'react-native';
+import { darkTheme, lightTheme } from '../../constants/styles/authStyles';
 import { createUnifiedStyles } from '../../constants/styles/unifiedStyles';
 import { useTheme } from '../../utils/theme-context';
-import { lightTheme, darkTheme } from '../../constants/styles/authStyles';
 import { InfoRow } from './InfoRow';
 
 interface MatchInfoCardProps {
@@ -44,7 +44,7 @@ export const MatchInfoCard: React.FC<MatchInfoCardProps> = ({
 
   const renderCopyableRow = (label: string, id: string, isLast: boolean = false) => {
     const isCopied = copiedId === id;
-    
+
     return (
       <View
         style={[
@@ -93,6 +93,15 @@ export const MatchInfoCard: React.FC<MatchInfoCardProps> = ({
     );
   };
 
+  const renderSectionHeader = (title: string, icon: any) => (
+    <View style={[styles.sectionHeader, { marginTop: 16, marginBottom: 8 }]}>
+      <View style={styles.sectionIconContainer}>
+        <Feather name={icon} size={16} color={theme.primary} />
+      </View>
+      <Text style={[styles.sectionTitle, { fontSize: 16 }]}>{title}</Text>
+    </View>
+  );
+
   return (
     <View style={styles.sectionContainer}>
       <View style={styles.sectionHeader}>
@@ -104,7 +113,7 @@ export const MatchInfoCard: React.FC<MatchInfoCardProps> = ({
 
       <InfoRow label="Your Role" value={currentUserRole} />
       <InfoRow label="Match Type" value={match.matchType || 'N/A'} />
-      
+
       {match.donationType && (
         <InfoRow label="Donation Type" value={match.donationType} />
       )}
@@ -120,6 +129,41 @@ export const MatchInfoCard: React.FC<MatchInfoCardProps> = ({
           value={`${match.distance.toFixed(2)} km`}
         />
       )}
+
+      {/* Compatibility Section */}
+      {(match.compatibilityScore !== undefined || match.matchReason) && (
+        <>
+          {renderSectionHeader("Compatibility", "activity")}
+          {match.compatibilityScore !== undefined && (
+            <InfoRow
+              label="Overall Score"
+              value={`${(match.compatibilityScore * 100).toFixed(0)}%`}
+              valueColor={theme.primary}
+            />
+          )}
+          {match.bloodCompatibilityScore !== undefined && (
+            <InfoRow label="Blood Match" value={`${(match.bloodCompatibilityScore * 100).toFixed(0)}%`} />
+          )}
+          {match.locationCompatibilityScore !== undefined && (
+            <InfoRow label="Location Match" value={`${(match.locationCompatibilityScore * 100).toFixed(0)}%`} />
+          )}
+          {match.medicalCompatibilityScore !== undefined && (
+            <InfoRow label="Medical Match" value={`${(match.medicalCompatibilityScore * 100).toFixed(0)}%`} />
+          )}
+          {match.urgencyPriorityScore !== undefined && (
+            <InfoRow label="Urgency Score" value={`${(match.urgencyPriorityScore * 100).toFixed(0)}%`} />
+          )}
+          {match.matchReason && (
+            <View style={{ paddingVertical: 8 }}>
+              <Text style={[styles.text, { color: theme.textSecondary, fontSize: 12, marginBottom: 4 }]}>Match Reason</Text>
+              <Text style={[styles.text, { color: theme.text }]}>{match.matchReason}</Text>
+            </View>
+          )}
+        </>
+      )}
+
+      {/* Status Details Section */}
+      {renderSectionHeader("Status Details", "clock")}
 
       <InfoRow
         label="Your Status"
@@ -150,6 +194,67 @@ export const MatchInfoCard: React.FC<MatchInfoCardProps> = ({
         value={formatDate(match.matchedAt)}
       />
 
+      {match.confirmationExpiresAt && !match.isConfirmed && !match.withdrawnAt && (
+        <InfoRow
+          label="Expires At"
+          value={formatDate(match.confirmationExpiresAt)}
+          valueColor={theme.error}
+        />
+      )}
+
+      {match.firstConfirmer && (
+        <InfoRow
+          label="First Confirmed By"
+          value={match.firstConfirmer}
+        />
+      )}
+
+      {match.withdrawnAt && (
+        <>
+          <InfoRow
+            label="Withdrawn At"
+            value={formatDate(match.withdrawnAt)}
+            valueColor={theme.error}
+          />
+          {match.withdrawnBy && (
+            <InfoRow label="Withdrawn By" value={match.withdrawnBy} />
+          )}
+          {match.withdrawalReason && (
+            <View style={{ paddingVertical: 8 }}>
+              <Text style={[styles.text, { color: theme.textSecondary, fontSize: 12, marginBottom: 4 }]}>Withdrawal Reason</Text>
+              <Text style={[styles.text, { color: theme.error }]}>{match.withdrawalReason}</Text>
+            </View>
+          )}
+        </>
+      )}
+
+      {/* Completion Details Section */}
+      {match.status === 'COMPLETED' && (
+        <>
+          {renderSectionHeader("Completion Details", "check-circle")}
+          {match.completedAt && (
+            <InfoRow label="Completed At" value={formatDate(match.completedAt)} />
+          )}
+          {match.hospitalName && (
+            <InfoRow label="Hospital" value={match.hospitalName} />
+          )}
+          {match.receivedDate && (
+            <InfoRow label="Received Date" value={match.receivedDate} />
+          )}
+          {match.recipientRating && (
+            <InfoRow label="Rating" value={`${match.recipientRating} / 5`} />
+          )}
+          {match.completionNotes && (
+            <View style={{ paddingVertical: 8 }}>
+              <Text style={[styles.text, { color: theme.textSecondary, fontSize: 12, marginBottom: 4 }]}>Notes</Text>
+              <Text style={[styles.text, { color: theme.text }]}>{match.completionNotes}</Text>
+            </View>
+          )}
+        </>
+      )}
+
+      {/* IDs Section */}
+      {renderSectionHeader("IDs", "hash")}
       {renderCopyableRow('Donation ID', match.donationId)}
       {renderCopyableRow('Request ID', match.receiveRequestId, true)}
     </View>
