@@ -277,6 +277,13 @@ export const createUnifiedStyles = (theme: any) =>
       marginBottom: hp("1.5%"),
     },
 
+    locationButtonText: {
+      color: "#fff",
+      fontSize: wp("4%"),
+      fontWeight: "600",
+      marginLeft: wp("2%"),
+    },
+
     coordinatesContainer: {
       flexDirection: "row",
       alignItems: "center",

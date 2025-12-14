@@ -1,11 +1,12 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
-import Modal from "react-native-modal";
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import * as SecureStore from 'expo-secure-store';
+import React from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Modal from "react-native-modal";
+import { darkTheme, lightTheme } from '../../constants/styles/authStyles';
+import { useAuth } from '../../utils/auth-context';
 import { useTheme } from '../../utils/theme-context';
-import { lightTheme, darkTheme } from '../../constants/styles/authStyles';
-import { BlurView } from 'expo-blur';
 
 interface MenuItem {
   icon: string;
@@ -160,15 +161,15 @@ export function SidebarMenu({ isVisible, onClose }: SidebarMenuProps) {
     {
       label: 'Quick Actions',
       items: [
-        { 
-          icon: 'dollar-sign', 
+        {
+          icon: 'dollar-sign',
           label: 'Raise Fund',
           subtitle: 'Start a fundraiser',
           route: '/navigation/RaiseFund',
           badge: 'New'
         },
-        { 
-          icon: 'activity', 
+        {
+          icon: 'activity',
           label: 'Activity',
           subtitle: 'View match results',
           route: '/navigation/matchscreens/MatchResultsScreen'
@@ -178,14 +179,14 @@ export function SidebarMenu({ isVisible, onClose }: SidebarMenuProps) {
     {
       label: 'Management',
       items: [
-        { 
-          icon: 'clipboard', 
+        {
+          icon: 'clipboard',
           label: 'My Status',
           subtitle: 'Track donations & requests',
           route: '/navigation/statusscreens/StatusScreen'
         },
-        { 
-          icon: 'link', 
+        {
+          icon: 'link',
           label: 'Manual Match',
           subtitle: 'Connect manually',
           route: '/navigation/matchscreens/ManualMatchScreen'
@@ -199,6 +200,34 @@ export function SidebarMenu({ isVisible, onClose }: SidebarMenuProps) {
     setTimeout(() => {
       router.push(route);
     }, 300);
+  };
+
+  const { logout } = useAuth();
+
+  const handleLogout = async () => {
+    const keysToDelete = [
+      "jwt",
+      "refreshToken",
+      "userId",
+      "email",
+      "username",
+      "roles",
+      "gender",
+      "dob",
+      "donorId",
+      "donorData",
+      "recipientData",
+      'locationId',
+      'addresses',
+      'selectedAddress',
+      'userLocation'
+    ];
+    await Promise.all(
+      keysToDelete.map((key) => SecureStore.deleteItemAsync(key))
+    );
+    await logout();
+    onClose();
+    router.replace("/(auth)/loginScreen");
   };
 
   return (
@@ -226,7 +255,7 @@ export function SidebarMenu({ isVisible, onClose }: SidebarMenuProps) {
           <Text style={styles.headerSubtitle}>Connecting Lives, Building Hope</Text>
         </View>
 
-        <ScrollView 
+        <ScrollView
           style={styles.menuScrollView}
           showsVerticalScrollIndicator={false}
         >
@@ -253,10 +282,10 @@ export function SidebarMenu({ isVisible, onClose }: SidebarMenuProps) {
                         <Text style={styles.badgeText}>{item.badge}</Text>
                       </View>
                     )}
-                    <Feather 
-                      name="chevron-right" 
-                      size={18} 
-                      color={theme.textSecondary} 
+                    <Feather
+                      name="chevron-right"
+                      size={18}
+                      color={theme.textSecondary}
                       style={styles.menuItemChevron}
                     />
                   </TouchableOpacity>
@@ -267,6 +296,20 @@ export function SidebarMenu({ isVisible, onClose }: SidebarMenuProps) {
         </ScrollView>
 
         <View style={styles.footer}>
+          <TouchableOpacity
+            style={[styles.menuItemButton, { marginBottom: 12 }]}
+            onPress={handleLogout}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.menuItemIconContainer, { backgroundColor: theme.error + '15' }]}>
+              <Feather name="log-out" size={20} color={theme.error} />
+            </View>
+            <View style={styles.menuItemContent}>
+              <Text style={[styles.menuItemText, { color: theme.error }]}>Logout</Text>
+              <Text style={styles.menuItemSubtext}>Sign out of your account</Text>
+            </View>
+          </TouchableOpacity>
+
           <TouchableOpacity
             style={styles.closeButton}
             onPress={onClose}

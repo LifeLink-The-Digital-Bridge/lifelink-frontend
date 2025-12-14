@@ -5,6 +5,7 @@ import * as SecureStore from "expo-secure-store";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Animated,
   Modal,
   ScrollView,
@@ -24,8 +25,12 @@ import { useTheme } from "../../utils/theme-context";
 
 import { TopBar } from "../../components/common/TopBar";
 import { ChatBot } from "../../components/dashboard/ChatBot";
+import { FilterToggle } from "../../components/dashboard/FilterToggle";
+import { NearbyActivityCard } from "../../components/dashboard/NearbyActivityCard";
 import { SidebarMenu } from "../../components/dashboard/SidebarMenu";
 import { WelcomeSection } from "../../components/dashboard/WelcomeSection";
+import { getNearbyDonations, getNearbyRequests } from "../api/nearbyApi";
+import { NearbyDonationActivityDTO, NearbyRequestActivityDTO } from "../api/nearbyTypes";
 
 const TOPBAR_HEIGHT = 90;
 
@@ -51,8 +56,10 @@ const Dashboard = () => {
   const [menuVisible, setMenuVisible] = useState(false);
   const [locationPermission, setLocationPermission] = useState<boolean | null>(null);
   const [currentLocation, setCurrentLocation] = useState<Location.LocationObject | null>(null);
-  const [nearbyData, setNearbyData] = useState<any[]>([]);
+  const [nearbyDonations, setNearbyDonations] = useState<NearbyDonationActivityDTO[]>([]);
+  const [nearbyRequests, setNearbyRequests] = useState<NearbyRequestActivityDTO[]>([]);
   const [loadingNearby, setLoadingNearby] = useState(false);
+  const [activityFilter, setActivityFilter] = useState<'all' | 'donors' | 'recipients'>('all');
 
   const [validationAlertVisible, setValidationAlertVisible] = useState(false);
   const [validationAlertMessage, setValidationAlertMessage] = useState("");
@@ -152,17 +159,64 @@ const Dashboard = () => {
     }
   };
 
+  const handleLogout = async () => {
+    const keysToDelete = [
+      "jwt",
+      "refreshToken",
+      "userId",
+      "email",
+      "username",
+      "roles",
+      "gender",
+      "dob",
+      "donorId",
+      "donorData",
+      "recipientData",
+      'locationId',
+      'addresses',
+      'selectedAddress',
+      'userLocation'
+    ];
+    await Promise.all(
+      keysToDelete.map((key) => SecureStore.deleteItemAsync(key))
+    );
+    // @ts-ignore
+    if (useAuth.getState) {
+      // @ts-ignore
+      useAuth.getState().logout();
+    }
+    router.replace("/(auth)/loginScreen");
+  };
+
   const fetchNearbyData = async (latitude: number, longitude: number) => {
     try {
       setLoadingNearby(true);
 
+      const [donations, requests] = await Promise.all([
+        getNearbyDonations(latitude, longitude, 10000),
+        getNearbyRequests(latitude, longitude, 10000)
+      ]);
 
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setNearbyData([]);
+      setNearbyDonations(donations || []);
+      setNearbyRequests(requests || []);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching nearby data:", error);
-      setNearbyData([]);
+      if (error?.response?.status === 403 || error?.message?.includes("403")) {
+        Alert.alert(
+          "Session Expired",
+          "Your session has expired. Please login again.",
+          [
+            {
+              text: "OK",
+              onPress: () => handleLogout(),
+            },
+          ],
+          { cancelable: false }
+        );
+      }
+      setNearbyDonations([]);
+      setNearbyRequests([]);
     } finally {
       setLoadingNearby(false);
     }
@@ -399,6 +453,16 @@ const Dashboard = () => {
               <Feather name="map-pin" size={wp("5%")} color={theme.primary} />
             </View>
 
+            {locationPermission === true && (nearbyDonations.length > 0 || nearbyRequests.length > 0) && (
+              <FilterToggle
+                activeFilter={activityFilter}
+                onFilterChange={setActivityFilter}
+                donorsCount={nearbyDonations.length}
+                recipientsCount={nearbyRequests.length}
+                theme={theme}
+              />
+            )}
+
             {locationPermission === false ? (
               <View style={nearbyStyles.locationDisabled}>
                 <View style={nearbyStyles.locationIcon}>
@@ -429,7 +493,7 @@ const Dashboard = () => {
                   Finding nearby activity...
                 </Text>
               </View>
-            ) : nearbyData.length === 0 ? (
+            ) : (nearbyDonations.length === 0 && nearbyRequests.length === 0) ? (
               <View style={nearbyStyles.emptyState}>
                 <Feather
                   name="users"
@@ -446,9 +510,26 @@ const Dashboard = () => {
               </View>
             ) : (
               <View>
-                {nearbyData.map((item, index) => (
-                  <Text key={index}>{item.name}</Text>
-                ))}
+                {(activityFilter === 'all' || activityFilter === 'donors') &&
+                  nearbyDonations.map((activity, index) => (
+                    <NearbyActivityCard
+                      key={`donation-${index}`}
+                      activity={activity}
+                      theme={theme}
+                      type="donation"
+                      onProfilePress={() => router.push(`/navigation/profilescreens/profileScreen?username=${activity.user.username}` as any)}
+                    />
+                  ))}
+                {(activityFilter === 'all' || activityFilter === 'recipients') &&
+                  nearbyRequests.map((activity, index) => (
+                    <NearbyActivityCard
+                      key={`request-${index}`}
+                      activity={activity}
+                      theme={theme}
+                      type="request"
+                      onProfilePress={() => router.push(`/navigation/profilescreens/profileScreen?username=${activity.user.username}` as any)}
+                    />
+                  ))}
               </View>
             )}
           </View>
