@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity, Modal, StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { Image, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import {
-  widthPercentageToDP as wp,
   heightPercentageToDP as hp,
-} from 'react-native-responsive-screen';
+  widthPercentageToDP as wp,
+} from '../../utils/responsive';
 
 interface ProfileHeaderProps {
   profile: {
@@ -54,15 +54,15 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
     <>
       <View style={[styles.profileSection, { backgroundColor: theme.card }]}>
         <View style={styles.profileTopRow}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.profileImageWrapper}
             onPress={() => profile.profileImageUrl && setImageViewerVisible(true)}
             activeOpacity={profile.profileImageUrl ? 0.7 : 1}
           >
             {profile.profileImageUrl ? (
-              <Image 
-                source={{ uri: profile.profileImageUrl }} 
-                style={[styles.profileImage, { borderColor: theme.primary }]} 
+              <Image
+                source={{ uri: profile.profileImageUrl }}
+                style={[styles.profileImage, { borderColor: theme.primary }]}
               />
             ) : (
               <View style={[styles.profileImagePlaceholder, { backgroundColor: theme.primary + '20' }]}>
@@ -102,7 +102,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
         </View>
 
         <View style={styles.statsRow}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.statItem}
             onPress={handleFollowersPress}
             activeOpacity={0.7}
@@ -115,7 +115,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.statItem}
             onPress={handleFollowingPress}
             activeOpacity={0.7}

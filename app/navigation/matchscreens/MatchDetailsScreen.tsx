@@ -13,7 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { heightPercentageToDP as hp, widthPercentageToDP as wp } from "react-native-responsive-screen";
+import { heightPercentageToDP as hp, widthPercentageToDP as wp } from '../../../utils/responsive';
 import { ValidationAlert } from "../../../components/common/ValidationAlert";
 import { ActionButtons } from "../../../components/match/ActionButtons";
 import { CompletionModal } from "../../../components/match/CompletionModal";

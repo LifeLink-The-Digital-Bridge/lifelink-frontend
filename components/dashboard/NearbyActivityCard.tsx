@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import React from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
+import { heightPercentageToDP as hp, widthPercentageToDP as wp } from '../../utils/responsive';
 import { NearbyDonationActivityDTO, NearbyRequestActivityDTO } from '../../app/api/nearbyTypes';
 
 interface NearbyActivityCardProps {

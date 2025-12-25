@@ -22,7 +22,7 @@ import {
   getMyMatchesAsRecipient,
 } from "../../api/matchingApi";
 import { getStatusColor, formatStatusDisplay } from "../../../utils/statusHelpers";
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from '../../../utils/responsive';
 
 const HEADER_HEIGHT = 135;
 

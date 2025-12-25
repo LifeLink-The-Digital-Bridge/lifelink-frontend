@@ -17,7 +17,7 @@ import AppLayout from '@/components/AppLayout';
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
-} from 'react-native-responsive-screen';
+} from '../../../utils/responsive';
 
 const FollowListScreen = () => {
   const { colorScheme } = useTheme();

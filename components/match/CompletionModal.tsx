@@ -1,7 +1,7 @@
 import React from 'react';
 import { Modal, View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from '../../utils/responsive';
 import { CompletionConfirmationDTO } from '../../app/api/matchingApi';
 
 interface CompletionModalProps {

@@ -1,7 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
-import { heightPercentageToDP as hp, widthPercentageToDP as wp } from "react-native-responsive-screen";
+import { heightPercentageToDP as hp, widthPercentageToDP as wp } from '../../utils/responsive';
 import { getStatusInfo } from "../../utils/statusHelpers";
 import { StatusBadge } from "./StatusBadge";
 import { router } from "expo-router/build/exports";

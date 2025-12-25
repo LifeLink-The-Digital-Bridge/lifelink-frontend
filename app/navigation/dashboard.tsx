@@ -14,7 +14,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { heightPercentageToDP as hp, widthPercentageToDP as wp } from "react-native-responsive-screen";
+import { heightPercentageToDP as hp, widthPercentageToDP as wp } from '../../utils/responsive';
 import ScrollableHeaderLayout from "../../components/common/ScrollableHeaderLayout";
 import { darkTheme, lightTheme } from "../../constants/styles/authStyles";
 import { createDashboardStyles } from "../../constants/styles/dashboardStyles";

@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { widthPercentageToDP as wp } from "react-native-responsive-screen";
+import { widthPercentageToDP as wp } from '../../utils/responsive';
 
 interface EmptyStateProps {
   type: "donations" | "requests";

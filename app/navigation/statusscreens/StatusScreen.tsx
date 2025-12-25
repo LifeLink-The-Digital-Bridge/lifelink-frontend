@@ -37,7 +37,7 @@ import {
   ReceiveRequestDTO,
 } from "../../api/requestApi";
 import { StatusHeader } from "@/components/common/StatusHeader";
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from '../../../utils/responsive';
 import { DonationCard } from "../../../components/status/DonationCard";
 import { RequestCard } from "../../../components/status/RequestCard";
 import { CancellationModal } from "../../../components/status/CancellationModal";

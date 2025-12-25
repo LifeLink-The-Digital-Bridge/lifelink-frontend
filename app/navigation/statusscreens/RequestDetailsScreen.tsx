@@ -16,7 +16,7 @@ import { darkTheme, lightTheme } from "../../../constants/styles/authStyles";
 import { createUnifiedStyles } from "../../../constants/styles/unifiedStyles";
 import { useTheme } from "../../../utils/theme-context";
 import { getStatusColor, formatStatusDisplay, getUrgencyConfig } from "../../../utils/statusHelpers";
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from '../../../utils/responsive';
 import { InfoRow } from "../../../components/match/InfoRow";
 import { getMyMatchesAsRecipient, MatchResponse } from "../../api/matchingApi";
 

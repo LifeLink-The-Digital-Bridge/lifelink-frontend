@@ -10,7 +10,7 @@ import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '../../utils/theme-context';
 import { lightTheme, darkTheme } from '../../constants/styles/authStyles';
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from '../../utils/responsive';
 import ScrollableHeaderLayout from '../../components/common/ScrollableHeaderLayout';
 
 const RaiseFund = () => {

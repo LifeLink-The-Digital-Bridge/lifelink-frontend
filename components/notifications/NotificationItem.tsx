@@ -2,7 +2,7 @@ import { Feather } from '@expo/vector-icons';
 import { formatDistanceToNow } from 'date-fns';
 import React, { useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
-import { widthPercentageToDP as wp } from 'react-native-responsive-screen';
+import { widthPercentageToDP as wp } from '../../utils/responsive';
 import { createNotificationStyles } from '../../constants/styles/notificationStyles';
 import { NotificationDTO, NotificationType } from '../../utils/types/notification';
 import { CustomAlert } from '../common/CustomAlert';

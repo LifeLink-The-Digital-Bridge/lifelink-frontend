@@ -2,7 +2,7 @@ import AppLayout from '@/components/AppLayout';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
+import { heightPercentageToDP as hp, widthPercentageToDP as wp } from '../../utils/responsive';
 import { CustomAlert } from '../../components/common/CustomAlert';
 import { TopBar } from '../../components/common/TopBar';
 import { NotificationList } from '../../components/notifications/NotificationList';

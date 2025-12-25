@@ -2,7 +2,7 @@ import { Feather } from '@expo/vector-icons';
 import { isAfter, isBefore, startOfToday, startOfYesterday } from 'date-fns';
 import React from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, Text, View } from 'react-native';
-import { heightPercentageToDP as hp, widthPercentageToDP as wp } from 'react-native-responsive-screen';
+import { heightPercentageToDP as hp, widthPercentageToDP as wp } from '../../utils/responsive';
 import { createNotificationStyles } from '../../constants/styles/notificationStyles';
 import { NotificationDTO } from '../../utils/types/notification';
 import { NotificationItem } from './NotificationItem';
