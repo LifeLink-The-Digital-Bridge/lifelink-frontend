@@ -1,5 +1,5 @@
 export interface LoginRequest {
-  loginType: 'username' | 'email';
+  loginType: "username" | "email";
   identifier: string;
   password: string;
 }
@@ -15,16 +15,15 @@ export interface LoginResponse {
   dob: string;
 }
 
-import Constants from 'expo-constants';
-const BASE_URL = Constants.expoConfig?.extra?.API_URL;
-console.log('All env:', process.env);
-console.log('BASE_URL:', process.env.EXPO_PUBLIC_API_URL);
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
-export const loginUser = async (payload: LoginRequest): Promise<LoginResponse> => {
+export const loginUser = async (
+  payload: LoginRequest,
+): Promise<LoginResponse> => {
   const response = await fetch(`${BASE_URL}/auth/login`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify(payload),
   });
@@ -34,27 +33,26 @@ export const loginUser = async (payload: LoginRequest): Promise<LoginResponse> =
 
     try {
       const errorData = await response.json();
-      console.log('Error data:', errorData);
+      console.log("Error data:", errorData);
 
-      if (typeof errorData.message === 'string') {
+      if (typeof errorData.message === "string") {
         errorMessage = errorData.message;
-      } 
-      else if (typeof errorData === 'object' && errorData !== null) {
-        errorMessage = Object.values(errorData).join('\n');
+      } else if (typeof errorData === "object" && errorData !== null) {
+        errorMessage = Object.values(errorData).join("\n");
       }
     } catch {
       switch (response.status) {
         case 401:
-          errorMessage = 'Unauthorized: Invalid username or password.';
+          errorMessage = "Unauthorized: Invalid username or password.";
           break;
         case 403:
-          errorMessage = 'Forbidden: You do not have access.';
+          errorMessage = "Forbidden: You do not have access.";
           break;
         case 404:
-          errorMessage = 'Not Found: The requested resource was not found.';
+          errorMessage = "Not Found: The requested resource was not found.";
           break;
         case 500:
-          errorMessage = 'Server Error: Please try again later.';
+          errorMessage = "Server Error: Please try again later.";
           break;
       }
     }

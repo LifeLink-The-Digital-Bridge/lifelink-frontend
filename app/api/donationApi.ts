@@ -1,13 +1,32 @@
-import * as SecureStore from 'expo-secure-store';
-import Constants from 'expo-constants';
+import * as SecureStore from "expo-secure-store";
 
-const BASE_URL = Constants.expoConfig?.extra?.API_URL;
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
-export type DonationType = 'BLOOD' | 'ORGAN' | 'TISSUE' | 'STEM_CELL';
-export type BloodType = 'A_POSITIVE' | 'A_NEGATIVE' | 'B_POSITIVE' | 'B_NEGATIVE' | 'O_POSITIVE' | 'O_NEGATIVE' | 'AB_POSITIVE' | 'AB_NEGATIVE';
-export type OrganType = 'HEART' | 'LIVER' | 'KIDNEY' | 'LUNG' | 'PANCREAS' | 'INTESTINE';
-export type TissueType = 'BONE' | 'SKIN' | 'CORNEA' | 'VEIN' | 'TENDON' | 'LIGAMENT';
-export type StemCellType = 'PERIPHERAL_BLOOD' | 'BONE_MARROW' | 'CORD_BLOOD';
+export type DonationType = "BLOOD" | "ORGAN" | "TISSUE" | "STEM_CELL";
+export type BloodType =
+  | "A_POSITIVE"
+  | "A_NEGATIVE"
+  | "B_POSITIVE"
+  | "B_NEGATIVE"
+  | "O_POSITIVE"
+  | "O_NEGATIVE"
+  | "AB_POSITIVE"
+  | "AB_NEGATIVE";
+export type OrganType =
+  | "HEART"
+  | "LIVER"
+  | "KIDNEY"
+  | "LUNG"
+  | "PANCREAS"
+  | "INTESTINE";
+export type TissueType =
+  | "BONE"
+  | "SKIN"
+  | "CORNEA"
+  | "VEIN"
+  | "TENDON"
+  | "LIGAMENT";
+export type StemCellType = "PERIPHERAL_BLOOD" | "BONE_MARROW" | "CORD_BLOOD";
 
 export interface DonationRequest {
   donorId: string;
@@ -16,7 +35,7 @@ export interface DonationRequest {
   locationId: string;
   bloodType: BloodType;
   quantity?: number;
-  
+
   organType?: OrganType;
   isCompatible?: boolean;
   organQuality?: string;
@@ -28,9 +47,9 @@ export interface DonationRequest {
   functionalAssessment?: string;
   hasAbnormalities?: boolean;
   abnormalityDescription?: string;
-  
+
   tissueType?: TissueType;
-  
+
   stemCellType?: StemCellType;
 }
 
@@ -50,24 +69,24 @@ export interface CancellationResponseDTO {
 }
 
 export async function registerDonation(payload: DonationRequest) {
-  const token = await SecureStore.getItemAsync('jwt');
-  const userId = await SecureStore.getItemAsync('userId');
-  
+  const token = await SecureStore.getItemAsync("jwt");
+  const userId = await SecureStore.getItemAsync("userId");
+
   const response = await fetch(`${BASE_URL}/donors/donate`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Authorization': `Bearer ${token}`,
-      'id': userId || '',
-      'Content-Type': 'application/json'
+      Authorization: `Bearer ${token}`,
+      id: userId || "",
+      "Content-Type": "application/json",
     },
     body: JSON.stringify(payload),
   });
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(errorText || 'Failed to register donation');
+    throw new Error(errorText || "Failed to register donation");
   }
-  
+
   return await response.json();
 }
 
@@ -90,15 +109,17 @@ export const getMyDonations = async (): Promise<any[]> => {
     }
     throw new Error("Failed to fetch my donations");
   }
-  
+
   return await response.json();
 };
 
-export const fetchDonationsByUserId = async (userId: string): Promise<any[]> => {
+export const fetchDonationsByUserId = async (
+  userId: string,
+): Promise<any[]> => {
   try {
     const jwt = await SecureStore.getItemAsync("jwt");
     const currentUserId = await SecureStore.getItemAsync("userId");
-    
+
     const response = await fetch(
       `${BASE_URL}/donors/by-userId/${userId}/donations`,
       {
@@ -108,7 +129,7 @@ export const fetchDonationsByUserId = async (userId: string): Promise<any[]> => 
           Authorization: `Bearer ${jwt}`,
           id: currentUserId || "",
         },
-      }
+      },
     );
 
     if (response.status === 403) {
@@ -129,8 +150,9 @@ export const fetchDonationsByUserId = async (userId: string): Promise<any[]> => 
   }
 };
 
-
-export const fetchDonationsByDonorId = async (donorId: string): Promise<any[]> => {
+export const fetchDonationsByDonorId = async (
+  donorId: string,
+): Promise<any[]> => {
   const token = await SecureStore.getItemAsync("jwt");
   const userId = await SecureStore.getItemAsync("userId");
   if (!token || !userId) return [];
@@ -153,20 +175,20 @@ export const fetchDonationsByDonorId = async (donorId: string): Promise<any[]> =
 };
 
 export async function fetchDonorAddresses(donorId: string): Promise<any[]> {
-  const token = await SecureStore.getItemAsync('jwt');
-  const userId = await SecureStore.getItemAsync('userId');
-  
+  const token = await SecureStore.getItemAsync("jwt");
+  const userId = await SecureStore.getItemAsync("userId");
+
   if (!token || !donorId) {
-    throw new Error('Missing authentication or donor ID');
+    throw new Error("Missing authentication or donor ID");
   }
 
   const response = await fetch(`${BASE_URL}/donors/${donorId}/addresses`, {
-    method: 'GET',
+    method: "GET",
     headers: {
-      'Authorization': `Bearer ${token}`,
-      'id': userId || '',
-      'Content-Type': 'application/json'
-    }
+      Authorization: `Bearer ${token}`,
+      id: userId || "",
+      "Content-Type": "application/json",
+    },
   });
 
   if (!response.ok) {
@@ -176,20 +198,23 @@ export async function fetchDonorAddresses(donorId: string): Promise<any[]> {
     const errorText = await response.text();
     throw new Error(`Failed to fetch addresses: ${errorText}`);
   }
-  
+
   return await response.json();
 }
 
-export async function addDonorAddress(donorId: string, locationData: any): Promise<any> {
-  const token = await SecureStore.getItemAsync('jwt');
-  const userId = await SecureStore.getItemAsync('userId');
-  
+export async function addDonorAddress(
+  donorId: string,
+  locationData: any,
+): Promise<any> {
+  const token = await SecureStore.getItemAsync("jwt");
+  const userId = await SecureStore.getItemAsync("userId");
+
   const response = await fetch(`${BASE_URL}/donors/${donorId}/addresses`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Authorization': `Bearer ${token}`,
-      'id': userId || '',
-      'Content-Type': 'application/json'
+      Authorization: `Bearer ${token}`,
+      id: userId || "",
+      "Content-Type": "application/json",
     },
     body: JSON.stringify(locationData),
   });
@@ -198,12 +223,12 @@ export async function addDonorAddress(donorId: string, locationData: any): Promi
     const errorText = await response.text();
     throw new Error(`Failed to add address: ${errorText}`);
   }
-  
+
   return await response.json();
 }
 export const cancelDonation = async (
   donationId: string,
-  cancellationData: CancellationRequestDTO
+  cancellationData: CancellationRequestDTO,
 ): Promise<CancellationResponseDTO> => {
   const token = await SecureStore.getItemAsync("jwt");
   const userId = await SecureStore.getItemAsync("userId");
@@ -221,7 +246,7 @@ export const cancelDonation = async (
         id: userId,
       },
       body: JSON.stringify(cancellationData),
-    }
+    },
   );
 
   if (!response.ok) {
@@ -233,7 +258,9 @@ export const cancelDonation = async (
   return await response.json();
 };
 
-export const canCancelDonation = async (donationId: string): Promise<boolean> => {
+export const canCancelDonation = async (
+  donationId: string,
+): Promise<boolean> => {
   const token = await SecureStore.getItemAsync("jwt");
   const userId = await SecureStore.getItemAsync("userId");
   if (!token || !userId) throw new Error("Not authenticated");
@@ -245,7 +272,7 @@ export const canCancelDonation = async (donationId: string): Promise<boolean> =>
         Authorization: `Bearer ${token}`,
         id: userId,
       },
-    }
+    },
   );
 
   if (!response.ok) {
@@ -256,7 +283,9 @@ export const canCancelDonation = async (donationId: string): Promise<boolean> =>
   return data.canCancel;
 };
 
-export const getDonationStatus = async (donationId: string): Promise<string> => {
+export const getDonationStatus = async (
+  donationId: string,
+): Promise<string> => {
   const token = await SecureStore.getItemAsync("jwt");
   const userId = await SecureStore.getItemAsync("userId");
   if (!token || !userId) throw new Error("Not authenticated");
@@ -268,7 +297,7 @@ export const getDonationStatus = async (donationId: string): Promise<string> => 
         Authorization: `Bearer ${token}`,
         id: userId,
       },
-    }
+    },
   );
 
   if (!response.ok) {

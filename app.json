@@ -3,20 +3,23 @@
     "name": "LifeLink",
     "slug": "LifeLink",
     "version": "1.0.0",
+    "icon": "./assets/images/Lifelink_splash.png",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
     "scheme": "lifelink",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.adepusricharan-03.LifeLink",
+      "icon": "./assets/images/Lifelink_splash.png"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/Lifelink_splash.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.adepusricharan_03.LifeLink"
     },
     "web": {
       "bundler": "metro",
@@ -35,10 +38,27 @@
           "preventAutoHide": true
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "kotlinVersion": "2.0.21",
+            "usesCleartextTraffic": true,
+            "enableProguardInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true,
+            "useLegacyPackaging": true,
+            "enableMinifyInReleaseBuilds": true
+          }
+        }
+      ],
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {}
     }
   }
 }
