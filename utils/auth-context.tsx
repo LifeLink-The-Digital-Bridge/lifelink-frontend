@@ -15,14 +15,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const logout = async () => {
-    await SecureStore.deleteItemAsync("jwt");
+    const keysToClear = [
+      "jwt",
+      "accessToken",
+      "refreshToken",
+      "roles",
+      "userId",
+      "username",
+      "email",
+      "dob",
+      "gender",
+    ];
+
+    await Promise.all(keysToClear.map((key) => SecureStore.deleteItemAsync(key)));
     setIsAuthenticated(false);
   };
 
   useEffect(() => {
     async function checkAuth() {
       setIsLoading(true);
-      const token = await SecureStore.getItemAsync("jwt");
+      const token =
+        (await SecureStore.getItemAsync("jwt")) ||
+        (await SecureStore.getItemAsync("accessToken"));
       setIsAuthenticated(!!token);
       setIsLoading(false);
     }
