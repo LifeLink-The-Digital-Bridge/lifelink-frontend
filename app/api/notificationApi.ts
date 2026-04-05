@@ -12,7 +12,9 @@ const normalizeNotification = (data: any): NotificationDTO => {
 };
 
 export const fetchAllNotifications = async (): Promise<NotificationDTO[]> => {
-    const token = await SecureStore.getItemAsync("jwt");
+    const token =
+        (await SecureStore.getItemAsync("jwt")) ||
+        (await SecureStore.getItemAsync("accessToken"));
     const userId = await SecureStore.getItemAsync("userId");
 
     if (!token || !userId) {
@@ -36,7 +38,9 @@ export const fetchAllNotifications = async (): Promise<NotificationDTO[]> => {
 };
 
 export const fetchUnreadNotifications = async (): Promise<NotificationDTO[]> => {
-    const token = await SecureStore.getItemAsync("jwt");
+    const token =
+        (await SecureStore.getItemAsync("jwt")) ||
+        (await SecureStore.getItemAsync("accessToken"));
     const userId = await SecureStore.getItemAsync("userId");
 
     if (!token || !userId) {
@@ -60,7 +64,9 @@ export const fetchUnreadNotifications = async (): Promise<NotificationDTO[]> => 
 };
 
 export const getUnreadCount = async (): Promise<number> => {
-    const token = await SecureStore.getItemAsync("jwt");
+    const token =
+        (await SecureStore.getItemAsync("jwt")) ||
+        (await SecureStore.getItemAsync("accessToken"));
     const userId = await SecureStore.getItemAsync("userId");
 
     if (!token || !userId) {
@@ -86,7 +92,9 @@ export const getUnreadCount = async (): Promise<number> => {
 export const markNotificationAsRead = async (
     notificationId: string
 ): Promise<NotificationDTO> => {
-    const token = await SecureStore.getItemAsync("jwt");
+    const token =
+        (await SecureStore.getItemAsync("jwt")) ||
+        (await SecureStore.getItemAsync("accessToken"));
     const userId = await SecureStore.getItemAsync("userId");
 
     if (!token || !userId) {
@@ -116,7 +124,9 @@ export const markNotificationAsRead = async (
 };
 
 export const markAllNotificationsAsRead = async (): Promise<void> => {
-    const token = await SecureStore.getItemAsync("jwt");
+    const token =
+        (await SecureStore.getItemAsync("jwt")) ||
+        (await SecureStore.getItemAsync("accessToken"));
     const userId = await SecureStore.getItemAsync("userId");
 
     if (!token || !userId) {
@@ -139,7 +149,9 @@ export const markAllNotificationsAsRead = async (): Promise<void> => {
 export const deleteNotification = async (
     notificationId: string
 ): Promise<void> => {
-    const token = await SecureStore.getItemAsync("jwt");
+    const token =
+        (await SecureStore.getItemAsync("jwt")) ||
+        (await SecureStore.getItemAsync("accessToken"));
     const userId = await SecureStore.getItemAsync("userId");
 
     if (!token || !userId) {

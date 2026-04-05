@@ -52,6 +52,12 @@
           }
         }
       ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow LifeLink to access your camera to scan Health ID QR codes."
+        }
+      ],
       "expo-font"
     ],
     "experiments": {

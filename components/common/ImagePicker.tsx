@@ -6,7 +6,7 @@ import authStyles from '../../constants/styles/authStyles';
 
 interface ImagePickerComponentProps {
   imageUri?: string;
-  onImageSelected: (uri: string) => void;
+  onImageSelected?: (uri: string) => void;
   placeholder?: string;
 }
 
@@ -36,7 +36,7 @@ export function ImagePickerComponent({
 
     if (!result.canceled && result.assets[0].base64) {
       const uri = `data:image/jpeg;base64,${result.assets[0].base64}`;
-      onImageSelected(uri);
+      onImageSelected?.(uri);
     }
   };
 

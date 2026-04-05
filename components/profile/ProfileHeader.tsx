@@ -6,6 +6,7 @@ import {
   heightPercentageToDP as hp,
   widthPercentageToDP as wp,
 } from '../../utils/responsive';
+import { useLanguage } from '../../utils/language-context';
 
 interface ProfileHeaderProps {
   profile: {
@@ -33,6 +34,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
 }) => {
   const [imageViewerVisible, setImageViewerVisible] = useState(false);
   const router = useRouter();
+  const { t } = useLanguage();
 
   const handleFollowersPress = () => {
     if (profile?.id && profile?.username) {
@@ -88,7 +90,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               <View style={styles.infoItem}>
                 <Feather name="calendar" size={13} color={theme.textSecondary} />
                 <Text style={[styles.infoText, { color: theme.textSecondary }]}>
-                  Date Of Birth {formatDate(profile.dob)}
+                  {t("profile.header.dateOfBirth")} {formatDate(profile.dob)}
                 </Text>
               </View>
             )}
@@ -111,7 +113,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               {profile.followersCount ?? 0}
             </Text>
             <Text style={[styles.statLabel, { color: theme.textSecondary }]}>
-              Followers
+              {t("profile.header.followers")}
             </Text>
           </TouchableOpacity>
 
@@ -124,14 +126,14 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
               {profile.followingCount ?? 0}
             </Text>
             <Text style={[styles.statLabel, { color: theme.textSecondary }]}>
-              Following
+              {t("profile.header.following")}
             </Text>
           </TouchableOpacity>
 
           <View style={styles.statItem}>
             <Text style={[styles.statValue, { color: theme.text }]}>0</Text>
             <Text style={[styles.statLabel, { color: theme.textSecondary }]}>
-              Lives Saved
+              {t("profile.header.livesSaved")}
             </Text>
           </View>
         </View>

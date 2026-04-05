@@ -6,13 +6,14 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-nati
 import Modal from "react-native-modal";
 import { darkTheme, lightTheme } from '../../constants/styles/authStyles';
 import { useAuth } from '../../utils/auth-context';
+import { useRole } from '../../utils/role-context';
 import { useTheme } from '../../utils/theme-context';
 
 interface MenuItem {
   icon: string;
   label: string;
   subtitle: string;
-  route: '/navigation/RaiseFund' | '/navigation/statusscreens/StatusScreen' | '/navigation/matchscreens/ManualMatchScreen' | '/navigation/matchscreens/MatchResultsScreen';
+  route: string;
   badge?: string;
 }
 
@@ -31,6 +32,7 @@ export function SidebarMenu({ isVisible, onClose }: SidebarMenuProps) {
   const { colorScheme } = useTheme();
   const isDark = colorScheme === 'dark';
   const theme = isDark ? darkTheme : lightTheme;
+  const { isMigrant, isDoctor, isNGO, isAdmin } = useRole();
 
   const styles = StyleSheet.create({
     sidebarContainer: {
@@ -159,43 +161,168 @@ export function SidebarMenu({ isVisible, onClose }: SidebarMenuProps) {
 
   const menuSections: MenuSection[] = [
     {
-      label: 'Quick Actions',
+      label: 'Home & Core',
       items: [
         {
-          icon: 'dollar-sign',
-          label: 'Raise Fund',
-          subtitle: 'Start a fundraiser',
-          route: '/navigation/RaiseFund',
-          badge: 'New'
+          icon: 'home',
+          label: 'Donate Hub',
+          subtitle: 'Open donation flow',
+          route: '/(tabs)/donate',
         },
         {
-          icon: 'activity',
-          label: 'Activity',
-          subtitle: 'View match results',
-          route: '/navigation/matchscreens/MatchResultsScreen'
+          icon: 'clipboard',
+          label: 'Request Hub',
+          subtitle: 'Open receive flow',
+          route: '/(tabs)/receive',
+        },
+        {
+          icon: 'map-pin',
+          label: 'Locations',
+          subtitle: 'Nearby centers',
+          route: '/(tabs)/maps',
         },
       ]
     },
     {
-      label: 'Management',
+      label: 'Status & Activity',
       items: [
         {
-          icon: 'clipboard',
+          icon: 'bar-chart-2',
           label: 'My Status',
           subtitle: 'Track donations & requests',
-          route: '/navigation/statusscreens/StatusScreen'
+          route: '/navigation/statusscreens/StatusScreen',
         },
         {
-          icon: 'link',
-          label: 'Manual Match',
-          subtitle: 'Connect manually',
-          route: '/navigation/matchscreens/ManualMatchScreen'
+          icon: 'activity',
+          label: 'Activity',
+          subtitle: 'View Match Results',
+          route: '/navigation/matchscreens/MatchResultsScreen',
         },
-      ]
+      ],
+    },
+    {
+      label: 'Migrant Health',
+      items: [
+        ...(isMigrant || isAdmin
+          ? [
+              {
+                icon: 'heart',
+                label: 'Health Dashboard',
+                subtitle: 'Migrant health overview',
+                route: '/navigation/healthscreens/MigrantDashboardScreen' as const,
+              },
+            ]
+          : []),
+        ...(isMigrant || isAdmin
+          ? [
+              {
+                icon: 'credit-card',
+                label: 'Health ID',
+                subtitle: 'View your health ID',
+                route: '/navigation/healthscreens/HealthIDScreen' as const,
+              },
+            ]
+          : []),
+      ],
+    },
+    {
+      label: 'Administration',
+      items: [
+        ...(isAdmin
+          ? [
+              {
+                icon: 'bar-chart',
+                label: 'SDG Dashboard',
+                subtitle: 'Impact analytics and KPIs',
+                route: '/navigation/healthscreens/AdminDashboardScreen' as const,
+              },
+            ]
+          : []),
+      ],
+    },
+    {
+      label: 'Emergency',
+      items: [
+        {
+          icon: 'alert-triangle',
+          label: 'Emergency Access',
+          subtitle: 'PIN-protected critical health data',
+          route: '/navigation/healthscreens/EmergencyAccessScreen',
+        },
+      ],
+    },
+    {
+      label: 'Medical Professionals',
+      items: [
+        ...(isDoctor || isAdmin
+          ? [
+              {
+                icon: 'users',
+                label: 'Doctor Dashboard',
+                subtitle: 'Manage your patients',
+                route: '/navigation/healthscreens/DoctorDashboardScreen' as const,
+              },
+              {
+                icon: 'user-check',
+                label: 'Monitored Migrants',
+                subtitle: 'Patients under your care',
+                route: '/navigation/healthscreens/DoctorPatientsScreen' as const,
+              },
+            ]
+          : []),
+        {
+          icon: 'search',
+          label: 'Find Doctors',
+          subtitle: 'Network of verified doctors',
+          route: '/navigation/healthscreens/DoctorProfileListScreen',
+        },
+      ],
+    },
+    {
+      label: 'NGOs & Support',
+      items: [
+        ...(isNGO || isAdmin
+          ? [
+              {
+                icon: 'shield',
+                label: 'NGO Dashboard',
+                subtitle: 'Manage migrant outreach',
+                route: '/navigation/healthscreens/NGODashboardScreen' as const,
+              },
+            ]
+          : []),
+        ...(isNGO || isAdmin
+          ? [
+              {
+                icon: 'users',
+                label: 'Find Migrants',
+                subtitle: 'Search migrant profiles',
+                route: '/navigation/healthscreens/MigrantProfileListScreen' as const,
+              },
+            ]
+          : []),
+        {
+          icon: 'search',
+          label: 'Find NGOs',
+          subtitle: 'Discover support organizations',
+          route: '/navigation/healthscreens/NGOProfileListScreen',
+        },
+      ],
+    },
+    {
+      label: 'Connections',
+      items: [
+        {
+          icon: 'inbox',
+          label: 'Connection Requests',
+          subtitle: 'View pending requests',
+          route: '/navigation/healthscreens/ConnectionRequestsScreen',
+        },
+      ],
     }
-  ];
+  ].filter((section) => section.items.length > 0);
 
-  const handleMenuItemPress = (route: MenuItem['route']) => {
+  const handleMenuItemPress = (route: any) => {
     onClose();
     setTimeout(() => {
       router.push(route);

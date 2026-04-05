@@ -7,6 +7,8 @@ import { lightTheme, darkTheme } from '../constants/styles/authStyles';
 
 interface AppLayoutProps {
   children: React.ReactNode;
+  showBackButton?: boolean;
+  backRoute?: string;
 }
 
 const AppLayout = ({ children }: AppLayoutProps) => {

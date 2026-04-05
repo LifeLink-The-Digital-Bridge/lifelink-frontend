@@ -3,6 +3,7 @@ import { View, TouchableOpacity, Text } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { createProfileStyles } from '../../constants/styles/profileStyles';
+import { useLanguage } from '../../utils/language-context';
 
 interface ProfileActionsProps {
   isOwnProfile: boolean;
@@ -25,6 +26,7 @@ export const ProfileActions: React.FC<ProfileActionsProps> = ({
 }) => {
   const router = useRouter();
   const styles = createProfileStyles(theme);
+  const { t } = useLanguage();
 
   if (!isOwnProfile) {
     return (
@@ -48,7 +50,7 @@ export const ProfileActions: React.FC<ProfileActionsProps> = ({
               isFollowing ? styles.secondaryButtonText : styles.primaryButtonText,
             ]}
           >
-            {isFollowing ? "Following" : "Follow"}
+            {isFollowing ? t("profile.actions.following") : t("profile.actions.follow")}
           </Text>
         </TouchableOpacity>
       </View>
@@ -62,14 +64,18 @@ export const ProfileActions: React.FC<ProfileActionsProps> = ({
         onPress={() => router.push("/navigation/profilescreens/editProfile")}
       >
         <Feather name="edit-2" size={16} color={theme.text} />
-        <Text style={[styles.buttonText, styles.secondaryButtonText]}>Edit Profile</Text>
+        <Text style={[styles.buttonText, styles.secondaryButtonText]}>
+          {t("profile.actions.editProfile")}
+        </Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.actionButton, styles.primaryButton]}
         onPress={() => router.push("/navigation/statusscreens/StatusScreen")}
       >
         <Feather name="activity" size={16} color="#fff" />
-        <Text style={[styles.buttonText, styles.primaryButtonText]}>My Status</Text>
+        <Text style={[styles.buttonText, styles.primaryButtonText]}>
+          {t("profile.actions.myStatus")}
+        </Text>
       </TouchableOpacity>
     </View>
   );

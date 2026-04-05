@@ -1,5 +1,10 @@
 import * as SecureStore from "expo-secure-store";
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL;
+const normalizeBaseUrl = (value: unknown): string => {
+  const base = String(value || "").trim().replace(/\/+$/, "");
+  return base;
+};
+
+const BASE_URL = normalizeBaseUrl(process.env.EXPO_PUBLIC_API_URL);
 
 export interface ManualMatchRequest {
   donationId: string;
@@ -316,12 +321,7 @@ export interface ReceiveRequestDTO {
   location?: LocationDTO;
 }
 
-const getAuthHeaders = async (includeUserId: boolean = true) => {
-  const token = await SecureStore.getItemAsync("jwt");
-  const userId = await SecureStore.getItemAsync("userId");
-
-  if (!token) throw new Error("Not authenticated");
-
+const buildAuthHeaders = (token: string, userId: string | null, includeUserId: boolean): Record<string, string> => {
   const headers: Record<string, string> = {
     Authorization: `Bearer ${token}`,
     "Content-Type": "application/json",
@@ -332,6 +332,43 @@ const getAuthHeaders = async (includeUserId: boolean = true) => {
   }
 
   return headers;
+};
+
+const sanitizeToken = (value: string | null): string | null => {
+  const token = String(value || "")
+    .trim()
+    .replace(/^Bearer\s+/i, "")
+    .replace(/^"(.*)"$/, "$1")
+    .replace(/^'(.*)'$/, "$1");
+  if (!token || token === "null" || token === "undefined") {
+    return null;
+  }
+  return token;
+};
+
+const logMatchAuthDebug = (label: string, details: Record<string, unknown>) => {
+  console.log(`[matchingApi] ${label}`, details);
+};
+
+const getAuthHeaders = async (includeUserId: boolean = true) => {
+  const rawJwt = await SecureStore.getItemAsync("jwt");
+  const rawAccessToken = await SecureStore.getItemAsync("accessToken");
+  const token = sanitizeToken(rawJwt) || sanitizeToken(rawAccessToken);
+  const tokenSource = sanitizeToken(rawJwt) ? "jwt" : sanitizeToken(rawAccessToken) ? "accessToken" : "none";
+  const userId = await SecureStore.getItemAsync("userId");
+
+  logMatchAuthDebug("getAuthHeaders", {
+    baseUrl: BASE_URL || "<empty>",
+    includeUserId,
+    tokenSource,
+    tokenLength: token?.length || 0,
+    tokenPrefix: token ? token.slice(0, 12) : null,
+    userIdPresent: !!userId,
+    userIdPrefix: userId ? String(userId).slice(0, 8) : null,
+  });
+
+  if (!token || (includeUserId && !userId)) throw new Error("Not authenticated");
+  return buildAuthHeaders(token, userId, includeUserId);
 };
 
 const handleResponse = async (response: Response, errorMessage: string) => {
@@ -349,6 +386,12 @@ const handleResponse = async (response: Response, errorMessage: string) => {
       errorDetails = errorMessage;
     }
 
+    logMatchAuthDebug("handleResponseError", {
+      url: response.url,
+      status: response.status,
+      errorDetails,
+    });
+
     switch (response.status) {
       case 400:
         if (errorDetails.includes("grace period")) {
@@ -362,7 +405,9 @@ const handleResponse = async (response: Response, errorMessage: string) => {
         }
         throw new Error(errorDetails);
       case 401:
-        throw new Error("Authentication required. Please login again.");
+        throw new Error(
+          `Authentication required. ${errorDetails || "Please login again."}`,
+        );
       case 403:
         throw new Error(errorDetails || "Access denied");
       case 404:
@@ -402,8 +447,10 @@ export const manualMatch = async (
 };
 
 export const getMyMatchesAsDonor = async (): Promise<MatchResponse[]> => {
+  const requestUrl = `${BASE_URL}/matching/my-matches/as-donor`;
+  logMatchAuthDebug("getMyMatchesAsDonor_request", { url: requestUrl });
   const headers = await getAuthHeaders();
-  const response = await fetch(`${BASE_URL}/matching/my-matches/as-donor`, {
+  const response = await fetch(requestUrl, {
     method: "GET",
     headers,
   });
@@ -415,8 +462,10 @@ export const getMyMatchesAsDonor = async (): Promise<MatchResponse[]> => {
 };
 
 export const getMyMatchesAsRecipient = async (): Promise<MatchResponse[]> => {
+  const requestUrl = `${BASE_URL}/matching/my-matches/as-recipient`;
+  logMatchAuthDebug("getMyMatchesAsRecipient_request", { url: requestUrl });
   const headers = await getAuthHeaders();
-  const response = await fetch(`${BASE_URL}/matching/my-matches/as-recipient`, {
+  const response = await fetch(requestUrl, {
     method: "GET",
     headers,
   });

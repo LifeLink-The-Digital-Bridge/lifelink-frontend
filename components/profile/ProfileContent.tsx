@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { createProfileStyles } from "../../constants/styles/profileStyles";
+import { useLanguage } from "../../utils/language-context";
 
 interface ProfileContentProps {
   activeTab: string;
@@ -56,13 +57,21 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
 }) => {
   const router = useRouter();
   const styles = createProfileStyles(theme);
+  const { t } = useLanguage();
+
+  const getTabLabel = (tab: string) => {
+    if (tab === "donations") return t("profile.tabs.donations");
+    if (tab === "reviews") return t("profile.tabs.reviews");
+    if (tab === "receives") return t("profile.tabs.receives");
+    return tab;
+  };
 
   if (!isOwnProfile && checkingAccess) {
     return (
       <View style={styles.emptyState}>
         <ActivityIndicator size="small" color={theme.primary} />
         <Text style={[styles.emptyDescription, { marginTop: 10 }]}>
-          Checking permissions...
+          {t("profile.permissions.checking")}
         </Text>
       </View>
     );
@@ -74,9 +83,9 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
         <View style={styles.emptyIcon}>
           <Feather name="lock" size={56} color={theme.textSecondary} />
         </View>
-        <Text style={styles.emptyTitle}>Private Profile</Text>
+        <Text style={styles.emptyTitle}>{t("profile.private.title")}</Text>
         <Text style={styles.emptyDescription}>
-          This user's {activeTab} are private
+          {t("profile.private.message", { tab: getTabLabel(activeTab) })}
         </Text>
       </View>
     );
@@ -90,7 +99,7 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
             <View style={styles.emptyState}>
               <ActivityIndicator size="small" color={theme.primary} />
               <Text style={[styles.emptyDescription, { marginTop: 10 }]}>
-                Loading donations...
+                {t("profile.donations.loading")}
               </Text>
             </View>
           );
@@ -102,11 +111,11 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
               <View style={styles.emptyIcon}>
                 <Feather name="droplet" size={56} color={theme.textSecondary} />
               </View>
-              <Text style={styles.emptyTitle}>No Donations Yet</Text>
+              <Text style={styles.emptyTitle}>{t("profile.donations.emptyTitle")}</Text>
               <Text style={styles.emptyDescription}>
                 {isOwnProfile
-                  ? "Register as a donor and make your first donation to see it here"
-                  : "This user hasn't made any donations yet"}
+                  ? t("profile.donations.emptyOwnDescription")
+                  : t("profile.donations.emptyOtherDescription")}
               </Text>
               {isOwnProfile && (
                 <TouchableOpacity
@@ -121,7 +130,7 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
                 >
                   <Feather name="plus-circle" size={16} color="#fff" />
                   <Text style={[styles.buttonText, styles.primaryButtonText]}>
-                    Register as Donor
+                    {t("profile.donations.registerButton")}
                   </Text>
                 </TouchableOpacity>
               )}
@@ -140,7 +149,7 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
               >
                 <View style={styles.cardHeader}>
                   <Text style={styles.cardTitle}>
-                    {donation.donationType || "Blood Donation"}
+                    {donation.donationType || t("profile.donations.defaultType")}
                   </Text>
                   <View
                     style={[
@@ -176,7 +185,7 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
                       size={14}
                       color={theme.textSecondary}
                     />
-                    <Text style={styles.detailLabel}>Blood Type</Text>
+                    <Text style={styles.detailLabel}>{t("profile.fields.bloodType")}</Text>
                     <Text style={styles.detailValue}>{donation.bloodType}</Text>
                   </View>
                 )}
@@ -188,7 +197,7 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
                       size={14}
                       color={theme.textSecondary}
                     />
-                    <Text style={styles.detailLabel}>Organ</Text>
+                    <Text style={styles.detailLabel}>{t("profile.fields.organ")}</Text>
                     <Text style={styles.detailValue}>{donation.organType}</Text>
                   </View>
                 )}
@@ -200,7 +209,7 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
                       size={14}
                       color={theme.textSecondary}
                     />
-                    <Text style={styles.detailLabel}>Quantity</Text>
+                    <Text style={styles.detailLabel}>{t("profile.fields.quantity")}</Text>
                     <Text style={styles.detailValue}>{donation.quantity}</Text>
                   </View>
                 )}
@@ -211,7 +220,7 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
                     size={14}
                     color={theme.textSecondary}
                   />
-                  <Text style={styles.detailLabel}>Date</Text>
+                  <Text style={styles.detailLabel}>{t("profile.fields.date")}</Text>
                   <Text style={styles.detailValue}>
                     {formatLocalDate(donation.donationDate)}
                   </Text>
@@ -226,7 +235,7 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
               >
                 <Feather name="list" size={16} color={theme.primary} />
                 <Text style={[styles.buttonText, styles.viewAllButtonText]}>
-                  View All Donations
+                  {t("profile.donations.viewAll")}
                 </Text>
               </TouchableOpacity>
             )}
@@ -247,7 +256,7 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
                     size={14}
                     color={theme.textSecondary}
                   />
-                  <Text style={styles.detailLabel}>Date</Text>
+                  <Text style={styles.detailLabel}>{t("profile.fields.date")}</Text>
                   <Text style={styles.detailValue}>
                     {formatDate(review.date)}
                   </Text>
@@ -263,7 +272,7 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
             <View style={styles.emptyState}>
               <ActivityIndicator size="small" color={theme.primary} />
               <Text style={[styles.emptyDescription, { marginTop: 10 }]}>
-                Loading requests...
+                {t("profile.receives.loading")}
               </Text>
             </View>
           );
@@ -279,11 +288,11 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
                   color={theme.textSecondary}
                 />
               </View>
-              <Text style={styles.emptyTitle}>No Receive Requests Yet</Text>
+              <Text style={styles.emptyTitle}>{t("profile.receives.emptyTitle")}</Text>
               <Text style={styles.emptyDescription}>
                 {isOwnProfile
-                  ? "Register as a recipient and create your first request to see it here"
-                  : "This user hasn't made any requests yet"}
+                  ? t("profile.receives.emptyOwnDescription")
+                  : t("profile.receives.emptyOtherDescription")}
               </Text>
               {isOwnProfile && (
                 <TouchableOpacity
@@ -301,7 +310,7 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
                 >
                   <Feather name="plus-circle" size={16} color="#fff" />
                   <Text style={[styles.buttonText, styles.primaryButtonText]}>
-                    Register as Recipient
+                    {t("profile.receives.registerButton")}
                   </Text>
                 </TouchableOpacity>
               )}
@@ -358,7 +367,7 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
                       size={14}
                       color={theme.textSecondary}
                     />
-                    <Text style={styles.detailLabel}>Organ</Text>
+                    <Text style={styles.detailLabel}>{t("profile.fields.organ")}</Text>
                     <Text style={styles.detailValue}>{req.requestedOrgan}</Text>
                   </View>
                 )}
@@ -370,14 +379,14 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
                       size={14}
                       color={theme.textSecondary}
                     />
-                    <Text style={styles.detailLabel}>Quantity</Text>
+                    <Text style={styles.detailLabel}>{t("profile.fields.quantity")}</Text>
                     <Text style={styles.detailValue}>{req.quantity}</Text>
                   </View>
                 )}
 
                 <View style={styles.cardDetail}>
                   <Feather name="info" size={14} color={theme.textSecondary} />
-                  <Text style={styles.detailLabel}>Status</Text>
+                  <Text style={styles.detailLabel}>{t("profile.fields.status")}</Text>
                   <Text style={styles.detailValue}>{req.status}</Text>
                 </View>
 
@@ -387,7 +396,7 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
                     size={14}
                     color={theme.textSecondary}
                   />
-                  <Text style={styles.detailLabel}>Date</Text>
+                  <Text style={styles.detailLabel}>{t("profile.fields.date")}</Text>
                   <Text style={styles.detailValue}>
                     {formatLocalDate(req.requestDate)}
                   </Text>
@@ -402,7 +411,7 @@ export const ProfileContent: React.FC<ProfileContentProps> = ({
               >
                 <Feather name="list" size={16} color={theme.primary} />
                 <Text style={[styles.buttonText, styles.viewAllButtonText]}>
-                  View All Requests
+                  {t("profile.receives.viewAll")}
                 </Text>
               </TouchableOpacity>
             )}

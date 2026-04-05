@@ -10,7 +10,9 @@ export const getNearbyDonations = async (
   longitude: number,
   radius: number = 10000,
 ): Promise<NearbyDonationActivityDTO[]> => {
-  const token = await SecureStore.getItemAsync("jwt");
+  const token =
+    (await SecureStore.getItemAsync("jwt")) ||
+    (await SecureStore.getItemAsync("accessToken"));
   const userId = await SecureStore.getItemAsync("userId");
 
   if (!token || !userId) {
@@ -52,7 +54,9 @@ export const getNearbyRequests = async (
   longitude: number,
   radius: number = 10000,
 ): Promise<NearbyRequestActivityDTO[]> => {
-  const token = await SecureStore.getItemAsync("jwt");
+  const token =
+    (await SecureStore.getItemAsync("jwt")) ||
+    (await SecureStore.getItemAsync("accessToken"));
   const userId = await SecureStore.getItemAsync("userId");
 
   if (!token || !userId) {

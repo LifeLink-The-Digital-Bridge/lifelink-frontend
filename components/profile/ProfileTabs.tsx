@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, TouchableOpacity, Text } from 'react-native';
 import { createProfileStyles } from '../../constants/styles/profileStyles';
+import { useLanguage } from '../../utils/language-context';
 
 interface ProfileTabsProps {
   tabs: readonly string[];
@@ -16,6 +17,14 @@ export const ProfileTabs: React.FC<ProfileTabsProps> = ({
   theme,
 }) => {
   const styles = createProfileStyles(theme);
+  const { t } = useLanguage();
+
+  const getTabLabel = (tab: string) => {
+    if (tab === "donations") return t("profile.tabs.donations");
+    if (tab === "reviews") return t("profile.tabs.reviews");
+    if (tab === "receives") return t("profile.tabs.receives");
+    return tab.charAt(0).toUpperCase() + tab.slice(1);
+  };
 
   return (
     <View style={styles.tabsContainer}>
@@ -28,7 +37,7 @@ export const ProfileTabs: React.FC<ProfileTabsProps> = ({
           <Text
             style={[styles.tabText, activeTab === tab && styles.activeTabText]}
           >
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            {getTabLabel(tab)}
           </Text>
         </TouchableOpacity>
       ))}

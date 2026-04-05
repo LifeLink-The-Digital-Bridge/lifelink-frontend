@@ -56,7 +56,9 @@ export interface CancellationResponseDTO {
 }
 
 const getAuthHeaders = async () => {
-  const token = await SecureStore.getItemAsync("jwt");
+  const token =
+    (await SecureStore.getItemAsync("jwt")) ||
+    (await SecureStore.getItemAsync("accessToken"));
   const userId = await SecureStore.getItemAsync("userId");
   if (!token || !userId) throw new Error("Not authenticated");
 
@@ -100,6 +102,9 @@ export const getMyRequests = async (): Promise<ReceiveRequestDTO[]> => {
   });
 
   if (!response.ok) {
+    if (response.status === 403) {
+      throw new Error("NOT_REGISTERED_AS_RECIPIENT");
+    }
     throw new Error(
       `Failed to get my requests with status ${response.status}`
     );

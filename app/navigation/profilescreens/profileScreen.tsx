@@ -41,6 +41,7 @@ import {
   ReceiveRequestDTO,
 } from "../../api/requestApi";
 import ScrollableHeaderLayout from "../../../components/common/ScrollableHeaderLayout";
+import { useLanguage } from "../../../utils/language-context";
 
 const mockReviews = [
   { id: 1, text: "Great donor, very helpful!", date: "2024-06-02" },
@@ -62,6 +63,7 @@ const ProfileScreen: React.FC = () => {
   const router = useRouter();
   const { logout } = useAuth();
   const { theme, isDark, setTheme } = useTheme();
+  const { t } = useLanguage();
   const { hideTabBar, showTabBar } = useTabBar();
   const currentTheme = isDark ? darkTheme : lightTheme;
   const styles = createProfileStyles(currentTheme);
@@ -509,8 +511,8 @@ const ProfileScreen: React.FC = () => {
     if (profileNotFound && isOwnProfile && !loading) {
       const timeoutId = setTimeout(() => {
         Alert.alert(
-          "Session Expired",
-          "Your profile could not be loaded. Please login again.",
+          t("profile.sessionExpired.title"),
+          t("profile.sessionExpired.message"),
           [
             {
               text: "OK",
@@ -523,7 +525,7 @@ const ProfileScreen: React.FC = () => {
 
       return () => clearTimeout(timeoutId);
     }
-  }, [profileNotFound, isOwnProfile, loading, handleLogout]);
+  }, [profileNotFound, isOwnProfile, loading, handleLogout, t]);
 
   if (loading || profileLoading) {
     return (
@@ -535,7 +537,7 @@ const ProfileScreen: React.FC = () => {
       >
         <ActivityIndicator size="large" color={currentTheme.primary} />
         <Text style={{ marginTop: 10, color: currentTheme.textSecondary }}>
-          Loading profile...
+          {t("profile.loading")}
         </Text>
       </View>
     );
@@ -559,9 +561,9 @@ const ProfileScreen: React.FC = () => {
             >
               <Feather name="user-x" size={32} color={currentTheme.error} />
             </View>
-            <Text style={alertStyles.title}>User Not Found</Text>
+            <Text style={alertStyles.title}>{t("profile.notFound.title")}</Text>
             <Text style={alertStyles.message}>
-              The user you're looking for doesn't exist or has been removed
+              {t("profile.notFound.message")}
             </Text>
             <TouchableOpacity
               style={[
@@ -577,7 +579,7 @@ const ProfileScreen: React.FC = () => {
             >
               <Feather name="arrow-left" size={18} color="#fff" />
               <Text style={[alertStyles.buttonText, { marginLeft: 8 }]}>
-                Go Back
+                {t("profile.notFound.goBack")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -710,9 +712,9 @@ const ProfileScreen: React.FC = () => {
               >
                 <Feather name="log-out" size={28} color={currentTheme.error} />
               </View>
-              <Text style={alertStyles.title}>Confirm Logout</Text>
+              <Text style={alertStyles.title}>{t("profile.logout.confirmTitle")}</Text>
               <Text style={alertStyles.message}>
-                Are you sure you want to logout? You will need to sign in again to access your account.
+                {t("profile.logout.confirmMessage")}
               </Text>
 
               <View
@@ -735,7 +737,7 @@ const ProfileScreen: React.FC = () => {
                   onPress={() => setShowLogoutConfirm(false)}
                 >
                   <Text style={[alertStyles.buttonText, { color: currentTheme.text }]}>
-                    Cancel
+                    {t("profile.common.cancel")}
                   </Text>
                 </TouchableOpacity>
 
@@ -752,7 +754,7 @@ const ProfileScreen: React.FC = () => {
                     handleLogout();
                   }}
                 >
-                  <Text style={alertStyles.buttonText}>Logout</Text>
+                  <Text style={alertStyles.buttonText}>{t("profile.common.logout")}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -774,15 +776,15 @@ const ProfileScreen: React.FC = () => {
               <View style={alertStyles.iconContainer}>
                 <Feather name="bell" size={28} color={currentTheme.primary} />
               </View>
-              <Text style={alertStyles.title}>Notifications</Text>
+              <Text style={alertStyles.title}>{t("profile.notifications.title")}</Text>
               <Text style={alertStyles.message}>
-                No new notifications at the moment
+                {t("profile.notifications.emptyMessage")}
               </Text>
               <TouchableOpacity
                 style={alertStyles.button}
                 onPress={() => setBellAlertVisible(false)}
               >
-                <Text style={alertStyles.buttonText}>Got it</Text>
+                <Text style={alertStyles.buttonText}>{t("profile.notifications.gotIt")}</Text>
               </TouchableOpacity>
             </TouchableOpacity>
           </TouchableOpacity>
