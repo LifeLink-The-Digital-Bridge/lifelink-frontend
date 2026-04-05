@@ -14,7 +14,6 @@ import { validateBloodPressure as validateBP } from "../../../utils/bloodPressur
 import * as SecureStore from "expo-secure-store";
 import { registerDonor, addDonorRole } from "../../api/donorApi";
 import { refreshAuthTokens } from "../../api/roleApi";
-import { healthApi } from "../../api/healthApi";
 import { useTheme } from "../../../utils/theme-context";
 import { lightTheme, darkTheme } from "../../../constants/styles/authStyles";
 import { createUnifiedStyles } from "../../../constants/styles/unifiedStyles";
@@ -26,19 +25,6 @@ import { StatusHeader } from "@/components/common/StatusHeader";
 import AppLayout from "@/components/AppLayout";
 
 const HEADER_HEIGHT = 180;
-
-const calculateAgeFromDob = (dob: string): number | null => {
-  if (!dob) return null;
-  const birthDate = new Date(dob);
-  if (Number.isNaN(birthDate.getTime())) return null;
-  const now = new Date();
-  let age = now.getFullYear() - birthDate.getFullYear();
-  const monthDiff = now.getMonth() - birthDate.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < birthDate.getDate())) {
-    age -= 1;
-  }
-  return age >= 0 ? age : null;
-};
 
 const DonorScreen: React.FC = () => {
   const { colorScheme } = useTheme();
@@ -64,8 +50,6 @@ const DonorScreen: React.FC = () => {
   const [manualLocationSet, setManualLocationSet] = useState<boolean>(false);
   const [hasExistingData, setHasExistingData] = useState<boolean>(false);
   const [hasLocationData, setHasLocationData] = useState<boolean>(false);
-  const [isMigrantUser, setIsMigrantUser] = useState<boolean>(false);
-  const [healthPrefillApplied, setHealthPrefillApplied] = useState<boolean>(false);
 
   const locationFetchAttempted = useRef<boolean>(false);
   const dataCheckCompleted = useRef<boolean>(false);
@@ -226,23 +210,19 @@ const DonorScreen: React.FC = () => {
         } catch {
           roles = [];
         }
-        setIsMigrantUser(roles.includes("MIGRANT"));
 
         if (!roles.includes("DONOR")) {
           await addDonorRole();
           const newTokens = await refreshAuthTokens();
-          const refreshedRoles = Array.isArray(newTokens.roles) ? newTokens.roles : [];
-          setIsMigrantUser(refreshedRoles.includes("MIGRANT"));
           await Promise.all([
-            SecureStore.setItemAsync("jwt", newTokens.accessToken),
             SecureStore.setItemAsync("accessToken", newTokens.accessToken),
             SecureStore.setItemAsync("refreshToken", newTokens.refreshToken),
-            SecureStore.setItemAsync("email", newTokens.email || ""),
-            SecureStore.setItemAsync("username", newTokens.username || ""),
-            SecureStore.setItemAsync("roles", JSON.stringify(refreshedRoles)),
-            SecureStore.setItemAsync("userId", newTokens.id || ""),
-            SecureStore.setItemAsync("gender", newTokens.gender || ""),
-            SecureStore.setItemAsync("dob", newTokens.dob || ""),
+            SecureStore.setItemAsync("email", newTokens.email),
+            SecureStore.setItemAsync("username", newTokens.username),
+            SecureStore.setItemAsync("roles", JSON.stringify(newTokens.roles)),
+            SecureStore.setItemAsync("userId", newTokens.id),
+            SecureStore.setItemAsync("gender", newTokens.gender),
+            SecureStore.setItemAsync("dob", newTokens.dob),
           ]);
         }
       } catch (error: any) {
@@ -259,110 +239,6 @@ const DonorScreen: React.FC = () => {
     };
     ensureDonorRole();
   }, [router]);
-
-  useEffect(() => {
-    if (roleLoading || healthPrefillApplied) {
-      return;
-    }
-
-    const prefillFromHealthProfile = async () => {
-      try {
-        const [rolesString, storedUserId, storedDob, storedDonorData] = await Promise.all([
-          SecureStore.getItemAsync("roles"),
-          SecureStore.getItemAsync("userId"),
-          SecureStore.getItemAsync("dob"),
-          SecureStore.getItemAsync("donorData"),
-        ]);
-
-        if (storedDonorData) {
-          setHealthPrefillApplied(true);
-          return;
-        }
-
-        let roles: string[] = [];
-        try {
-          roles = rolesString ? JSON.parse(rolesString) : [];
-        } catch {
-          roles = [];
-        }
-
-        const isMigrant = roles.includes("MIGRANT");
-        setIsMigrantUser(isMigrant);
-        if (!isMigrant || !storedUserId) {
-          setHealthPrefillApplied(true);
-          return;
-        }
-
-        const healthIdData = await healthApi.getHealthIDByUserId(storedUserId);
-        if (!healthIdData) {
-          setHealthPrefillApplied(true);
-          return;
-        }
-
-        if (healthIdData.hemoglobinLevel !== undefined && healthIdData.hemoglobinLevel !== null) {
-          formState.setHemoglobinLevel(String(healthIdData.hemoglobinLevel));
-        }
-        if (healthIdData.bloodPressure) {
-          formState.setBloodPressure(healthIdData.bloodPressure);
-        }
-        if (healthIdData.hasDiabetes !== undefined && healthIdData.hasDiabetes !== null) {
-          formState.setHasDiabetes(healthIdData.hasDiabetes);
-        }
-        if (healthIdData.hasChronicDiseases !== undefined && healthIdData.hasChronicDiseases !== null) {
-          formState.setHasDiseases(healthIdData.hasChronicDiseases);
-        }
-        if (healthIdData.chronicConditions) {
-          formState.setDiseaseDescription(healthIdData.chronicConditions);
-          formState.setChronicDiseases(healthIdData.chronicConditions);
-        }
-        if (healthIdData.currentMedications) {
-          formState.setTakingMedication(true);
-          formState.setCurrentMedications(healthIdData.currentMedications);
-        }
-        if (healthIdData.medicalHistory) {
-          formState.setMedicalHistory(healthIdData.medicalHistory);
-        }
-        if (healthIdData.allergies) {
-          formState.setAllergies(healthIdData.allergies);
-        }
-        if (healthIdData.heightCm !== undefined && healthIdData.heightCm !== null) {
-          formState.setHeight(String(healthIdData.heightCm));
-        }
-        if (healthIdData.weightKg !== undefined && healthIdData.weightKg !== null) {
-          formState.setWeight(String(healthIdData.weightKg));
-        }
-        if (healthIdData.lastCheckupDate) {
-          formState.setLastMedicalCheckup(String(healthIdData.lastCheckupDate).slice(0, 10));
-        }
-        if (healthIdData.currentCity) {
-          formState.setCity(healthIdData.currentCity);
-        }
-        if (healthIdData.currentState) {
-          formState.setStateVal(healthIdData.currentState);
-          formState.setDistrict(healthIdData.currentState);
-        }
-        if (!formState.country) {
-          formState.setCountry("India");
-        }
-
-        const derivedAge = storedDob ? calculateAgeFromDob(storedDob) : null;
-        if (derivedAge !== null) {
-          const heightValue = healthIdData.heightCm || 0;
-          const weightValue = healthIdData.weightKg || 0;
-          if (heightValue > 0 && weightValue > 0) {
-            const bmi = weightValue / Math.pow(heightValue / 100, 2);
-            formState.setBodySize(bmi < 18.5 ? "SMALL" : bmi < 25 ? "MEDIUM" : "LARGE");
-          }
-        }
-      } catch (error) {
-        console.error("Error pre-filling donor form from Health ID:", error);
-      } finally {
-        setHealthPrefillApplied(true);
-      }
-    };
-
-    prefillFromHealthProfile();
-  }, [roleLoading, healthPrefillApplied]);
 
   useEffect(() => {
     if (locationFetchAttempted.current || !dataCheckCompleted.current) {
@@ -523,35 +399,6 @@ const DonorScreen: React.FC = () => {
         addressData.id = formState.addressId;
       }
 
-      const hlaProfile =
-        formState.hlaA1 &&
-        formState.hlaA2 &&
-        formState.hlaB1 &&
-        formState.hlaB2 &&
-        formState.testingDate &&
-        formState.laboratoryName
-          ? {
-              hlaA1: formState.hlaA1,
-              hlaA2: formState.hlaA2,
-              hlaB1: formState.hlaB1,
-              hlaB2: formState.hlaB2,
-              hlaC1: formState.hlaC1 || undefined,
-              hlaC2: formState.hlaC2 || undefined,
-              hlaDR1: formState.hlaDR1 || undefined,
-              hlaDR2: formState.hlaDR2 || undefined,
-              hlaDQ1: formState.hlaDQ1 || undefined,
-              hlaDQ2: formState.hlaDQ2 || undefined,
-              hlaDP1: formState.hlaDP1 || undefined,
-              hlaDP2: formState.hlaDP2 || undefined,
-              testingDate: formState.testingDate,
-              testingMethod: formState.testingMethod,
-              laboratoryName: formState.laboratoryName,
-              certificationNumber: formState.certificationNumber || undefined,
-              hlaString: `${formState.hlaA1},${formState.hlaA2},${formState.hlaB1},${formState.hlaB2},${formState.hlaC1 || ""},${formState.hlaC2 || ""},${formState.hlaDR1 || ""},${formState.hlaDR2 || ""},${formState.hlaDQ1 || ""},${formState.hlaDQ2 || ""},${formState.hlaDP1 || ""},${formState.hlaDP2 || ""}`,
-              isHighResolution: true,
-            }
-          : undefined;
-
       const payload = {
         registrationDate: new Date().toISOString().slice(0, 10),
         status: "ACTIVE",
@@ -612,29 +459,37 @@ const DonorScreen: React.FC = () => {
           consentedAt: new Date().toISOString(),
         },
         addresses: [addressData],
-        hlaProfile,
+        hlaProfile:
+          formState.hlaA1 &&
+            formState.hlaA2 &&
+            formState.hlaB1 &&
+            formState.hlaB2 &&
+            formState.testingDate &&
+            formState.laboratoryName
+            ? {
+              hlaA1: formState.hlaA1,
+              hlaA2: formState.hlaA2,
+              hlaB1: formState.hlaB1,
+              hlaB2: formState.hlaB2,
+              hlaC1: formState.hlaC1 || undefined,
+              hlaC2: formState.hlaC2 || undefined,
+              hlaDR1: formState.hlaDR1 || undefined,
+              hlaDR2: formState.hlaDR2 || undefined,
+              hlaDQ1: formState.hlaDQ1 || undefined,
+              hlaDQ2: formState.hlaDQ2 || undefined,
+              hlaDP1: formState.hlaDP1 || undefined,
+              hlaDP2: formState.hlaDP2 || undefined,
+              testingDate: formState.testingDate,
+              testingMethod: formState.testingMethod,
+              laboratoryName: formState.laboratoryName,
+              certificationNumber: formState.certificationNumber || undefined,
+              hlaString: `${formState.hlaA1},${formState.hlaA2},${formState.hlaB1},${formState.hlaB2},${formState.hlaC1 || ""},${formState.hlaC2 || ""},${formState.hlaDR1 || ""},${formState.hlaDR2 || ""},${formState.hlaDQ1 || ""},${formState.hlaDQ2 || ""},${formState.hlaDP1 || ""},${formState.hlaDP2 || ""}`,
+              isHighResolution: true,
+            }
+            : undefined,
       };
 
-      const enrollmentPayload = {
-        consentGiven: formState.isConsented,
-        consentType: "GENERAL",
-        bloodGlucoseLevel: formState.bloodGlucoseLevel ? Number(formState.bloodGlucoseLevel) : undefined,
-        creatinineLevel: Number(formState.creatinineLevel),
-        liverFunctionTests: formState.liverFunctionTests,
-        cardiacStatus: formState.cardiacStatus,
-        pulmonaryFunction: Number(formState.pulmonaryFunction),
-        overallHealthStatus: formState.overallHealthStatus,
-        age: formState.age ?? undefined,
-        dob: formState.dob || undefined,
-        bodyMassIndex: formState.bodyMassIndex ? Number(formState.bodyMassIndex) : undefined,
-        bodySize: formState.bodySize || undefined,
-        addresses: [addressData],
-        hlaProfile: hlaProfile || null,
-      };
-
-      const response = isMigrantUser
-        ? await healthApi.enrollAsDonor(enrollmentPayload)
-        : await registerDonor(payload);
+      const response = await registerDonor(payload);
       if (response?.id) {
         await SecureStore.setItemAsync("donorId", response.id);
         await SecureStore.setItemAsync("donorData", JSON.stringify(response));

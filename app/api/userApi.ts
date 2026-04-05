@@ -39,34 +39,6 @@ export interface UserProfile {
   profileVisibility: "PUBLIC" | "PRIVATE" | "FOLLOWERS_ONLY";
   followersCount?: number;
   followingCount?: number;
-  doctorDetails?: {
-    medicalRegistrationNumber?: string;
-    specialization?: string;
-    qualification?: string;
-    hospitalName?: string;
-    clinicAddress?: string;
-    yearsOfExperience?: number;
-    consultationFee?: number;
-    latitude?: number;
-    longitude?: number;
-  } | null;
-  ngoDetails?: {
-    organizationName?: string;
-    registrationNumber?: string;
-    registrationYear?: number;
-    organizationType?: string;
-    serviceAreas?: string;
-    headOfficeAddress?: string;
-    website?: string;
-    totalVolunteers?: number;
-    latitude?: number;
-    longitude?: number;
-  } | null;
-  migrantDetails?: {
-    aadhaarHash?: string;
-    latitude?: number;
-    longitude?: number;
-  } | null;
 }
 
 export interface UserDTO {
@@ -82,47 +54,6 @@ export interface UserDTO {
   profileVisibility: "PUBLIC" | "PRIVATE" | "FOLLOWERS_ONLY";
   followersCount?: number;
   followingCount?: number;
-  doctorDetails?: {
-    medicalRegistrationNumber?: string;
-    specialization?: string;
-    qualification?: string;
-    hospitalName?: string;
-    clinicAddress?: string;
-    yearsOfExperience?: number;
-    consultationFee?: number;
-    latitude?: number;
-    longitude?: number;
-  } | null;
-  ngoDetails?: {
-    organizationName?: string;
-    registrationNumber?: string;
-    registrationYear?: number;
-    organizationType?: string;
-    serviceAreas?: string;
-    headOfficeAddress?: string;
-    website?: string;
-    totalVolunteers?: number;
-    latitude?: number;
-    longitude?: number;
-  } | null;
-  migrantDetails?: {
-    aadhaarHash?: string;
-    latitude?: number;
-    longitude?: number;
-  } | null;
-}
-
-export interface NearbyUser {
-  id: string;
-  name: string;
-  username: string;
-  role: "DOCTOR" | "MIGRANT" | "NGO" | string;
-  roles: string[];
-  latitude: number;
-  longitude: number;
-  distanceKm: number;
-  profileImageUrl?: string | null;
-  detail?: string | null;
 }
 
 export const getUserProfile = async (
@@ -142,38 +73,6 @@ export const searchUsers = async (query: string): Promise<UserProfile[]> => {
     );
   } catch (error: any) {
     throw new Error(error.message || "Failed to search users");
-  }
-};
-
-export const searchDoctors = async (): Promise<UserProfile[]> => {
-  try {
-    return await fetchWithAuth(`/users/doctors/search`);
-  } catch (error: any) {
-    throw new Error(error.message || "Failed to search doctors");
-  }
-};
-
-export const searchNgos = async (): Promise<UserProfile[]> => {
-  try {
-    return await fetchWithAuth(`/users/ngos/search`);
-  } catch (error: any) {
-    throw new Error(error.message || "Failed to search NGOs");
-  }
-};
-
-export const getNearbyUsers = async (
-  latitude: number,
-  longitude: number,
-  radiusKm: number = 10,
-  roles: string[] = ["DOCTOR", "MIGRANT", "NGO"],
-): Promise<NearbyUser[]> => {
-  try {
-    const roleQuery = roles.map((role) => `roles=${encodeURIComponent(role)}`).join("&");
-    return await fetchWithAuth(
-      `/users/nearby?latitude=${latitude}&longitude=${longitude}&radiusKm=${radiusKm}${roleQuery ? `&${roleQuery}` : ""}`,
-    );
-  } catch (error: any) {
-    throw new Error(error.message || "Failed to fetch nearby users");
   }
 };
 
@@ -242,16 +141,5 @@ export const getFollowing = async (userId: string): Promise<UserProfile[]> => {
     return await fetchWithAuth(`/users/follow/${userId}/following`);
   } catch (error: any) {
     throw new Error(error.message || "Failed to fetch following");
-  }
-};
-
-export const getUsersByIds = async (userIds: string[]): Promise<UserProfile[]> => {
-  try {
-    return await fetchWithAuth(`/users/batch`, {
-      method: "POST",
-      body: JSON.stringify(userIds),
-    });
-  } catch (error: any) {
-    throw new Error(error.message || "Failed to fetch users implicitly");
   }
 };

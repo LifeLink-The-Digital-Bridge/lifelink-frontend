@@ -7,10 +7,9 @@ import { lightTheme, darkTheme, createAuthStyles } from '../../../constants/styl
 interface PasswordInputProps extends TextInputProps {
   style?: any;
   hasError?: boolean;
-  error?: string;
 }
 
-export function PasswordInput({ style, hasError, error, ...props }: PasswordInputProps) {
+export function PasswordInput({ style, hasError, ...props }: PasswordInputProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
 
@@ -25,7 +24,7 @@ export function PasswordInput({ style, hasError, error, ...props }: PasswordInpu
         style={[
           styles.passwordInput,
           isFocused && styles.inputFocused,
-          (hasError || !!error) && styles.inputError,
+          hasError && styles.inputError,
           style,
         ]}
         placeholderTextColor={theme.textSecondary}

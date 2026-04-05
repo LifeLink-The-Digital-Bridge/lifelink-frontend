@@ -1,6 +1,5 @@
 import { Tabs } from "expo-router/tabs";
 import { useAuth } from '../../utils/auth-context';
-import { useRole } from '../../utils/role-context';
 import { MaterialIcons, Feather, FontAwesome5 } from "@expo/vector-icons";
 import { Redirect } from "expo-router";
 import { useTheme } from "../../utils/theme-context";
@@ -14,20 +13,15 @@ function TabsContent() {
   const isDark = colorScheme === 'dark';
   const theme = isDark ? darkTheme : lightTheme;
   const { isAuthenticated, isLoading } = useAuth();
-  const { isMigrant, isDoctor, isNGO, isAdmin, isLoading: roleLoading } = useRole();
   const { tabBarTranslateY } = useTabBar();
   const insets = useSafeAreaInsets();
 
-  if (isLoading || roleLoading) return null;
+  if (isLoading) return null;
   if (!isAuthenticated) return <Redirect href="/(auth)/loginScreen" />;
   
   const tabBarHeight = Platform.OS === 'ios' 
-    ? 56 + insets.bottom 
-    : 56 + Math.max(insets.bottom, 0);
-  const showMigrantTabs = isMigrant && !isDoctor && !isNGO && !isAdmin;
-  const showDoctorTabs = isDoctor && !isAdmin;
-  const showNgoTabs = isNGO && !isAdmin;
-  const showDefaultDonationTabs = !isMigrant && !isDoctor && !isNGO && !isAdmin;
+    ? 60 + insets.bottom 
+    : 60 + Math.max(insets.bottom, 0);
   
   return (
     <Tabs
@@ -53,7 +47,7 @@ function TabsContent() {
           transform: [{ translateY: tabBarTranslateY }],
         },
         tabBarItemStyle: {
-          height: 56,
+          height: 60,
           justifyContent: 'center',
           alignItems: 'center',
           borderRadius: 12,
@@ -74,10 +68,10 @@ function TabsContent() {
         tabBarHideOnKeyboard: true,
       }}
     >
-        <Tabs.Screen
+      <Tabs.Screen
         name="index"
         options={{
-          title: isAdmin ? "Admin" : isDoctor ? "Patients" : isNGO ? "Services" : isMigrant ? "Health" : "Home",
+          title: "Home",
           tabBarIcon: ({ color, size, focused }) => (
             <View style={{
               width: 36,
@@ -89,7 +83,7 @@ function TabsContent() {
               marginBottom: 2,
             }}>
               <MaterialIcons 
-                name={isAdmin ? "admin-panel-settings" : isDoctor ? "people" : isNGO ? "groups" : isMigrant ? "favorite" : "home"} 
+                name="home" 
                 size={focused ? 26 : 22} 
                 color={color}
               />
@@ -97,63 +91,11 @@ function TabsContent() {
           ),
         }}
       />
-      
-      <Tabs.Screen
-        name="health-id"
-        options={{
-          href: showMigrantTabs ? undefined : null,
-          title: "Health ID",
-          tabBarIcon: ({ color, focused }) => (
-            <View style={{
-              width: 36,
-              height: 36,
-              borderRadius: 18,
-              backgroundColor: focused ? theme.primary + '15' : 'transparent',
-              justifyContent: 'center',
-              alignItems: 'center',
-              marginBottom: 2,
-            }}>
-              <MaterialIcons 
-                name="qr-code-2" 
-                size={focused ? 26 : 22} 
-                color={color}
-              />
-            </View>
-          ),
-        }}
-      />
-
-      <Tabs.Screen
-        name="records"
-        options={{
-          href: showMigrantTabs ? undefined : null,
-          title: "Records",
-          tabBarIcon: ({ color, focused }) => (
-            <View style={{
-              width: 36,
-              height: 36,
-              borderRadius: 18,
-              backgroundColor: focused ? theme.primary + '15' : 'transparent',
-              justifyContent: 'center',
-              alignItems: 'center',
-              marginBottom: 2,
-            }}>
-              <MaterialIcons 
-                name="assignment" 
-                size={focused ? 26 : 22} 
-                color={color}
-              />
-            </View>
-          ),
-        }}
-      />
-
       <Tabs.Screen
         name="donate"
         options={{
-          href: showDefaultDonationTabs ? undefined : null,
           title: "Donate",
-          tabBarIcon: ({ color, focused }) => (
+          tabBarIcon: ({ color, size, focused }) => (
             <View style={{
               width: 36,
               height: 36,
@@ -172,7 +114,6 @@ function TabsContent() {
           ),
         }}
       />
-
       <Tabs.Screen
         name="maps"
         options={{
@@ -196,63 +137,11 @@ function TabsContent() {
           ),
         }}
       />
-
-      <Tabs.Screen
-        name="patients"
-        options={{
-          href: showDoctorTabs ? undefined : null,
-          title: "Patients",
-          tabBarIcon: ({ color, focused }) => (
-            <View style={{
-              width: 36,
-              height: 36,
-              borderRadius: 18,
-              backgroundColor: focused ? theme.primary + '15' : 'transparent',
-              justifyContent: 'center',
-              alignItems: 'center',
-              marginBottom: 2,
-            }}>
-              <MaterialIcons
-                name="badge"
-                size={focused ? 24 : 20}
-                color={color}
-              />
-            </View>
-          ),
-        }}
-      />
-
-      <Tabs.Screen
-        name="support"
-        options={{
-          href: showNgoTabs ? undefined : null,
-          title: "Support",
-          tabBarIcon: ({ color, focused }) => (
-            <View style={{
-              width: 36,
-              height: 36,
-              borderRadius: 18,
-              backgroundColor: focused ? theme.primary + '15' : 'transparent',
-              justifyContent: 'center',
-              alignItems: 'center',
-              marginBottom: 2,
-            }}>
-              <MaterialIcons
-                name="volunteer-activism"
-                size={focused ? 24 : 20}
-                color={color}
-              />
-            </View>
-          ),
-        }}
-      />
-
       <Tabs.Screen
         name="receive"
         options={{
-          href: showDefaultDonationTabs ? undefined : null,
           title: "Request",
-          tabBarIcon: ({ color, focused }) => (
+          tabBarIcon: ({ color, size, focused }) => (
             <View style={{
               width: 36,
               height: 36,
@@ -271,14 +160,6 @@ function TabsContent() {
           ),
         }}
       />
-
-      <Tabs.Screen
-        name="emergency"
-        options={{
-          href: null,
-        }}
-      />
-
       <Tabs.Screen
         name="profile"
         options={{

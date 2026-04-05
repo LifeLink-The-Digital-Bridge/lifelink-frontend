@@ -49,7 +49,6 @@ export default function RegisterScreen() {
     dob: "",
     gender: "",
     profileImageUrl: "",
-    roles: ["DONOR", "DEFAULT"],
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});

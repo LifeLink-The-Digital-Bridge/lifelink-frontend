@@ -20,7 +20,7 @@ interface PickerItem {
 
 interface CustomPickerProps {
   selectedValue: string;
-  onValueChange?: (value: string) => void;
+  onValueChange: (value: string) => void;
   items: PickerItem[];
   placeholder?: string;
   style?: any;
@@ -130,7 +130,7 @@ export function CustomPicker({
   });
 
   const handleItemSelect = (value: string) => {
-    onValueChange?.(value);
+    onValueChange(value);
     setModalVisible(false);
   };
 
