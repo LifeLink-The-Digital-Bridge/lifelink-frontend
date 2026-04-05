@@ -16,13 +16,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     await SecureStore.deleteItemAsync("jwt");
+    await SecureStore.deleteItemAsync("accessToken");
     setIsAuthenticated(false);
   };
 
   useEffect(() => {
     async function checkAuth() {
       setIsLoading(true);
-      const token = await SecureStore.getItemAsync("jwt");
+      const token =
+        (await SecureStore.getItemAsync("jwt")) ||
+        (await SecureStore.getItemAsync("accessToken"));
       setIsAuthenticated(!!token);
       setIsLoading(false);
     }

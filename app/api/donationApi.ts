@@ -69,7 +69,9 @@ export interface CancellationResponseDTO {
 }
 
 export async function registerDonation(payload: DonationRequest) {
-  const token = await SecureStore.getItemAsync("jwt");
+  const token =
+    (await SecureStore.getItemAsync("jwt")) ||
+    (await SecureStore.getItemAsync("accessToken"));
   const userId = await SecureStore.getItemAsync("userId");
 
   const response = await fetch(`${BASE_URL}/donors/donate`, {
@@ -91,7 +93,9 @@ export async function registerDonation(payload: DonationRequest) {
 }
 
 export const getMyDonations = async (): Promise<any[]> => {
-  const token = await SecureStore.getItemAsync("jwt");
+  const token =
+    (await SecureStore.getItemAsync("jwt")) ||
+    (await SecureStore.getItemAsync("accessToken"));
   const userId = await SecureStore.getItemAsync("userId");
   if (!token || !userId) return [];
 
@@ -117,7 +121,9 @@ export const fetchDonationsByUserId = async (
   userId: string,
 ): Promise<any[]> => {
   try {
-    const jwt = await SecureStore.getItemAsync("jwt");
+    const jwt =
+      (await SecureStore.getItemAsync("jwt")) ||
+      (await SecureStore.getItemAsync("accessToken"));
     const currentUserId = await SecureStore.getItemAsync("userId");
 
     const response = await fetch(
@@ -153,7 +159,9 @@ export const fetchDonationsByUserId = async (
 export const fetchDonationsByDonorId = async (
   donorId: string,
 ): Promise<any[]> => {
-  const token = await SecureStore.getItemAsync("jwt");
+  const token =
+    (await SecureStore.getItemAsync("jwt")) ||
+    (await SecureStore.getItemAsync("accessToken"));
   const userId = await SecureStore.getItemAsync("userId");
   if (!token || !userId) return [];
 
@@ -175,7 +183,9 @@ export const fetchDonationsByDonorId = async (
 };
 
 export async function fetchDonorAddresses(donorId: string): Promise<any[]> {
-  const token = await SecureStore.getItemAsync("jwt");
+  const token =
+    (await SecureStore.getItemAsync("jwt")) ||
+    (await SecureStore.getItemAsync("accessToken"));
   const userId = await SecureStore.getItemAsync("userId");
 
   if (!token || !donorId) {
@@ -206,7 +216,9 @@ export async function addDonorAddress(
   donorId: string,
   locationData: any,
 ): Promise<any> {
-  const token = await SecureStore.getItemAsync("jwt");
+  const token =
+    (await SecureStore.getItemAsync("jwt")) ||
+    (await SecureStore.getItemAsync("accessToken"));
   const userId = await SecureStore.getItemAsync("userId");
 
   const response = await fetch(`${BASE_URL}/donors/${donorId}/addresses`, {
@@ -230,7 +242,9 @@ export const cancelDonation = async (
   donationId: string,
   cancellationData: CancellationRequestDTO,
 ): Promise<CancellationResponseDTO> => {
-  const token = await SecureStore.getItemAsync("jwt");
+  const token =
+    (await SecureStore.getItemAsync("jwt")) ||
+    (await SecureStore.getItemAsync("accessToken"));
   const userId = await SecureStore.getItemAsync("userId");
   if (!token || !userId) throw new Error("Not authenticated");
 

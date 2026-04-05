@@ -150,6 +150,7 @@ export default function LoginScreen() {
       const response = await loginUser({ loginType, identifier, password });
 
       await SecureStore.setItemAsync("jwt", response.accessToken);
+      await SecureStore.setItemAsync("accessToken", response.accessToken);
       await SecureStore.setItemAsync("refreshToken", response.refreshToken);
       await SecureStore.setItemAsync("userId", response.id);
       await SecureStore.setItemAsync("email", response.email);
@@ -247,7 +248,7 @@ export default function LoginScreen() {
             />
 
             <View style={styles.linkContainer}>
-              <TouchableOpacity onPress={() => router.push("./registerScreen")}>
+              <TouchableOpacity onPress={() => router.push("./roleSelectionScreen")}>
                 <Text style={styles.linkText}>Don't have an account? Sign up</Text>
               </TouchableOpacity>
             </View>

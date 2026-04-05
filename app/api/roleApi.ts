@@ -4,7 +4,9 @@ import Constants from "expo-constants";
 const BASE_URL = Constants.expoConfig?.extra?.API_URL;
 
 export const addDonorRole = async (): Promise<string> => {
-  const token = await SecureStore.getItemAsync("jwt");
+  const token =
+    (await SecureStore.getItemAsync("jwt")) ||
+    (await SecureStore.getItemAsync("accessToken"));
   const userId = await SecureStore.getItemAsync("userId");
   if (!token || !userId) throw new Error("Not authenticated");
   const response = await fetch(`${BASE_URL}/donors/addRole`, {
@@ -22,7 +24,9 @@ export const addDonorRole = async (): Promise<string> => {
 };
 
 export const addRecipientRole = async (): Promise<string> => {
-  const token = await SecureStore.getItemAsync("jwt");
+  const token =
+    (await SecureStore.getItemAsync("jwt")) ||
+    (await SecureStore.getItemAsync("accessToken"));
   const userId = await SecureStore.getItemAsync("userId");
   if (!token || !userId) throw new Error("Not authenticated");
   const response = await fetch(`${BASE_URL}/recipients/addRole`, {

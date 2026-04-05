@@ -14,7 +14,7 @@ import { lightTheme, darkTheme } from "../../constants/styles/authStyles";
 
 interface DatePickerProps {
   selectedDate?: string;
-  onDateChange: (date: string) => void;
+  onDateChange?: (date: string) => void;
   hasError?: boolean;
   placeholder?: string;
 }
@@ -44,7 +44,7 @@ export function CustomDatePicker({
   };
 
   const handleDateSelect = (day: any) => {
-    onDateChange(day.dateString);
+    onDateChange?.(day.dateString);
     setShowPicker(false);
   };
 

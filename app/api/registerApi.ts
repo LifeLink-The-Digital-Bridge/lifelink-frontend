@@ -1,3 +1,34 @@
+export interface MigrantDetailsPayload {
+  aadhaarHash?: string;
+  latitude?: number;
+  longitude?: number;
+}
+
+export interface DoctorDetailsPayload {
+  medicalRegistrationNumber: string;
+  specialization?: string;
+  qualification?: string;
+  hospitalName?: string;
+  clinicAddress?: string;
+  yearsOfExperience?: number;
+  consultationFee?: number;
+  latitude?: number;
+  longitude?: number;
+}
+
+export interface NGODetailsPayload {
+  organizationName: string;
+  registrationNumber: string;
+  registrationYear?: number;
+  organizationType?: string;
+  serviceAreas?: string;
+  headOfficeAddress?: string;
+  website?: string;
+  totalVolunteers?: number;
+  latitude?: number;
+  longitude?: number;
+}
+
 export interface RegisterRequest {
   name: string;
   email: string;
@@ -7,6 +38,10 @@ export interface RegisterRequest {
   dob: string;
   gender: string;
   profileImageUrl: string;
+  roles?: string[];
+  migrantDetails?: MigrantDetailsPayload;
+  doctorDetails?: DoctorDetailsPayload;
+  ngoDetails?: NGODetailsPayload;
 }
 
 export interface RegisterResponse {
